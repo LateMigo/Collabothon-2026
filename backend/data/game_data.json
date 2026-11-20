@@ -1,0 +1,648 @@
+{
+  "scenario": {
+    "id": "smoke-sparks-heartbeats",
+    "title": "Smoke, Sparks & Heartbeats",
+    "tagline": "Food / Energy / Tech / Medtech",
+    "description": "A grill chain, a power company, a smart-home maker and a heart-monitor lab compete for your money in the Republic of Valdoria. Read the news, watch for delayed effects and keep enough cash for rent.",
+    "total_weeks": 6,
+    "starting_cash": 2000.0,
+    "initial_monthly_rent": 400.0,
+    "rent_period_weeks": 4,
+    "bankruptcy_threshold": 0.85,
+    "risk_thresholds": {
+      "elevated": 0.4,
+      "critical": 0.7
+    },
+    "advisor_uses_per_game": 3,
+    "advisor_max_per_week": 1,
+    "advisor_accuracy": 0.7
+  },
+  "industries": {
+    "food": { "label": "Food & Restaurants", "color": "#E8483A" },
+    "energy": { "label": "Energy", "color": "#E39B0B" },
+    "tech": { "label": "Technology", "color": "#3A8DDE" },
+    "medtech": { "label": "Medical Technology", "color": "#14A085" }
+  },
+  "companies": [
+    {
+      "id": "sizzle",
+      "name": "Sizzle & Co.",
+      "ticker": "SZZL",
+      "industry": "food",
+      "main_product": "Smash burgers and grill platters",
+      "initial_price": 40.0,
+      "dividend_per_share": 0.4,
+      "bankruptcy_risk": 0.1,
+      "description": "A family-founded grill chain with 64 restaurants across Valdoria. Famous for smoky burgers, late-night opening hours and a pepper sauce nobody has managed to copy. Restaurants buy their meat and grain on monthly contracts.",
+      "country": "Republic of Valdoria",
+      "owner": "Bernard Quillfeather",
+      "condition": "Steady and profitable. Meat and grain make up almost half of its costs, so food prices matter a lot."
+    },
+    {
+      "id": "voltara",
+      "name": "Voltara Power",
+      "ticker": "VOLT",
+      "industry": "energy",
+      "main_product": "Electricity from wind farms and hydro plants",
+      "initial_price": 60.0,
+      "dividend_per_share": 0.9,
+      "bankruptcy_risk": 0.15,
+      "description": "The biggest electricity supplier in the northern provinces. Runs 12 wind farms and two mountain hydro plants, and sells power to homes and businesses on long contracts.",
+      "country": "Kingdom of Nordhavia",
+      "owner": "Ingrid Solvang",
+      "condition": "Reliable and a bit boring - in a good way. Pays regular dividends, but depends on energy prices and government rules."
+    },
+    {
+      "id": "pixelnest",
+      "name": "PixelNest",
+      "ticker": "PIXN",
+      "industry": "tech",
+      "main_product": "Smart thermostats and home sensors",
+      "initial_price": 80.0,
+      "dividend_per_share": 0.2,
+      "bankruptcy_risk": 0.2,
+      "description": "A fast-growing smart-home company that makes thermostats, door sensors and the app that connects them. Every product is built in one large factory on the edge of Port Lumen.",
+      "country": "Federation of Kestria",
+      "owner": "Theo Brightwater",
+      "condition": "Growing fast, but it borrowed a lot of money and relies on a single factory for everything it sells."
+    },
+    {
+      "id": "medipulse",
+      "name": "MediPulse Labs",
+      "ticker": "MDPL",
+      "industry": "medtech",
+      "main_product": "Wearable heart monitors",
+      "initial_price": 50.0,
+      "dividend_per_share": 0.5,
+      "bankruptcy_risk": 0.25,
+      "description": "A research-driven lab that designs wrist-worn heart monitors. Hospitals use them to watch patients after surgery; families use them to keep an eye on grandparents at home.",
+      "country": "Solmara Islands",
+      "owner": "Dr. Lena Marchetti-Voss",
+      "condition": "Promising products waiting for regulator approval. Strong research team, modest profits so far."
+    }
+  ],
+  "weeks": [
+    {
+      "week": 1,
+      "theme": "A record harvest",
+      "market_drift": { "sizzle": 0.0, "voltara": 0.01, "pixelnest": 0.0, "medipulse": 0.005 },
+      "events": [
+        {
+          "id": "w1-harvest",
+          "title": "Record harvest: meat and grain prices tumble",
+          "description": "Valdoria's farmers report their best season in 20 years. Wholesale prices for beef, chicken and wheat fell 18% this week. Supermarkets expect cheaper shelves soon, while restaurants still buy on monthly contracts.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "food",
+              "change_type": "percent",
+              "value": 0.2,
+              "delay_weeks": 2,
+              "consequence_text": "The drop in meat and grain prices from 2 weeks ago finally reached restaurant kitchens. Food costs fell, margins grew - and Sizzle & Co. shares followed."
+            }
+          ]
+        },
+        {
+          "id": "w1-thermostat",
+          "title": "PixelNest unveils the HeatSmart thermostat",
+          "description": "PixelNest's new thermostat promises to cut home heating bills by a quarter. More than 40,000 people pre-ordered it in the first 48 hours.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "pixelnest",
+              "change_type": "percent",
+              "value": 0.08,
+              "delay_weeks": 0,
+              "consequence_text": "Investors loved the HeatSmart pre-orders - PixelNest shares rose the same week."
+            }
+          ]
+        },
+        {
+          "id": "w1-noise-chef",
+          "title": "Celebrity chef: 'Burgers are so last season'",
+          "description": "TV chef Rocco Vantelli told a talk show that burgers are 'out' and that 'everyone will be eating foam and moss by spring'. The clip has 3 million views.",
+          "is_noise": true,
+          "effects": []
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "theme": "Taxes and tests",
+      "market_drift": { "sizzle": 0.01, "voltara": 0.0, "pixelnest": 0.015, "medipulse": -0.005 },
+      "events": [
+        {
+          "id": "w2-excise",
+          "title": "Parliament raises the energy excise tax",
+          "description": "Lawmakers voted to raise the excise tax on electricity and gas by 20%, starting next week. Landlords warn that the cost of heating and lighting buildings will be passed on to tenants.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "rent",
+              "target_id": "global",
+              "change_type": "flat",
+              "value": 80,
+              "delay_weeks": 1,
+              "consequence_text": "The energy excise voted in Week 2 just reached your landlord's bills - your monthly rent went up by $80."
+            },
+            {
+              "target_type": "stock_price",
+              "target_id": "voltara",
+              "change_type": "percent",
+              "value": -0.05,
+              "delay_weeks": 0,
+              "consequence_text": "Investors worried that pricier energy means customers will use less of it - Voltara shares slipped right away."
+            }
+          ]
+        },
+        {
+          "id": "w2-filing",
+          "title": "MediPulse files its new heart monitor for approval",
+          "description": "MediPulse sent its PulseBand 2 monitor to the national health regulator. Approval usually takes a couple of weeks. Doctors who tested it call it 'the most accurate wristband we have seen'.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "medipulse",
+              "change_type": "percent",
+              "value": 0.04,
+              "delay_weeks": 0,
+              "consequence_text": "Hopeful investors bought a little MediPulse right after the filing."
+            },
+            {
+              "target_type": "stock_price",
+              "target_id": "medipulse",
+              "change_type": "percent",
+              "value": 0.15,
+              "delay_weeks": 2,
+              "consequence_text": "The PulseBand 2 filed in Week 2 has just been approved. MediPulse can now sell it to hospitals - and its share price jumped."
+            }
+          ]
+        },
+        {
+          "id": "w2-noise-clouds",
+          "title": "Viral post: 'Wind turbines scare away the clouds'",
+          "description": "A post claiming that Voltara's wind turbines 'push rain clouds away' was shared 500,000 times. Weather scientists call it complete nonsense.",
+          "is_noise": true,
+          "effects": []
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "theme": "Smoke on the horizon",
+      "market_drift": { "sizzle": 0.005, "voltara": 0.01, "pixelnest": 0.0, "medipulse": 0.01 },
+      "events": [
+        {
+          "id": "w3-fire",
+          "title": "Fire at PixelNest's only factory",
+          "description": "A fire broke out overnight at PixelNest's factory in Port Lumen. Nobody was hurt, but the production lines are badly damaged and all HeatSmart deliveries are on hold.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "pixelnest",
+              "change_type": "percent",
+              "value": -0.35,
+              "delay_weeks": 0,
+              "consequence_text": "The factory fire hit PixelNest immediately - investors sold the same week, expecting months without sales."
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "pixelnest",
+              "change_type": "flat",
+              "value": 0.3,
+              "delay_weeks": 0,
+              "consequence_text": "With its only factory offline and loans to repay, PixelNest's bankruptcy risk jumped."
+            }
+          ]
+        },
+        {
+          "id": "w3-heatwave",
+          "title": "Weather service warns of a long heatwave",
+          "description": "Forecasters expect record temperatures for the next few weeks. Shops report that air conditioners are selling out across Valdoria.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "voltara",
+              "change_type": "percent",
+              "value": 0.06,
+              "delay_weeks": 1,
+              "consequence_text": "The heatwave forecast in Week 3 arrived - air conditioners ran day and night, Voltara sold more electricity and its shares rose."
+            }
+          ]
+        },
+        {
+          "id": "w3-noise-takeover",
+          "title": "Rumor: a foreign giant wants to buy Sizzle & Co.",
+          "description": "An anonymous forum user claims a huge foreign food group is about to buy Sizzle & Co. at a big premium. Neither company has commented.",
+          "is_noise": true,
+          "effects": []
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "theme": "Rent week",
+      "market_drift": { "sizzle": -0.005, "voltara": 0.0, "pixelnest": -0.01, "medipulse": 0.0 },
+      "events": [
+        {
+          "id": "w4-record",
+          "title": "Voltara reports a record quarter",
+          "description": "Voltara earned more than ever this quarter. The board announced that dividend payments to shareholders will go up starting next week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "voltara",
+              "change_type": "percent",
+              "value": 0.05,
+              "delay_weeks": 0,
+              "consequence_text": "Record profits lifted Voltara's share price as soon as the results were published."
+            },
+            {
+              "target_type": "dividend",
+              "target_id": "voltara",
+              "change_type": "flat",
+              "value": 0.6,
+              "delay_weeks": 1,
+              "consequence_text": "The bigger dividend promised in Week 4 kicked in - Voltara now pays shareholders more cash every week."
+            }
+          ]
+        },
+        {
+          "id": "w4-insurer",
+          "title": "PixelNest's insurer disputes the fire claim",
+          "description": "PixelNest's insurance company says the factory's sprinklers were not properly maintained and may refuse to pay for the damage. Lawyers expect a long fight.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "pixelnest",
+              "change_type": "percent",
+              "value": -0.1,
+              "delay_weeks": 0,
+              "consequence_text": "News of the insurance dispute pushed PixelNest shares lower right away."
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "pixelnest",
+              "change_type": "flat",
+              "value": 0.2,
+              "delay_weeks": 1,
+              "consequence_text": "The insurance dispute from Week 4 turned into real cash trouble - without a payout, PixelNest's bankruptcy risk climbed again."
+            }
+          ]
+        },
+        {
+          "id": "w4-noise-yacht",
+          "title": "Gossip: MediPulse boss spotted on a luxury yacht",
+          "description": "A celebrity magazine printed blurry photos of someone who 'looks like' MediPulse's founder at a yacht party. The company says she was at a medical conference that day.",
+          "is_noise": true,
+          "effects": []
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "theme": "Pressure points",
+      "market_drift": { "sizzle": 0.01, "voltara": -0.01, "pixelnest": 0.0, "medipulse": 0.01 },
+      "events": [
+        {
+          "id": "w5-wages",
+          "title": "Restaurant workers win a higher minimum wage",
+          "description": "After long negotiations, restaurant staff in Valdoria will earn 12% more starting next week. Owners say they will have to raise menu prices or accept smaller profits.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "food",
+              "change_type": "percent",
+              "value": -0.08,
+              "delay_weeks": 1,
+              "consequence_text": "The higher wages agreed in Week 5 showed up in restaurant costs - Sizzle & Co.'s profits shrank and its share price dipped."
+            },
+            {
+              "target_type": "dividend",
+              "target_id": "food",
+              "change_type": "percent",
+              "value": -0.25,
+              "delay_weeks": 1,
+              "consequence_text": "Bigger wage bills from Week 5 made Sizzle & Co. trim its dividend by a quarter."
+            }
+          ]
+        },
+        {
+          "id": "w5-credit",
+          "title": "Bank cuts PixelNest's credit line",
+          "description": "Valdoria Merchant Bank halved the amount PixelNest is allowed to borrow. Without new money, the company may struggle to pay suppliers and rebuild its factory.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "pixelnest",
+              "change_type": "percent",
+              "value": -0.15,
+              "delay_weeks": 0,
+              "consequence_text": "Losing its bank credit sent PixelNest shares down immediately."
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "pixelnest",
+              "change_type": "flat",
+              "value": 0.2,
+              "delay_weeks": 1,
+              "consequence_text": "The credit cut from Week 5 left PixelNest unable to pay its bills - its bankruptcy risk crossed the danger line."
+            }
+          ]
+        },
+        {
+          "id": "w5-noise-astro",
+          "title": "Astrologer: 'A golden week for energy stocks'",
+          "description": "A popular astrologer told her 2 million followers that 'Jupiter is smiling on energy companies' this week.",
+          "is_noise": true,
+          "effects": []
+        }
+      ]
+    },
+    {
+      "week": 6,
+      "theme": "The final bell",
+      "market_drift": { "sizzle": 0.0, "voltara": 0.005, "pixelnest": 0.0, "medipulse": -0.005 },
+      "events": [
+        {
+          "id": "w6-export",
+          "title": "MediPulse signs an export deal with three countries",
+          "description": "Hospitals in Kestria, Nordhavia and the Solmara Islands will buy PulseBand 2 monitors for the next two years - MediPulse's biggest deal ever.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "medipulse",
+              "change_type": "percent",
+              "value": 0.1,
+              "delay_weeks": 0,
+              "consequence_text": "The export deal lifted MediPulse shares the same week it was announced."
+            }
+          ]
+        },
+        {
+          "id": "w6-pricecap",
+          "title": "Regulator caps electricity prices for winter",
+          "description": "The energy regulator limited how much power companies may charge households this winter. Customers cheer; energy companies grumble.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "voltara",
+              "change_type": "percent",
+              "value": -0.06,
+              "delay_weeks": 0,
+              "consequence_text": "A cap on electricity prices means smaller profits ahead - Voltara shares dipped right away."
+            }
+          ]
+        },
+        {
+          "id": "w6-noise-fridge",
+          "title": "Online trend: 'Smart fridges are spying on your snacks'",
+          "description": "A viral video jokes that smart-home devices secretly count how many snacks you eat. Tech reviewers point out that the video is satire.",
+          "is_noise": true,
+          "effects": []
+        }
+      ]
+    }
+  ],
+  "noise_insights": {
+    "w1-noise-chef": {
+      "related_company_id": "sizzle",
+      "misleading_direction": "down",
+      "reveal": "One TV chef's opinion doesn't change how many burgers people actually buy. Sizzle & Co.'s sales were not affected."
+    },
+    "w2-noise-clouds": {
+      "related_company_id": "voltara",
+      "misleading_direction": "down",
+      "reveal": "Wind turbines don't move clouds. A viral post isn't evidence - always ask who is behind a claim."
+    },
+    "w3-noise-takeover": {
+      "related_company_id": "sizzle",
+      "misleading_direction": "up",
+      "reveal": "No buyer ever showed up - the 'takeover' was an anonymous rumor. If Sizzle & Co. rose this week, it was thanks to the cheap meat from Week 1."
+    },
+    "w4-noise-yacht": {
+      "related_company_id": "medipulse",
+      "misleading_direction": "down",
+      "reveal": "A blurry gossip photo says nothing about how a company is doing. MediPulse's founder was at a medical conference."
+    },
+    "w5-noise-astro": {
+      "related_company_id": "voltara",
+      "misleading_direction": "up",
+      "reveal": "Horoscopes don't set share prices. Anything that happened to Voltara came from real news - like its record quarter and bigger dividend."
+    },
+    "w6-noise-fridge": {
+      "related_company_id": "pixelnest",
+      "misleading_direction": "down",
+      "reveal": "The video was a joke. PixelNest's real problems were the factory fire, the insurance dispute and its bank debt - not snack-counting fridges."
+    }
+  },
+  "fallback_texts": {
+    "week_lesson": {
+      "title_delayed": "Old news just hit the market",
+      "title_immediate": "Headlines moved prices fast",
+      "title_quiet": "A calm week on the market",
+      "summary_moves": "Biggest price moves this week: {moves}.",
+      "summary_no_moves": "Share prices barely moved this week.",
+      "lag_with_delayed": "Markets don't always react the moment news breaks. Restaurants buy food on monthly contracts, new laws start later and bills arrive weeks after a decision - so an effect can land long after the headline. This week: {items}.",
+      "lag_without_delayed": "Nothing from older news landed this week - but stay alert. Some headlines need one, two or even three weeks to reach a company's costs, its profits or your own bills. Re-read earlier news before you trade.",
+      "immediate_note": "Some news moved prices the very same week: {items}.",
+      "noise_note": "Not every headline matters: {items} turned out to be noise and changed nothing.",
+      "rent_change_note": "Your monthly rent changed by {delta} (now {rent}) because of news from Week {source_week}.",
+      "rent_paid_note": "You paid {amount} in rent this week.",
+      "dividend_note": "Your shares paid you {amount} in dividends - cash just for owning them.",
+      "bankruptcy_note": "{names} went bankrupt. Its shares are now worth $0 and can no longer be traded.",
+      "takeaway_delayed": "Today's headline can be next month's price move. Before you trade, look back at older news.",
+      "takeaway_immediate": "Big surprises, like disasters, hit prices right away. Spreading your money across companies softens the blow.",
+      "takeaway_quiet": "Calm weeks are a good moment to check your plan and your cash reserve for upcoming bills."
+    },
+    "glossary": {
+      "Market lag": "The delay between a piece of news and its effect on prices. Some news needs weeks to show up.",
+      "Dividend": "Cash a company pays to its shareholders, just for owning its shares.",
+      "Share price": "What one small piece of a company costs right now.",
+      "Bankruptcy risk": "How likely a company is to run out of money. If it goes bankrupt, its shares can become worthless.",
+      "Liquidity": "How much cash you can use right away - for example, to pay your rent.",
+      "Noise": "News that sounds important but doesn't actually change anything.",
+      "Diversification": "Spreading your money across different companies and industries, so one bad event can't sink you.",
+      "ROI": "Return on investment: how much your money grew or shrank, shown in percent.",
+      "Excise tax": "An extra tax on specific products, such as fuel or electricity."
+    },
+    "advisor": {
+      "accurate_delayed": "Keep an eye on {company} ({ticker}). '{event}' could {direction} its price {timing}. Markets often need time to catch up with news.",
+      "accurate_immediate": "'{event}' looks important for {company} ({ticker}). I'd expect it to {direction} the price {timing}.",
+      "accurate_risk": "Careful with {company} ({ticker}). After '{event}', its money problems look serious - if a company goes bankrupt, its shares can be worth nothing.",
+      "accurate_dividend": "'{event}' could change how much {company} ({ticker}) pays its shareholders {timing}. Dividends add up week after week.",
+      "accurate_rent": "'{event}' may not move share prices much, but it could make your bills bigger {timing}. Keep some cash ready for rent.",
+      "misleading_noise": "Big news! '{event}' could really {direction} the price of {company} ({ticker}) - and fast. If I were you, I'd act this week.",
+      "misleading_inverted": "I have a feeling about {company} ({ticker}): after '{event}', I think the market will {direction} its price. Trust me on this one.",
+      "quiet_week": "Honestly, I don't see anything big this week. Sometimes the smartest move is to stick to your plan and keep cash for bills.",
+      "timing_now": "this week",
+      "timing_soon": "next week",
+      "timing_later": "in a couple of weeks",
+      "direction_up": "push up",
+      "direction_down": "pull down"
+    },
+    "final_analysis": {
+      "play_styles": {
+        "cautious": {
+          "label": "Cautious Saver",
+          "description": "You kept most of your money in cash. That's safe and kept your bills covered, but cash alone doesn't grow or earn dividends."
+        },
+        "balanced": {
+          "label": "Balanced Diversifier",
+          "description": "You spread your money across several companies and kept some cash aside. That's how many long-term investors protect themselves from surprises."
+        },
+        "concentrated": {
+          "label": "Focused Bettor",
+          "description": "You put most of your money into one company at a time. When the pick is right it pays off big - but one bad headline can hurt a lot."
+        },
+        "aggressive": {
+          "label": "Bold Go-Getter",
+          "description": "You kept nearly all your money invested and traded often. Bold moves can pay off, but they leave little room for bills and surprises."
+        },
+        "reactive": {
+          "label": "Headline Chaser",
+          "description": "You reacted quickly to the news - including headlines that turned out to be noise. Speed only helps when the news is real."
+        }
+      },
+      "tips": {
+        "diversify": {
+          "title": "Spread your bets",
+          "tip": "Own a few companies from different industries. One fire, lawsuit or bad quarter shouldn't sink your whole savings."
+        },
+        "cash_reserve": {
+          "title": "Keep a bill buffer",
+          "tip": "Before investing, set aside enough cash for upcoming bills like rent. Money you'll need soon shouldn't be stuck in shares."
+        },
+        "delayed_signals": {
+          "title": "Read yesterday's news",
+          "tip": "Many effects arrive late - contracts, laws and prices take weeks to pass through. Ask: 'What happened two weeks ago that hasn't shown up yet?'"
+        },
+        "noise": {
+          "title": "Check the source",
+          "tip": "Rumors, gossip and viral posts are usually noise. Ask who is saying it and whether it changes the company's real sales or costs."
+        },
+        "bankruptcy": {
+          "title": "Respect the warning lights",
+          "tip": "When a company's bankruptcy risk keeps climbing, shrink your stake. A cheap-looking share can still fall to zero."
+        },
+        "dividends": {
+          "title": "Let dividends work for you",
+          "tip": "Steady companies that pay dividends hand you cash regularly - even in weeks when prices stand still."
+        },
+        "advisor": {
+          "title": "Trust, but verify",
+          "tip": "Advisors and experts can be wrong. Treat a hint as one opinion and compare it with the actual news before you act."
+        },
+        "patience": {
+          "title": "Have a plan, not a reflex",
+          "tip": "Decide why you are buying before you buy. A few well-reasoned trades usually beat many quick ones."
+        }
+      },
+      "overall_positive": "You finished with {net_worth} - a {roi} return. Great job turning headlines into decisions!",
+      "overall_neutral": "You finished with {net_worth} ({roi}). You protected your money - next time, let's make it grow a little smarter.",
+      "overall_negative": "You finished with {net_worth} ({roi}). Losing money in a game is the cheapest way to learn - here is what to try next time.",
+      "overall_liquidity": "You ran out of cash for rent in Week {week}. That ends the game - but it's one of the most valuable lessons in personal finance: bills come first.",
+      "insights": {
+        "s_diversified": {
+          "title": "You spread your money out",
+          "detail": "You owned {count} different companies across {industries} industries. When one stock stumbled, the others cushioned the fall."
+        },
+        "s_caught_delayed": {
+          "title": "You were in place before old news hit",
+          "detail": "You held {shares} {ticker} shares when '{event}' (Week {source_week}) finally moved the price in Week {trigger_week} ({impact}). That's how patient investors profit from market lag."
+        },
+        "s_dodged_delayed": {
+          "title": "You dodged a delayed hit",
+          "detail": "You sold {ticker} after '{event}' appeared in Week {source_week} - before it pulled the price down in Week {trigger_week}."
+        },
+        "s_cash_reserve": {
+          "title": "You kept cash for the bills",
+          "detail": "You had {cash} in cash before the {rent} rent payment in Week {week}. The bill never caught you off guard."
+        },
+        "s_exited_risk": {
+          "title": "You left a sinking ship in time",
+          "detail": "You sold your {ticker} shares before the company went bankrupt in Week {week}."
+        },
+        "s_avoided_bankrupt": {
+          "title": "You avoided the bankruptcy",
+          "detail": "You held no {ticker} shares when it went bankrupt in Week {week}. Watching the risk meter pays off."
+        },
+        "s_ignored_noise": {
+          "title": "You didn't fall for the noise",
+          "detail": "None of your trades followed the {count} misleading headlines. Staying calm when rumors fly is a real skill."
+        },
+        "s_dividends": {
+          "title": "Your shares paid you",
+          "detail": "You collected {amount} in dividends - money that arrived without selling a single share."
+        },
+        "s_profit": {
+          "title": "You grew your money",
+          "detail": "You finished with {net_worth}, a return of {roi}, after paying all your bills."
+        },
+        "s_finished": {
+          "title": "You stayed in the game",
+          "detail": "You made it through all {weeks} weeks and saw how news, delays and bills shape your money."
+        },
+        "i_concentrated": {
+          "title": "Too many eggs in one basket",
+          "detail": "At one point {share} of your stock money sat in {ticker} alone. Spreading across industries limits the damage when one company gets hit."
+        },
+        "i_missed_delayed": {
+          "title": "The early signal was there",
+          "detail": "'{event}' appeared in Week {source_week}, but {ticker} only reacted in Week {trigger_week} ({impact}). Buying in between would have caught that move."
+        },
+        "i_hit_delayed": {
+          "title": "Old news caught up with you",
+          "detail": "You held {shares} {ticker} shares when '{event}' from Week {source_week} pulled the price down in Week {trigger_week} ({impact}). Re-reading older headlines could have warned you."
+        },
+        "i_immediate_hit": {
+          "title": "One shock, a big dent",
+          "detail": "You held {shares} {ticker} shares when '{event}' hit in Week {week} and lost about {loss}. Owning several companies would have softened the blow."
+        },
+        "i_low_cash": {
+          "title": "Rent nearly caught you",
+          "detail": "Before the {rent} rent payment in Week {week} you had only {cash} in cash. Keep a cushion for bills you know are coming."
+        },
+        "i_liquidity": {
+          "title": "Out of cash on rent day",
+          "detail": "After paying {rent} rent in Week {week} your cash fell to {cash}. Shares are not cash - sell in time or keep a reserve."
+        },
+        "i_bankrupt_loss": {
+          "title": "Held on until the very end",
+          "detail": "You still owned {shares} {ticker} shares when it went bankrupt in Week {week} - about {loss} turned into $0. A 'Critical' risk label is a signal to reduce your stake."
+        },
+        "i_followed_noise": {
+          "title": "A rumor moved your money",
+          "detail": "In Week {week} you {action} {ticker} right after '{event}' - a headline that turned out to be noise."
+        },
+        "i_followed_bad_advice": {
+          "title": "The advisor got it wrong",
+          "detail": "In Week {week} the advisor's hint about {ticker} was a misread, and you {action} after it. Even experts are wrong sometimes - double-check hints against the news."
+        },
+        "i_idle_cash": {
+          "title": "Your cash sat on the bench",
+          "detail": "On average only {share} of your money was invested. Cash is safe, but it doesn't grow or pay dividends."
+        },
+        "i_overtrading": {
+          "title": "Lots of trades, lots of noise",
+          "detail": "You made {count} trades in {weeks} weeks. Frequent trading often means reacting to every headline instead of following a plan."
+        },
+        "i_next_level": {
+          "title": "Next level: plan around delays",
+          "detail": "Next time, write down which news could matter later and check it every week. Timing your moves around market lag is the next skill to master."
+        }
+      }
+    }
+  }
+}

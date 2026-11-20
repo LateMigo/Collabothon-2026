@@ -127,10 +127,11 @@ export default function App() {
   };
 
   const trade = async (companyId, action, shares) => {
+    // The trade form closes itself after its "Approved" stamp animation.
     const result = await api.trade(game.session_id, { company_id: companyId, action, shares });
     setGame(result.state);
-    setTradeCompanyId(null);
     showToast(result.message);
+    return result;
   };
 
   const askAdvisor = async () => {

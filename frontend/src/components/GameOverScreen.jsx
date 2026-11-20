@@ -5,9 +5,17 @@ import { money, pct, signedMoney, tone } from "../utils/format.js";
 
 function headlineFor(stats) {
   if (stats.end_reason === "liquidity") return "Out of cash.";
-  if (stats.roi_pct >= 10) return "Nice work, shark.";
+  if (stats.roi_pct >= 10) return "Nice work, space shark.";
   if (stats.roi_pct >= 0) return "Solid season.";
   return "Lesson learned.";
+}
+
+// The stamp the review board slams on your file.
+function verdictFor(stats) {
+  if (stats.end_reason === "liquidity") return { text: "Evicted", tone: "red" };
+  if (stats.roi_pct >= 10) return { text: "Promoted", tone: "green" };
+  if (stats.roi_pct >= 0) return { text: "Approved", tone: "green" };
+  return { text: "Probation", tone: "red" };
 }
 
 function TradeHistory({ trades }) {
@@ -85,7 +93,6 @@ function Coach({ analysis }) {
       <div className="tip-cards">
         {analysis.actionable_tips.map((tip, i) => (
           <article key={i} className="tip-card">
-            <span className="tip-card__num">{String(i + 1).padStart(2, "0")}</span>
             <h4>{tip.title}</h4>
             <p>{tip.tip}</p>
           </article>
@@ -177,16 +184,18 @@ export default function GameOverScreen({ game, onPlayAgain }) {
 
   const { stats, analysis } = data;
   const roiTone = tone(stats.roi_pct);
+  const verdict = verdictFor(stats);
 
   return (
     <main className="gameover">
       <section className="gameover-card" aria-labelledby="gameover-title">
-        <span className="pill">
+        <span className={`stamp stamp--${verdict.tone} stamp--drop gameover-card__verdict`}>{verdict.text}</span>
+        <span className="pill">Performance review</span>
+        <p className="eyebrow">
           {stats.end_reason === "liquidity"
             ? `Out of cash · Week ${stats.weeks_played} / ${game.total_weeks}`
             : `Season complete · ${stats.weeks_played} / ${game.total_weeks} weeks`}
-        </span>
-        <p className="eyebrow">{game.scenario.tagline}</p>
+        </p>
         <h1 id="gameover-title" className="gameover-card__title">
           {headlineFor(stats)}
         </h1>
@@ -231,8 +240,8 @@ export default function GameOverScreen({ game, onPlayAgain }) {
         </ol>
 
         <blockquote className="quote">
-          &ldquo;The market is a great teacher. It just sends the bill first.&rdquo;
-          <footer>&mdash; Grandma Odette, retired Valdorian bookkeeper</footer>
+          &ldquo;The galaxy is a great teacher. It just sends the bill first.&rdquo;
+          <footer>&mdash; Grandma Odette, retired asteroid bookkeeper</footer>
         </blockquote>
 
         <button type="button" className="btn btn--red btn--xl" onClick={onPlayAgain}>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal.jsx";
 import { clamp, money, plural } from "../utils/format.js";
 
@@ -10,6 +10,10 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
   const [shares, setShares] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [approved, setApproved] = useState(false);
+  const closeTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
 
   const price = company.price;
   // Auto-clamping: buy <= floor(cash / price), sell <= shares owned, never below 0.
@@ -46,6 +50,9 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
     setError(null);
     try {
       await onTrade(company.id, mode, value);
+      // Let the "Approved" stamp land on the form before the window closes.
+      setApproved(true);
+      closeTimer.current = setTimeout(onClose, 900);
     } catch (err) {
       setError(err.message);
       setSubmitting(false);
@@ -60,7 +67,7 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
         <header className="trade-modal__head">
           <span className="ticker-badge">{company.ticker}</span>
           <div>
-            <p className="eyebrow">{company.industry_label}</p>
+            <p className="eyebrow">Form T-1 &middot; Share order &middot; {company.industry_label}</p>
             <h2 id="trade-title" className="trade-modal__title">
               {company.name}
             </h2>
@@ -180,10 +187,20 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
 
         <button type="submit" className="btn btn--red btn--xl btn--block" disabled={value <= 0 || submitting}>
           <span>
-            {submitting ? "Sending order…" : `${verb} ${value} ${company.ticker} for ${money(total)}`}
+            {approved
+              ? "Order approved"
+              : submitting
+                ? "Sending order…"
+                : `${verb} ${value} ${company.ticker} for ${money(total)}`}
           </span>
           <span aria-hidden="true">&rarr;</span>
         </button>
+
+        {approved && (
+          <span className="stamp stamp--green stamp--drop trade-modal__stamp" role="status">
+            Approved
+          </span>
+        )}
       </form>
     </Modal>
   );

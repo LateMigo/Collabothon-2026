@@ -49,9 +49,9 @@ export default function Onboarding({ scenario, aiMode, highReadability, onToggle
       <section className="onboarding__left">
         <div className="onboarding__content">
           <span className="tag-box tag-box--tilt">
-            Market
+            Galactic Exchange
             <br />
-            Simulator
+            Registration desk
           </span>
           <p className="eyebrow">An investing game for every generation</p>
           <h1 className="onboarding__title">
@@ -76,8 +76,9 @@ export default function Onboarding({ scenario, aiMode, highReadability, onToggle
           </ul>
 
           <form className="setup-card" onSubmit={submit}>
+            <p className="setup-card__head">Form R-1 &middot; Investor registration</p>
             <fieldset className="setup-group">
-              <legend>Game mode</legend>
+              <legend>A &middot; Game mode</legend>
               <div className="mode-options">
                 <label className="mode-option is-selected">
                   <input type="radio" name="game-mode" value="single_investor" defaultChecked />
@@ -93,7 +94,7 @@ export default function Onboarding({ scenario, aiMode, highReadability, onToggle
             </fieldset>
 
             <fieldset className="setup-group">
-              <legend>Gameplay modifiers</legend>
+              <legend>B &middot; Gameplay modifiers</legend>
               <YesNo
                 label="Enable Dividends"
                 description="Companies pay you cash every week for each share you own."
@@ -109,7 +110,7 @@ export default function Onboarding({ scenario, aiMode, highReadability, onToggle
             </fieldset>
 
             <fieldset className="setup-group setup-group--row">
-              <legend>Comfort</legend>
+              <legend>C &middot; Comfort</legend>
               <p className="yesno__desc">Bigger text, stronger contrast and upright letters &mdash; switch it any time.</p>
               <ReadabilityToggle enabled={highReadability} onToggle={onToggleReadability} variant="light" />
             </fieldset>

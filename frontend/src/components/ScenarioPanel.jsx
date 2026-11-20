@@ -14,7 +14,7 @@ function WeekStepper({ current, total, gameOver }) {
             aria-current={active ? "step" : undefined}
           >
             <span className="stepper__dot">{week}</span>
-            <span className="stepper__label">Week</span>
+            <span className="stepper__label">{done ? "Closed" : active ? "Now" : "Week"}</span>
           </li>
         );
       })}
@@ -38,19 +38,21 @@ function PortfolioMini({ history, total, start }) {
   return (
     <section className="portfolio-mini" aria-label="Your portfolio">
       <header>
-        <h2>Your portfolio</h2>
+        <h2 className="panel-label">Your portfolio</h2>
         <span className={`portfolio-mini__change is-${tone(change)}`}>{pct(change)}</span>
       </header>
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Net worth ${money(last.net_worth)}, ${pct(change)} since start`}>
-        <line x1={pad} x2={W - pad} y1={y(start)} y2={y(start)} className="portfolio-mini__base" />
-        {history.length > 1 ? (
-          <polyline points={points} className="portfolio-mini__line" />
-        ) : (
-          <circle cx={x(0)} cy={y(start)} r="4" className="portfolio-mini__dot" />
-        )}
-        {history.length > 1 && <circle cx={x(last.week)} cy={y(last.net_worth)} r="4.5" className="portfolio-mini__dot" />}
-      </svg>
-      <p className="portfolio-mini__value">{money(last.net_worth)}</p>
+      <div className="portfolio-mini__screen">
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Net worth ${money(last.net_worth)}, ${pct(change)} since start`}>
+          <line x1={pad} x2={W - pad} y1={y(start)} y2={y(start)} className="portfolio-mini__base" />
+          {history.length > 1 ? (
+            <polyline points={points} className="portfolio-mini__line" />
+          ) : (
+            <circle cx={x(0)} cy={y(start)} r="4" className="portfolio-mini__dot" />
+          )}
+          {history.length > 1 && <circle cx={x(last.week)} cy={y(last.net_worth)} r="4.5" className="portfolio-mini__dot" />}
+        </svg>
+        <p className="portfolio-mini__value">{money(last.net_worth)}</p>
+      </div>
     </section>
   );
 }
@@ -59,17 +61,23 @@ export default function ScenarioPanel({ game, children }) {
   const { scenario } = game;
   return (
     <aside className="scenario-panel" aria-label="Scenario">
-      <span className="tag-box">Scenario 01</span>
-      <p className="eyebrow eyebrow--light">{scenario.tagline}</p>
-      <h1 className="scenario-panel__title">{scenario.title}</h1>
-      <p className="scenario-panel__desc">{scenario.description}</p>
+      <div className="clipboard">
+        <span className="clipboard__clip" aria-hidden="true" />
+        <span className="tag-box">Assignment 01</span>
+        <p className="eyebrow">{scenario.tagline}</p>
+        <h1 className="scenario-panel__title">{scenario.title}</h1>
+        <p className="scenario-panel__desc">{scenario.description}</p>
+      </div>
 
-      <WeekStepper current={game.current_week} total={game.total_weeks} gameOver={game.is_game_over} />
-      {scenario.week_theme && !game.is_game_over && (
-        <p className="scenario-panel__theme">
-          <span>This week:</span> {scenario.week_theme}
-        </p>
-      )}
+      <section className="calendar" aria-label="Season calendar">
+        <h2 className="panel-label">Season calendar</h2>
+        <WeekStepper current={game.current_week} total={game.total_weeks} gameOver={game.is_game_over} />
+        {scenario.week_theme && !game.is_game_over && (
+          <p className="scenario-panel__theme">
+            <span>This week:</span> {scenario.week_theme}
+          </p>
+        )}
+      </section>
 
       <PortfolioMini history={game.net_worth_history} total={game.total_weeks} start={game.starting_cash} />
 

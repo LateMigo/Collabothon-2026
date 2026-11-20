@@ -15,11 +15,15 @@ The universe is entirely made up: the companies, countries, people, events and t
 | --- | --- |
 | **Universal design, no age profiles** | The game never asks for your age. The same clear interface works for teenagers, parents and grandparents. |
 | **Plain-language AI** | Gemini is told to write short sentences and to explain every finance word it uses. Each week has a 2-minute lesson with a small glossary called the "jargon corner". |
-| **High Readability mode** | A single switch, available on every screen, makes the text larger, raises the contrast to the maximum, turns slanted capitals into normal upright letters, removes the background patterns and stops all animation. |
+| **High Readability mode** | A single switch, available on every screen, makes the text larger, raises the contrast to the maximum, swaps the pixel and typewriter fonts for Atkinson Hyperlegible (a typeface designed for low-vision readers), straightens tilted papers and stamps, removes the starfield, scanlines and glow effects, and stops all animation. |
 | **Real-life money mechanics** | Rent and living costs, dividends, bankruptcy risk and "market lag" are the lessons that carry over to real life. |
 | **Safe to fail** | A fictional universe and a scripted scenario. Running out of cash is part of the lesson, and there are no real consequences. |
 
 ---
+
+## Look & feel
+
+The game is styled as **Booth 7 of a shabby Galactic Exchange**: you sit at an olive-steel desk inside a space station, with space visible through the booth window. Each week's news arrives as a newspaper, *The Galactic Ledger*. Companies are paper dossiers with paperclips, and prices glow on amber CRT screens. Every outcome is rubber-stamped: trade orders get **APPROVED**, delayed effects **EFFECT FROM WEEK 1**, rumors **JUST NOISE**, and the weekly report and final performance review end with a verdict stamp. The illustrations are original and deliberately crude, as if drawn with a mouse. The fonts are Pixelify Sans, Courier Prime, VT323 and Black Ops One.
 
 ## Features
 
@@ -169,6 +173,15 @@ Interactive docs: http://localhost:8000/docs
 
 **Requirements:** Python 3.11+ and Node.js 18+.
 
+### Quick start on Windows (two double-clicks)
+
+1. **`setup.bat`**: run once after cloning. It checks for Python 3.11+ and Node.js, creates `backend/.venv`, installs the backend and frontend packages, and creates `backend/.env` from the example.
+2. **`start.bat`**: run every time you want to play. It starts the backend on port **8000** and the frontend on port **5173** in two windows, waits until both are ready and opens http://localhost:5173 in your browser. Servers that are already running are reused.
+
+Keep the two server windows open while you play; close them to stop the game.
+
+The manual steps below do the same thing on any operating system.
+
 ### 1. Backend (FastAPI)
 
 ```bash
@@ -256,5 +269,5 @@ frontend/
 2. **Rent increase (Week 2 → Week 3).** "Parliament raises the energy excise tax" appears in Week 2. After closing Week 3, the summary lists **"Effect from Week 2"** with monthly rent +$80, and the HUD shows **Rent: $480 (+$80)** and *Due at the end of this week!*
 3. **Rent payment (Week 4).** Closing Week 4 deducts **$480**, shown in the summary's "Your money moves" panel and in `Rent paid` on the end screen. To test the liquidity rule, start a new game, spend all your cash on shares and end four weeks without selling. The game ends with **Out of cash**.
 4. **Immediate factory fire (Week 3).** Hold PIXN when Week 3 closes. The summary shows two **Immediate Effect** entries (share price −35% and bankruptcy risk +30 pts). The card's risk meter goes to *Elevated*, then *Critical* in Week 6, and PixelNest goes bankrupt when Week 6 closes.
-5. **High Readability.** Switch it on in the onboarding screen or the HUD. Text gets larger, contrast increases, headings change from slanted capitals to normal upright text, background patterns and animation disappear, and the setting is kept after a page refresh.
+5. **High Readability.** Switch it on in the onboarding screen or the HUD. Text gets larger, contrast increases, pixel/typewriter fonts switch to Atkinson Hyperlegible, papers and stamps straighten, the starfield, CRT scanlines and animations disappear, and the setting is kept after a page refresh.
 6. **Personal move analysis.** Finish Week 6, then check **Move Analysis & Financial Coaching**. The strengths and improvements quote your actual trades (week, ticker, shares) and there are 3–4 tip cards. The badge reads *AI Coach · Gemini* when a key is set and *Smart Offline Analysis* when it isn't.

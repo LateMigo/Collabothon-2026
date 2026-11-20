@@ -9,7 +9,13 @@ function headlineFor(summary) {
   return "Holding steady.";
 }
 
-const ARROWS = { up: "↗", down: "↘", flat: "→" };
+// The verdict stamped on the weekly report.
+function verdictFor(summary) {
+  if (summary.end_reason === "liquidity") return { text: "Evicted", tone: "red" };
+  if (summary.net_worth_change_pct > 0.5) return { text: "Profit", tone: "green" };
+  if (summary.net_worth_change_pct < -0.5) return { text: "Loss", tone: "red" };
+  return { text: "No change", tone: "ink" };
+}
 
 // Higher rent or a higher bankruptcy risk is bad news for the player, so its colour flips.
 const BAD_WHEN_UP = new Set(["rent", "bankruptcy_risk"]);
@@ -54,7 +60,7 @@ function ConsequenceItem({ item }) {
 
 export default function WeekSummaryModal({ summary, onContinue }) {
   const resultTone = tone(summary.net_worth_change);
-  const iconTone = summary.end_reason === "liquidity" ? "down" : tone(summary.net_worth_change_pct, 0.5);
+  const verdict = verdictFor(summary);
   const rentPaid = summary.rent.paid ? summary.rent.amount_paid : 0;
   const marketMove = summary.net_worth_change - summary.dividends_total + rentPaid;
   const lesson = summary.lesson;
@@ -63,35 +69,42 @@ export default function WeekSummaryModal({ summary, onContinue }) {
   return (
     <Modal labelledBy="summary-title" className="summary" overlayClassName="summary-overlay" closeOnBackdrop={false}>
       <div className="summary__hero">
-        <div className={`summary__icon is-${iconTone}`} aria-hidden="true">
-          {ARROWS[iconTone]}
-        </div>
         <p className="eyebrow">
-          Closing of Week {summary.week} &middot; {summary.theme}
+          Weekly report &middot; Week {summary.week} closed &middot; {summary.theme}
         </p>
         <h2 id="summary-title" className="summary__headline" tabIndex={-1} data-autofocus>
           {headlineFor(summary)}
         </h2>
         <p className="summary__sub">{lesson.title}</p>
+        <span className={`stamp stamp--${verdict.tone} stamp--drop summary__verdict`}>{verdict.text}</span>
       </div>
 
-      <div className={`result-box is-${resultTone}`}>
+      <div className={`ledger is-${resultTone}`}>
         <p className="eyebrow">Your result this week</p>
-        <p className="result-box__value">{signedMoney(summary.net_worth_change)}</p>
-        <p className="result-box__sub">
-          New net worth: {money(summary.net_worth_after)} ({pct(summary.net_worth_change_pct)})
-        </p>
-        <ul className="result-box__breakdown">
-          <li>
-            Share prices <b className={`is-${tone(marketMove)}`}>{signedMoney(marketMove)}</b>
-          </li>
-          <li>
-            Dividends <b className={`is-${tone(summary.dividends_total)}`}>{signedMoney(summary.dividends_total)}</b>
-          </li>
-          <li>
-            Rent <b className={rentPaid ? "is-down" : "is-flat"}>{rentPaid ? signedMoney(-rentPaid) : money(0)}</b>
-          </li>
-        </ul>
+        <dl className="ledger__rows">
+          <div>
+            <dt>Share prices</dt>
+            <dd className={`is-${tone(marketMove)}`}>{signedMoney(marketMove)}</dd>
+          </div>
+          <div>
+            <dt>Dividends</dt>
+            <dd className={`is-${tone(summary.dividends_total)}`}>{signedMoney(summary.dividends_total)}</dd>
+          </div>
+          <div>
+            <dt>Rent</dt>
+            <dd className={rentPaid ? "is-down" : "is-flat"}>{rentPaid ? signedMoney(-rentPaid) : money(0)}</dd>
+          </div>
+          <div className="ledger__total">
+            <dt>Net change</dt>
+            <dd className={`is-${resultTone}`}>{signedMoney(summary.net_worth_change)}</dd>
+          </div>
+          <div className="ledger__total">
+            <dt>New net worth</dt>
+            <dd>
+              {money(summary.net_worth_after)} <small>({pct(summary.net_worth_change_pct)})</small>
+            </dd>
+          </div>
+        </dl>
       </div>
 
       {/* ----------------------- BLOCK 1 ----------------------- */}
@@ -229,6 +242,7 @@ export default function WeekSummaryModal({ summary, onContinue }) {
 
         <article className="lesson">
           <header className="lesson__head">
+            <span className="lesson__label">Coach&apos;s briefing</span>
             <span className={`source-badge source-badge--${lesson.ai_source}`}>
               {lesson.ai_source === "gemini" ? "Gemini AI lesson" : "Offline lesson"}
             </span>

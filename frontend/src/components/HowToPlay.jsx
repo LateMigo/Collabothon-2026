@@ -32,7 +32,7 @@ export default function HowToPlay({ onClose }) {
     <Modal labelledBy="help-title" onClose={onClose} className="help-modal">
       <header className="help-modal__head">
         <div>
-          <p className="eyebrow">Quick guide</p>
+          <p className="eyebrow">Clerk&apos;s handbook &middot; page 1</p>
           <h2 id="help-title" className="section-title section-title--xl">
             How to play
           </h2>

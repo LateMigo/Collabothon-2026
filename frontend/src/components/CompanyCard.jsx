@@ -39,6 +39,7 @@ export default function CompanyCard({ company, onTrade, disabled }) {
       <div className="company-card__inner">
         {/* ---------------- FRONT ---------------- */}
         <div className="company-card__face company-card__front" inert={flipped || undefined}>
+          <span className="paperclip" aria-hidden="true" />
           <div className="company-card__top">
             <span className="ticker-badge">{c.ticker}</span>
             <span
@@ -112,7 +113,7 @@ export default function CompanyCard({ company, onTrade, disabled }) {
         <div className="company-card__face company-card__back" inert={!flipped || undefined}>
           <div className="company-card__top">
             <span className="ticker-badge">{c.ticker}</span>
-            <span className="eyebrow eyebrow--light">Company file</span>
+            <span className="eyebrow">Classified file</span>
           </div>
           <h3 className="company-card__name">{c.name}</h3>
           <p className="company-card__desc">{c.description}</p>

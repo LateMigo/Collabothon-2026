@@ -382,6 +382,31 @@ function paintAlien(p) {
   p.set(86, 65, "#c9a54a");
 }
 
+// cinnamon roll seen from above at an angle: golden top with the dark cinnamon spiral, baked edge below
+const CINNAMON_ROLL = [
+  "...ooooooo...",
+  ".oohhhhhhhoo.",
+  "ohhhcccccgggo",
+  "ohhcgggggcggo",
+  "ohcggccccgcgo",
+  "ogcgcghgggcgo",
+  "ogcggcccggcgo",
+  "oggcgggggggco",
+  "osggcccccggso",
+  "ossggggggggso",
+  "osssssssssdso",
+  ".odddddddddo.",
+  "..ooooooooo..",
+];
+const CINNAMON_COLORS = {
+  o: "#3e200e",
+  h: "#e8b870",
+  g: "#d39a52",
+  c: "#5c2c10",
+  s: "#9a5a28",
+  d: "#6e3c18",
+};
+
 function paintDesk(p, rand) {
   // a banker's desk: walnut frame, green leather writing surface with gold tooling, brass trim
   const walnut = "#4a2c1a";
@@ -433,23 +458,21 @@ function paintDesk(p, rand) {
   p.rect(28, 106, 1, 6, BRASS_DARK);
   p.set(28, 112, BRASS);
 
-  // calculator
-  p.rect(30, 135, 15, 15, "#2e2e2c");
-  p.rect(32, 137, 11, 4, "#9cb070");
-  p.rect(38, 138, 1, 2, "#3d4a2a");
-  p.rect(40, 138, 1, 2, "#3d4a2a");
-  for (let by = 143; by <= 147; by += 2) for (let bx = 33; bx <= 41; bx += 3) p.rect(bx, by, 2, 1, "#8a8a84");
+  // a small pocket calculator
+  p.rect(31, 139, 10, 11, "#2e2e2c");
+  p.rect(32, 140, 8, 3, "#9cb070");
+  p.rect(36, 141, 1, 1, "#3d4a2a");
+  p.rect(38, 141, 1, 1, "#3d4a2a");
+  for (let by = 144; by <= 148; by += 2) for (let bx = 32; bx <= 38; bx += 3) p.rect(bx, by, 2, 1, "#8a8a84");
 
-  // piggy bank: the savings account, of course
-  p.ellipse(51, 145, 5, 4, "#7a3f4a");
-  p.ellipse(51, 145, 4, 3, "#d98a9a");
-  p.rect(45, 144, 2, 3, "#c9707f");
-  p.set(45, 145, "#7a3f4a");
-  p.rect(47, 141, 2, 1, "#c9707f");
-  p.rect(51, 141, 3, 1, "#3a1f24");
-  p.set(48, 144, INK);
-  p.rect(48, 149, 1, 1, "#7a3f4a");
-  p.rect(54, 149, 1, 1, "#7a3f4a");
+  // a cinnamon roll on a little plate: the late-night snack
+  p.ellipse(49, 148, 8, 1, "#8f8a7c");
+  p.rect(42, 147, 15, 1, "#d8d4c8");
+  CINNAMON_ROLL.forEach((row, j) =>
+    [...row].forEach((cell, i) => {
+      if (CINNAMON_COLORS[cell]) p.set(43 + i, 135 + j, CINNAMON_COLORS[cell]);
+    }),
+  );
 
   // stock sheet: three tickers with arrows
   p.rect(57, 130, 25, 22, PAPER_EDGE);
@@ -694,7 +717,7 @@ export default function HeroIllustration() {
       width={W}
       height={H}
       role="img"
-      aria-label="Pixel-art night scene: in a small room, a green alien with a huge afro, in a mustard sweater with a stock chart knitted on it, sits at a green-leather banker's desk covered in stock sheets and charts, rubbing a pen against his forehead while he thinks. A green banker's lamp, a calculator, a piggy bank, a sticky note with a question mark and a steaming coffee mug sit on the desk; through the window, snow falls on a dark city under a ringed planet, where a glass bank tower glows with the yellow Commerzbank ribbon logo on its crown."
+      aria-label="Pixel-art night scene: in a small room, a green alien with a huge afro, in a mustard sweater with a stock chart knitted on it, sits at a green-leather banker's desk covered in stock sheets and charts, rubbing a pen against his forehead while he thinks. A green banker's lamp, a small calculator, a cinnamon roll on a plate, a sticky note with a question mark and a steaming coffee mug sit on the desk; through the window, snow falls on a dark city under a ringed planet, where a tall glass tower glows with rows of lit office windows."
     />
   );
 }

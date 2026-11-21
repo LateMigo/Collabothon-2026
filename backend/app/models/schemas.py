@@ -46,6 +46,7 @@ class TargetType(StrEnum):
     DIVIDEND = "dividend"
     RENT = "rent"
     BANKRUPTCY_RISK = "bankruptcy_risk"
+    SAVINGS_RATE = "savings_rate"  # weekly interest rate of the player's savings account
 
 
 class ChangeType(StrEnum):
@@ -65,6 +66,14 @@ class ActionType(StrEnum):
     DIVIDEND = "dividend"
     RENT = "rent"
     BANKRUPTCY = "bankruptcy"
+    DEPOSIT = "deposit"
+    WITHDRAW = "withdraw"
+    INTEREST = "interest"
+
+
+class SavingsAction(StrEnum):
+    DEPOSIT = "deposit"
+    WITHDRAW = "withdraw"
 
 
 class AISource(StrEnum):
@@ -111,6 +120,12 @@ class EffectDefinition(_StrictModel):
     value: float
     delay_weeks: int = Field(ge=0, le=52)
     consequence_text: str = Field(min_length=1)
+    cause_chain: list[str] = Field(
+        default_factory=list,
+        max_length=4,
+        description="Short steps from the news to the company's money (no sizes, no timing). "
+        "The advisor uses them to explain cause and effect; the outcome step is added automatically.",
+    )
 
 
 class EventDefinition(_StrictModel):
@@ -129,6 +144,23 @@ class EventDefinition(_StrictModel):
         return self
 
 
+class Fundamentals(_StrictModel):
+    """The 'hard data' printed on the back of a company card."""
+
+    cash: float = Field(ge=0, description="Cash in the bank, in millions of $.")
+    debt: float = Field(ge=0, description="Loans still to repay, in millions of $.")
+    profit_margin: float = Field(ge=-1, le=1, description="Profit kept from every $1 of sales (0.12 = 12 cents).")
+
+
+class CompanyReport(_StrictModel):
+    """A weekly hard-data update. Only the fields that changed are listed."""
+
+    cash: float | None = Field(default=None, ge=0)
+    debt: float | None = Field(default=None, ge=0)
+    profit_margin: float | None = Field(default=None, ge=-1, le=1)
+    fine_print: str | None = None
+
+
 class CompanyDefinition(_StrictModel):
     id: str = Field(min_length=1)
     name: str
@@ -143,6 +175,8 @@ class CompanyDefinition(_StrictModel):
     owner: str
     condition: str
     listed_week: int = Field(default=1, ge=1, description="Week the company joins the exchange (IPO).")
+    fundamentals: Fundamentals
+    fine_print: str = Field(default="", description="Small footnote at the bottom of the card that rewards careful reading.")
 
 
 class IndustryDefinition(_StrictModel):
@@ -157,6 +191,10 @@ class WeekDefinition(_StrictModel):
         default_factory=dict,
         description="Small scripted everyday price wiggle per company (percent as fraction).",
     )
+    reports: dict[str, CompanyReport] = Field(
+        default_factory=dict,
+        description="Hard data published at the START of this week (company id -> changed values).",
+    )
     events: list[EventDefinition]
 
 
@@ -164,6 +202,11 @@ class NoiseInsight(_StrictModel):
     related_company_id: str | None = None
     misleading_direction: Literal["up", "down"]
     reveal: str
+    misleading_chain: list[str] = Field(
+        default_factory=list,
+        max_length=4,
+        description="The tempting (but wrong) reasoning a misled advisor would give about this rumor.",
+    )
 
 
 class RiskThresholds(_StrictModel):
@@ -194,6 +237,10 @@ class ScenarioSettings(_StrictModel):
     advisor_uses_per_game: int = Field(ge=0)
     advisor_cooldown_weeks: int = Field(default=1, ge=1, description="One advisor hint per this many weeks.")
     advisor_accuracy: float = Field(ge=0, le=1)
+    savings_account_name: str = Field(default="Savings account")
+    savings_weekly_rate: float = Field(
+        default=0.0, ge=0.0, le=0.1, description="Interest paid on savings at the end of every week (0.003 = 0.3%)."
+    )
 
 
 class WeekLessonTexts(_StrictModel):
@@ -210,6 +257,9 @@ class WeekLessonTexts(_StrictModel):
     rent_paid_note: str
     dividend_note: str
     bankruptcy_note: str
+    savings_note: str
+    savings_rent_note: str
+    savings_rate_note: str
     takeaway_delayed: str
     takeaway_immediate: str
     takeaway_quiet: str
@@ -221,14 +271,18 @@ class AdvisorTexts(_StrictModel):
     accurate_risk: str
     accurate_dividend: str
     accurate_rent: str
+    accurate_savings: str
     misleading_noise: str
     misleading_inverted: str
     quiet_week: str
+    quiet_chain: list[str]
     timing_now: str
     timing_soon: str
     timing_later: str
     direction_up: str
     direction_down: str
+    chain_middle: dict[str, str] = Field(description="'<target_type>:<up|down>' -> generic middle step.")
+    chain_outcome: dict[str, str] = Field(description="'<target_type>:<up|down>' -> final step of every chain.")
 
 
 class TextPair(_StrictModel):
@@ -246,6 +300,17 @@ class TipText(_StrictModel):
     tip: str
 
 
+class VerdictText(_StrictModel):
+    approved: bool
+    title: str
+    reason: str
+
+
+class HabitText(_StrictModel):
+    title: str
+    habit: str
+
+
 class FinalAnalysisTexts(_StrictModel):
     play_styles: dict[str, PlayStyleText]
     tips: dict[str, TipText]
@@ -254,6 +319,8 @@ class FinalAnalysisTexts(_StrictModel):
     overall_negative: str
     overall_liquidity: str
     insights: dict[str, TextPair]
+    verdicts: dict[str, VerdictText]
+    habits: dict[str, HabitText]
 
 
 class FallbackTexts(_StrictModel):
@@ -282,6 +349,10 @@ class GameModifiers(BaseModel):
     enable_living_costs: bool = True
 
 
+def _empty_fundamentals() -> Fundamentals:
+    return Fundamentals(cash=0.0, debt=0.0, profit_margin=0.0)
+
+
 class CompanyState(BaseModel):
     id: str
     price: float
@@ -294,6 +365,9 @@ class CompanyState(BaseModel):
     bankrupt_week: int | None = None
     latest_note: str | None = None
     latest_note_week: int | None = None
+    fundamentals: Fundamentals = Field(default_factory=_empty_fundamentals)
+    previous_fundamentals: Fundamentals = Field(default_factory=_empty_fundamentals)
+    fine_print: str = ""
 
 
 class PortfolioPosition(BaseModel):
@@ -341,6 +415,8 @@ class TriggeredConsequence(BaseModel):
     company_impacts: list[CompanyImpact] = Field(default_factory=list)
     rent_before: float | None = None
     rent_after: float | None = None
+    rate_before: float | None = None
+    rate_after: float | None = None
 
 
 class PricePoint(BaseModel):
@@ -368,6 +444,8 @@ class RentPayment(BaseModel):
     amount: float
     cash_before: float
     cash_after: float
+    savings_before: float = 0.0
+    from_savings: float = 0.0
 
 
 class BankruptcyRecord(BaseModel):
@@ -382,6 +460,8 @@ class WeeklySnapshot(BaseModel):
     week: int
     cash: float
     stocks_value: float
+    savings: float = 0.0
+    interest_earned: float = 0.0
     net_worth: float
     holdings: dict[str, int]
     prices: dict[str, float]
@@ -412,6 +492,12 @@ class GameSession(BaseModel):
     rent_change_source_week: int | None = None
     total_rent_paid: float = 0.0
     total_dividends: float = 0.0
+    savings: float = 0.0
+    savings_rate: float = 0.0
+    previous_savings_rate: float = 0.0
+    savings_rate_changed_week: int | None = None
+    savings_rate_source_week: int | None = None
+    total_interest: float = 0.0
     companies: dict[str, CompanyState]
     portfolio: dict[str, PortfolioPosition] = Field(default_factory=dict)
     pending_effects: list[PendingEffect] = Field(default_factory=list)
@@ -443,12 +529,38 @@ class TradeRequest(BaseModel):
     shares: int = Field(ge=0, le=1_000_000)
 
 
+class SavingsRequest(BaseModel):
+    action: SavingsAction
+    amount: float = Field(gt=0, le=1_000_000_000)
+
+
+class NewsTag(BaseModel):
+    """'Who could this story be about?' Rumors get tags too, so a tag never reveals noise."""
+
+    kind: Literal["sector", "bills", "savings"]
+    label: str
+    color: str | None = None
+    tickers: list[str] = Field(default_factory=list)
+    company_ids: list[str] = Field(default_factory=list)
+
+
 class NewsItem(BaseModel):
     """What the player sees during a turn. Deliberately has NO is_noise / effects / delay."""
 
     id: str
     title: str
     description: str
+    tags: list[NewsTag] = Field(default_factory=list)
+
+
+class FundamentalsView(BaseModel):
+    cash: float
+    debt: float
+    profit_margin: float
+    cash_trend: Direction
+    debt_trend: Direction
+    margin_trend: Direction
+    changed_this_week: bool
 
 
 class CompanyView(BaseModel):
@@ -482,6 +594,19 @@ class CompanyView(BaseModel):
     avg_cost: float
     position_value: float
     max_affordable: int
+    fundamentals: FundamentalsView
+    fine_print: str
+
+
+class SavingsView(BaseModel):
+    account_name: str
+    balance: float
+    weekly_rate_pct: float
+    previous_rate_pct: float
+    rate_changed_week: int | None
+    rate_change_source_week: int | None
+    total_interest: float
+    projected_interest: float
 
 
 class RentView(BaseModel):
@@ -540,6 +665,7 @@ class GameStateResponse(BaseModel):
     total_dividends: float
     sell_spread_pct: float
     rent: RentView
+    savings: SavingsView
     advisor: AdvisorView
     companies: list[CompanyView]
     news: list[NewsItem]
@@ -561,6 +687,8 @@ class ScenarioInfo(BaseModel):
     companies_count: int
     starting_companies: int
     listing_interval_weeks: int | None
+    savings_account_name: str
+    savings_weekly_rate_pct: float
     available_modes: list[GameMode]
     coming_soon_modes: list[GameMode]
 
@@ -579,9 +707,19 @@ class TradeResponse(BaseModel):
     state: GameStateResponse
 
 
+class SavingsResponse(BaseModel):
+    action: SavingsAction
+    requested_amount: float
+    amount: float
+    was_clamped: bool
+    message: str
+    state: GameStateResponse
+
+
 class AdvisorResponse(BaseModel):
     week: int
     hint: str
+    cause_and_effect: list[str]
     focus_company_id: str | None
     focus_company_name: str | None
     suggested_action: SuggestedAction
@@ -638,7 +776,19 @@ class RentUpdate(BaseModel):
     paid: bool
     amount_paid: float
     cash_before_payment: float | None
+    from_savings: float = 0.0
     next_due_week: int | None
+
+
+class SavingsUpdate(BaseModel):
+    balance_before: float
+    interest: float
+    rate_pct: float
+    rate_changed: bool
+    old_rate_pct: float
+    rate_source_week: int | None
+    rent_from_savings: float
+    balance_after: float
 
 
 class BankruptcyNotice(BaseModel):
@@ -665,6 +815,7 @@ class WeekSummaryResponse(BaseModel):
     dividends: list[DividendItem]
     dividends_total: float
     rent: RentUpdate
+    savings: SavingsUpdate
     bankruptcies: list[BankruptcyNotice]
     unmasked_noise: list[UnmaskedNoise]
     lesson: WeekLesson
@@ -715,6 +866,7 @@ class WeekSummaryContext(BaseModel):
     price_changes: list[PriceChange]
     unmasked_noise: list[UnmaskedNoise]
     rent: RentUpdate
+    savings: SavingsUpdate
     dividends_total: float
     bankruptcies: list[BankruptcyNotice]
     net_worth_change: float
@@ -729,6 +881,7 @@ class AdvisorSignal(BaseModel):
     direction: Literal["up", "down"]
     weeks_until_effect: int
     is_noise: bool = False
+    cause_chain: list[str] = Field(default_factory=list)
 
 
 class AdvisorCompanyBrief(BaseModel):
@@ -739,6 +892,9 @@ class AdvisorCompanyBrief(BaseModel):
     price: float
     risk_level: RiskLevel
     shares_owned: int
+    cash_millions: float
+    debt_millions: float
+    profit_margin_pct: float
 
 
 class AdvisorContext(BaseModel):
@@ -748,12 +904,18 @@ class AdvisorContext(BaseModel):
     signals: list[AdvisorSignal]
     companies: list[AdvisorCompanyBrief]
     player_cash: float
+    player_savings: float
+    savings_rate_pct: float
     rent_due_week: int | None
     monthly_rent: float
 
 
 class AdvisorHintContent(BaseModel):
     hint: str = Field(description="One friendly hint, max 55 words, no exact numbers.")
+    cause_and_effect: list[str] = Field(
+        description="3-5 very short steps (max 7 words each) from the news to the company's money to its "
+        "share price, e.g. ['Cooks earn more', 'Restaurant costs go up', 'Profit shrinks', 'Share price may dip']."
+    )
     focus_company_id: str | None = Field(description="Id of the company the hint is about, or null.")
     suggested_action: SuggestedAction
 
@@ -776,6 +938,10 @@ class DelayedSignalOutcome(BaseModel):
     impact_label: str
     direction: Direction
     player_shares: int
+    value_change: float = Field(default=0.0, description="What the effect did to the player's shares, in $.")
+    bought_week: int | None = Field(
+        default=None, description="Week the player BOUGHT this stock after the warning news appeared."
+    )
     outcome: Literal["caught", "missed", "hit", "dodged", "neutral"]
 
 
@@ -817,6 +983,8 @@ class RentCheck(BaseModel):
     week: int
     rent: float
     cash_before: float
+    savings_before: float = 0.0
+    from_savings: float = 0.0
     status: Literal["comfortable", "tight", "short"]
 
 
@@ -836,6 +1004,10 @@ class PlayerMetrics(BaseModel):
     max_concentration_pct: float
     max_concentration_ticker: str | None
     avg_invested_pct: float
+    avg_savings_pct: float = 0.0
+    final_savings: float = 0.0
+    total_interest: float = 0.0
+    rent_covered_by_savings: float = 0.0
     noise_events_total: int
     noise_followed: list[NoiseFollow]
     delayed_signals: list[DelayedSignalOutcome]
@@ -859,7 +1031,31 @@ class PracticalTip(BaseModel):
     tip: str = Field(description="One or two plain sentences of universal, practical advice.")
 
 
+class InspectorVerdict(BaseModel):
+    approved: bool = Field(description="true = APPROVED stamp, false = REJECTED stamp.")
+    title: str = Field(description="2-3 word inspector label, e.g. 'Prudent Strategist' or 'FOMO Victim'.")
+    reason: str = Field(description="One plain sentence that justifies the stamp with a real fact from the game.")
+
+
+class KeyMoment(BaseModel):
+    week: int = Field(description="The game week this moment happened in.")
+    kind: Literal["mistake", "win"]
+    title: str = Field(description="Short title, max 7 words.")
+    detail: str = Field(
+        description="1-2 sentences: the news, the player's decision and what it caused, e.g. "
+        "'In Week 3 you bought PIZA despite the news about higher cook wages, which cut its profit in Week 4.'"
+    )
+
+
+class RealLifeHabit(BaseModel):
+    title: str = Field(description="Short habit name, max 6 words.")
+    habit: str = Field(description="1-2 sentences: one simple money or banking habit to start in real life this month.")
+
+
 class MoveAnalysisContent(BaseModel):
+    verdict: InspectorVerdict
+    key_moments: list[KeyMoment] = Field(description="Exactly 2 specific weeks that decided the season, mistakes first.")
+    real_life_habit: RealLifeHabit
     play_style: str = Field(description="2-3 word label of the player's style.")
     play_style_summary: str = Field(description="1-2 sentences describing the style.")
     overall_message: str = Field(description="One encouraging sentence about the final result.")
@@ -880,6 +1076,8 @@ class FinalStats(BaseModel):
     total_rent_paid: float
     final_cash: float
     final_stocks_value: float
+    final_savings: float = 0.0
+    total_interest: float = 0.0
     trades_count: int
     weeks_played: int
     end_reason: EndReason | None

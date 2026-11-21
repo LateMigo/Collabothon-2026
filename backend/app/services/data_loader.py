@@ -56,6 +56,22 @@ REQUIRED_INSIGHTS = {
     "i_idle_cash",
     "i_overtrading",
     "i_next_level",
+    "s_savings",
+    "s_savings_rent",
+    "i_bought_bad_news",
+}
+REQUIRED_VERDICTS = {"evicted", "fomo", "all_in", "rookie", "careful_saver", "prudent", "bold", "steady"}
+REQUIRED_HABITS = {
+    "emergency_fund",
+    "cooling_off",
+    "spread",
+    "check_health",
+    "automate",
+    "review_monthly",
+    "fees",
+}
+CHAIN_KEYS = {
+    f"{target.value}:{direction}" for target in TargetType for direction in ("up", "down")
 }
 
 
@@ -114,6 +130,8 @@ class GameDataRepository:
     def target_label(self, target_type: TargetType, target_id: str) -> str:
         if target_type == TargetType.RENT:
             return "Your monthly rent"
+        if target_type == TargetType.SAVINGS_RATE:
+            return "Your savings interest"
         if target_id == GLOBAL_TARGET:
             return "All companies"
         company = self.company(target_id)
@@ -202,9 +220,9 @@ def validate_cross_references(data: GameData) -> None:
             event_ids.add(event.id)
             for effect in event.effects:
                 where = f"Event '{event.id}' (week {week.week})"
-                if effect.target_type == TargetType.RENT:
+                if effect.target_type in (TargetType.RENT, TargetType.SAVINGS_RATE):
                     if effect.target_id != GLOBAL_TARGET:
-                        errors.append(f"{where}: rent effects must target 'global'")
+                        errors.append(f"{where}: {effect.target_type.value} effects must target 'global'")
                 elif effect.target_id not in valid_company_targets | valid_industry_targets | {GLOBAL_TARGET}:
                     errors.append(f"{where}: unknown target_id '{effect.target_id}'")
                 trigger = week.week + effect.delay_weeks
@@ -215,6 +233,12 @@ def validate_cross_references(data: GameData) -> None:
                         f"{where}: effect triggers in week {trigger}, after the final week "
                         f"{scenario.total_weeks} - the thread would never close"
                     )
+
+        for company_id in week.reports:
+            if company_id not in valid_company_targets:
+                errors.append(f"Week {week.week}: reports reference unknown company '{company_id}'")
+            elif listed_week[company_id] > week.week:
+                errors.append(f"Week {week.week}: report for '{company_id}' before it is listed")
 
     for event_id, insight in data.noise_insights.items():
         if event_id not in event_ids:
@@ -232,6 +256,17 @@ def validate_cross_references(data: GameData) -> None:
     missing = REQUIRED_INSIGHTS - set(final_texts.insights)
     if missing:
         errors.append(f"fallback_texts.final_analysis.insights is missing {sorted(missing)}")
+    missing = REQUIRED_VERDICTS - set(final_texts.verdicts)
+    if missing:
+        errors.append(f"fallback_texts.final_analysis.verdicts is missing {sorted(missing)}")
+    missing = REQUIRED_HABITS - set(final_texts.habits)
+    if missing:
+        errors.append(f"fallback_texts.final_analysis.habits is missing {sorted(missing)}")
+    advisor_texts = data.fallback_texts.advisor
+    for name, table in (("chain_middle", advisor_texts.chain_middle), ("chain_outcome", advisor_texts.chain_outcome)):
+        missing = CHAIN_KEYS - set(table)
+        if missing:
+            errors.append(f"fallback_texts.advisor.{name} is missing {sorted(missing)}")
 
     if errors:
         raise ScenarioDataError("Invalid game_data.json:\n  - " + "\n  - ".join(errors))

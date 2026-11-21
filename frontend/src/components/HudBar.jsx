@@ -4,12 +4,12 @@ import BrandMark from "./BrandMark.jsx";
 
 const COLLAPSED_KEY = "fq.hudCollapsed";
 
-/** Shared rent logic for the full readout and the collapsed strip. */
-function rentStatus(rent, cash) {
+/** Shared rent logic for the full readout and the collapsed strip. `ready` = cash + savings. */
+function rentStatus(rent, ready) {
   const changed = Math.abs(rent.rent_delta) > 0.001;
   const up = rent.rent_delta > 0;
   const dueThisWeek = rent.next_due_week !== null && rent.weeks_until_due === 0;
-  const danger = rent.next_due_week !== null && rent.weeks_until_due <= 1 && cash < rent.monthly_rent;
+  const danger = rent.next_due_week !== null && rent.weeks_until_due <= 1 && ready < rent.monthly_rent;
   let dueText;
   if (rent.next_due_week === null) dueText = "No more rent this season";
   else if (dueThisWeek) dueText = "Due at the end of this week!";
@@ -18,7 +18,7 @@ function rentStatus(rent, cash) {
   return { changed, up, dueThisWeek, danger, dueText, delta };
 }
 
-function RentIndicator({ rent, cash }) {
+function RentIndicator({ rent, ready }) {
   if (!rent.enabled) {
     return (
       <div className="hud-stat hud-rent hud-rent--off">
@@ -28,7 +28,7 @@ function RentIndicator({ rent, cash }) {
     );
   }
 
-  const status = rentStatus(rent, cash);
+  const status = rentStatus(rent, ready);
   const changeNote = status.changed
     ? `Rent changed in Week ${rent.changed_week} because of news from Week ${rent.change_source_week}.`
     : undefined;
@@ -58,6 +58,8 @@ function RentIndicator({ rent, cash }) {
 export default function HudBar({ game }) {
   const [collapsed, setCollapsed] = useState(() => readStorage("localStorage", COLLAPSED_KEY) === "1");
   const { current_week: week, total_weeks: total, cash, stocks_value: stocks, net_worth: netWorth } = game;
+  const savings = game.savings.balance;
+  const ready = cash + savings;
   const change = ((netWorth - game.starting_cash) / game.starting_cash) * 100;
   const progress = Math.min(100, ((week - (game.is_game_over ? 0 : 1)) / total) * 100);
 
@@ -66,7 +68,7 @@ export default function HudBar({ game }) {
   }, [collapsed]);
 
   if (collapsed) {
-    const danger = game.rent.enabled && rentStatus(game.rent, cash).danger;
+    const danger = game.rent.enabled && rentStatus(game.rent, ready).danger;
     return (
       <div className="hud-tab-wrap">
         <button
@@ -110,6 +112,10 @@ export default function HudBar({ game }) {
             <dt>Stocks</dt>
             <dd>{money(stocks)}</dd>
           </div>
+          <div className="hud-stat" title={`${game.savings.account_name}: ${game.savings.weekly_rate_pct}% interest a week`}>
+            <dt>Savings</dt>
+            <dd>{money(savings)}</dd>
+          </div>
           <div className="hud-stat hud-stat--accent">
             <dt>Net worth</dt>
             <dd>
@@ -119,7 +125,7 @@ export default function HudBar({ game }) {
               </span>
             </dd>
           </div>
-          <RentIndicator rent={game.rent} cash={cash} />
+          <RentIndicator rent={game.rent} ready={ready} />
         </dl>
 
         <div className="hud__controls">

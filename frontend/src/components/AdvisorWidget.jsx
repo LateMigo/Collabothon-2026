@@ -33,6 +33,16 @@ export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAs
       {hint && (
         <blockquote className="advisor__hint" aria-live="polite">
           <p>&ldquo;{hint.hint}&rdquo;</p>
+          {hint.cause_and_effect?.length > 0 && (
+            <div className="advisor__chain">
+              <p className="advisor__chain-label">Vorr&apos;s reasoning &mdash; check every step:</p>
+              <ol className="cause-chain">
+                {hint.cause_and_effect.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          )}
           <footer>
             <span className={`source-badge source-badge--${hint.ai_source}`}>
               {hint.ai_source === "gemini" ? "AI Advisor · Gemini" : "Offline Advisor"}

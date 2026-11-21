@@ -83,7 +83,7 @@ export default function ScenarioPanel({ game, children }) {
 
       {children}
 
-      <p className="panel-note">Cash you don&apos;t invest stays safe &mdash; and it pays your rent.</p>
+      <p className="panel-note">Bills first: cash and savings pay your rent &mdash; shares don&apos;t.</p>
     </aside>
   );
 }

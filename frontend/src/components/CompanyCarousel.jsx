@@ -5,6 +5,16 @@ import CompanyCard from "./CompanyCard.jsx";
  * Company dossiers in a horizontal tray: flip through them with the side arrows
  * instead of scrolling the whole page down.
  */
+/** Width of one "page" of slides (whole cards + the gaps between them). */
+function pageStep(track) {
+  const slide = track.firstElementChild;
+  if (!slide) return track.clientWidth;
+  const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+  const slideStep = slide.getBoundingClientRect().width + gap;
+  const perPage = Math.max(1, Math.round((track.clientWidth + gap) / slideStep));
+  return perPage * slideStep;
+}
+
 export default function CompanyCarousel({ companies, onTrade, disabled }) {
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
@@ -18,9 +28,14 @@ export default function CompanyCarousel({ companies, onTrade, disabled }) {
     const maxScroll = track.scrollWidth - track.clientWidth;
     setAtStart(track.scrollLeft <= 10);
     setAtEnd(track.scrollLeft >= maxScroll - 10);
-    const total = Math.max(1, Math.round(track.scrollWidth / track.clientWidth));
+    const step = pageStep(track);
+    const total = Math.max(1, Math.ceil((maxScroll - 10) / step) + 1);
     setPages(total);
-    setPage(Math.min(total - 1, Math.round(track.scrollLeft / track.clientWidth)));
+    setPage(
+      track.scrollLeft >= maxScroll - 10
+        ? total - 1
+        : Math.min(total - 1, Math.round(track.scrollLeft / step)),
+    );
   }, []);
 
   useEffect(() => {
@@ -34,13 +49,13 @@ export default function CompanyCarousel({ companies, onTrade, disabled }) {
   const go = (direction) => {
     const track = trackRef.current;
     if (!track) return;
-    track.scrollBy({ left: direction * track.clientWidth, behavior: "smooth" });
+    track.scrollBy({ left: direction * pageStep(track), behavior: "smooth" });
   };
 
   const goTo = (index) => {
     const track = trackRef.current;
     if (!track) return;
-    track.scrollTo({ left: index * track.clientWidth, behavior: "smooth" });
+    track.scrollTo({ left: index * pageStep(track), behavior: "smooth" });
   };
 
   return (

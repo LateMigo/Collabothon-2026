@@ -3,11 +3,19 @@ import Modal from "./Modal.jsx";
 const STEPS = [
   {
     title: "Read the news",
-    text: "Every week brings new headlines. Some move prices right away, some only weeks later — and some are just noise.",
+    text: "Every week brings new headlines. Some move prices right away, some only weeks later — and some are just noise. The tag under each story shows which sector and company it is about.",
   },
   {
     title: "Buy or sell",
-    text: "Press “Buy / Sell” on a company card. Selling costs a 5% fee, so selling right after buying loses money — plan to hold. Flip a card with “Details” to learn more.",
+    text: "Press “Buy / Sell” on a company card. Selling costs a 5% fee, so selling right after buying loses money — plan to hold. Tap any [?] for a one-sentence explanation.",
+  },
+  {
+    title: "Check the hard data",
+    text: "Flip a card with “Details”: cash, debt and profit margin with arrows. A red dot means new numbers this week. When the news shouts “success” but debt keeps rising, be careful. And read the fine print!",
+  },
+  {
+    title: "Keep a safety pot",
+    text: "Money in the savings vault earns a little interest every week and can’t lose value. If your cash is short on rent day, the vault pays the rest automatically.",
   },
   {
     title: "Meet new companies",
@@ -19,7 +27,7 @@ const STEPS = [
   },
   {
     title: "Pay your bills",
-    text: "Rent is due every 4 weeks. Keep enough cash! If your cash drops below zero on rent day, the game ends.",
+    text: "Rent is due every 4 weeks. Keep enough cash or savings! If both run out on rent day, the game ends.",
   },
   {
     title: "Watch the risk",
@@ -27,7 +35,7 @@ const STEPS = [
   },
   {
     title: "Ask the advisor",
-    text: "You get 3 hints per game (1 per week). About 7 in 10 are right — so always double-check them against the news.",
+    text: "You get 3 hints per game (1 per week). Agent Vorr shows his reasoning step by step — about 7 in 10 hints are right, so check every step against the news.",
   },
 ];
 

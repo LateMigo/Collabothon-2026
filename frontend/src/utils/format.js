@@ -18,6 +18,16 @@ export const pct = (value, digits = 1) => `${value >= 0 ? "+" : "\u2212"}${Math.
 
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+/** Company-sized money in millions: "$18M", "$0.4M". */
+export const millions = (value) => {
+  const v = value ?? 0;
+  const text = v < 10 && !Number.isInteger(v) ? v.toFixed(1) : Math.round(v).toString();
+  return `$${text}M`;
+};
+
+/** A weekly rate in percent: 0.3 -> "0.3%". */
+export const ratePct = (value) => `${Number((value ?? 0).toFixed(2))}%`;
+
 export const tone = (value, epsilon = 0.0001) => (value > epsilon ? "up" : value < -epsilon ? "down" : "flat");
 
 export const RISK_LABELS = { low: "Low", elevated: "Elevated", critical: "Critical" };

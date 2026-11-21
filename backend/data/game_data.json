@@ -3,7 +3,7 @@
     "id": "pizza-clay-spears",
     "title": "Pizza, Clay & Laser Spears",
     "tagline": "Pizza / Keramzyt / Kebab / Laser spears / Starships / Renovation",
-    "description": "A pizza chain and a keramzyt factory open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, watch for delayed effects and keep enough cash for rent.",
+    "description": "A pizza chain and a keramzyt factory open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, check each company's hard data, watch for delayed effects and keep enough money for rent - in cash or in the safe savings vault.",
     "total_weeks": 12,
     "starting_cash": 3000.0,
     "initial_monthly_rent": 400.0,
@@ -17,7 +17,9 @@
     "advisor_uses_per_game": 3,
     "advisor_cooldown_weeks": 1,
     "advisor_accuracy": 0.7,
-    "risk_sensitivity": 0.3
+    "risk_sensitivity": 0.3,
+    "savings_account_name": "Galactic Savings Vault",
+    "savings_weekly_rate": 0.003
   },
   "industries": {
     "food": {
@@ -59,7 +61,13 @@
       "country": "Republic of Valdoria",
       "owner": "Gianna Nebulotti",
       "condition": "Steady and profitable. Flour, cheese and meat make up almost half of its costs, so food prices matter a lot.",
-      "listed_week": 1
+      "listed_week": 1,
+      "fundamentals": {
+        "cash": 18.0,
+        "debt": 12.0,
+        "profit_margin": 0.11
+      },
+      "fine_print": "Flour, cheese and meat are bought on monthly contracts, so price changes reach the menu weeks later."
     },
     {
       "id": "keramzyt",
@@ -74,7 +82,13 @@
       "country": "Kingdom of Nordhavia",
       "owner": "Zbigniew Glinka",
       "condition": "Reliable and a bit boring - in a good way. Pays regular dividends, but depends on the building season and on energy prices for its kilns.",
-      "listed_week": 1
+      "listed_week": 1,
+      "fundamentals": {
+        "cash": 24.0,
+        "debt": 6.0,
+        "profit_margin": 0.15
+      },
+      "fine_print": "The kilns run on gas: energy taxes and gas prices hit profits right away."
     },
     {
       "id": "galac-kebab",
@@ -89,7 +103,13 @@
       "country": "Solmara Islands",
       "owner": "Mehmet Orbital-Yilmaz",
       "condition": "Promising new products waiting for food-safety approval. Loyal fans, but modest profits so far - a bit risky.",
-      "listed_week": 3
+      "listed_week": 3,
+      "fundamentals": {
+        "cash": 6.0,
+        "debt": 9.0,
+        "profit_margin": 0.04
+      },
+      "fine_print": "The Zero-G Döner still needs a food-safety approval. Such decisions usually take about two weeks."
     },
     {
       "id": "laser-dzida",
@@ -104,7 +124,13 @@
       "country": "Federation of Kestria",
       "owner": "Theo Brightwater",
       "condition": "Growing fast, but it borrowed a lot of money and relies on a single factory for everything it sells.",
-      "listed_week": 5
+      "listed_week": 5,
+      "fundamentals": {
+        "cash": 9.0,
+        "debt": 46.0,
+        "profit_margin": 0.14
+      },
+      "fine_print": "Every spear is built in one single factory. $46M of loans must be refinanced with the bank this season."
     },
     {
       "id": "howl",
@@ -119,7 +145,13 @@
       "country": "Republic of Valdoria",
       "owner": "Captain Mira Okafor-Lund",
       "condition": "A young company with big loans for its shipyard. Very sensitive to trade, strikes and orders - clearly risky.",
-      "listed_week": 7
+      "listed_week": 7,
+      "fundamentals": {
+        "cash": 5.0,
+        "debt": 30.0,
+        "profit_margin": 0.03
+      },
+      "fine_print": "Young shipyard: its share price usually swings about twice as much as the market (high volatility)."
     },
     {
       "id": "lecicki",
@@ -134,7 +166,13 @@
       "country": "Republic of Valdoria",
       "owner": "The Łęcicki family",
       "condition": "Very safe: a big order book and loyal customers. Gets more work when people fix up old homes instead of buying new ones.",
-      "listed_week": 9
+      "listed_week": 9,
+      "fundamentals": {
+        "cash": 20.0,
+        "debt": 1.0,
+        "profit_margin": 0.22
+      },
+      "fine_print": "Customers pay before the work starts - online reviews have never changed the order book."
     }
   ],
   "weeks": [
@@ -158,7 +196,12 @@
               "change_type": "percent",
               "value": 0.2,
               "delay_weeks": 2,
-              "consequence_text": "The student wave from Week 1 moved into the dorms - late-night pizza orders exploded and Cosmic Pizza's shares followed."
+              "consequence_text": "The student wave from Week 1 moved into the dorms - late-night pizza orders exploded and Cosmic Pizza's shares followed.",
+              "cause_chain": [
+                "40% more students this semester",
+                "Dorm kitchens can barely cook",
+                "Late-night pizza orders pile up"
+              ]
             }
           ]
         },
@@ -174,7 +217,12 @@
               "change_type": "percent",
               "value": 0.06,
               "delay_weeks": 1,
-              "consequence_text": "The dry spell forecast in Week 1 arrived - building sites ordered keramzyt by the truckload and Fabric of Keramzyt's shares rose."
+              "consequence_text": "The dry spell forecast in Week 1 arrived - building sites ordered keramzyt by the truckload and Fabric of Keramzyt's shares rose.",
+              "cause_chain": [
+                "Dry weather is on the way",
+                "Builders start projects early",
+                "More keramzyt orders"
+              ]
             }
           ]
         },
@@ -194,6 +242,12 @@
         "cosmic-pizza": 0.01,
         "keramzyt": 0.005
       },
+      "reports": {
+        "keramzyt": {
+          "cash": 27.0,
+          "profit_margin": 0.18
+        }
+      },
       "events": [
         {
           "id": "w2-excise",
@@ -207,7 +261,12 @@
               "change_type": "flat",
               "value": 80,
               "delay_weeks": 1,
-              "consequence_text": "The energy excise voted in Week 2 just reached your landlord's bills - your monthly rent went up by $80."
+              "consequence_text": "The energy excise voted in Week 2 just reached your landlord's bills - your monthly rent went up by $80.",
+              "cause_chain": [
+                "Energy tax goes up",
+                "Heating buildings costs landlords more",
+                "Landlords pass it on to tenants"
+              ]
             },
             {
               "target_type": "stock_price",
@@ -215,7 +274,12 @@
               "change_type": "percent",
               "value": -0.05,
               "delay_weeks": 0,
-              "consequence_text": "Keramzyt is baked in gas-fired kilns - investors expected pricier energy to eat its profits, and the shares slipped right away."
+              "consequence_text": "Keramzyt is baked in gas-fired kilns - investors expected pricier energy to eat its profits, and the shares slipped right away.",
+              "cause_chain": [
+                "Energy tax goes up",
+                "Gas-fired kilns cost more to run",
+                "Less profit per pebble"
+              ]
             }
           ]
         },
@@ -231,7 +295,11 @@
               "change_type": "percent",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Record profits lifted Fabric of Keramzyt's share price as soon as the results were published."
+              "consequence_text": "Record profits lifted Fabric of Keramzyt's share price as soon as the results were published.",
+              "cause_chain": [
+                "Record sales this quarter",
+                "More profit for the company"
+              ]
             },
             {
               "target_type": "dividend",
@@ -239,7 +307,11 @@
               "change_type": "flat",
               "value": 0.6,
               "delay_weeks": 1,
-              "consequence_text": "The bigger dividend promised in Week 2 kicked in - Fabric of Keramzyt now pays shareholders more cash every week."
+              "consequence_text": "The bigger dividend promised in Week 2 kicked in - Fabric of Keramzyt now pays shareholders more cash every week.",
+              "cause_chain": [
+                "Record profits",
+                "The board shares more cash with owners"
+              ]
             }
           ]
         },
@@ -260,6 +332,15 @@
         "keramzyt": -0.005,
         "galac-kebab": -0.01
       },
+      "reports": {
+        "cosmic-pizza": {
+          "cash": 19.0,
+          "profit_margin": 0.13
+        },
+        "keramzyt": {
+          "profit_margin": 0.16
+        }
+      },
       "events": [
         {
           "id": "w3-ipo-galac-kebab",
@@ -273,7 +354,11 @@
               "change_type": "percent",
               "value": 0.04,
               "delay_weeks": 0,
-              "consequence_text": "Hungry investors bought Galac-Kebab in its first week - the price edged up."
+              "consequence_text": "Hungry investors bought Galac-Kebab in its first week - the price edged up.",
+              "cause_chain": [
+                "A new company joins the exchange",
+                "Curious investors want a piece"
+              ]
             },
             {
               "target_type": "stock_price",
@@ -281,7 +366,12 @@
               "change_type": "percent",
               "value": 0.15,
               "delay_weeks": 2,
-              "consequence_text": "The Zero-G Döner approval expected since Week 3 came through. Galac-Kebab can now sell it on every orbital station - and its share price jumped."
+              "consequence_text": "The Zero-G Döner approval expected since Week 3 came through. Galac-Kebab can now sell it on every orbital station - and its share price jumped.",
+              "cause_chain": [
+                "Food-safety approval is pending",
+                "Approval opens every orbital station",
+                "Many more kebab customers"
+              ]
             }
           ]
         },
@@ -297,7 +387,12 @@
               "change_type": "percent",
               "value": -0.08,
               "delay_weeks": 1,
-              "consequence_text": "The higher wages agreed in Week 3 showed up in restaurant costs - Cosmic Pizza's profits shrank and its share price dipped."
+              "consequence_text": "The higher wages agreed in Week 3 showed up in restaurant costs - Cosmic Pizza's profits shrank and its share price dipped.",
+              "cause_chain": [
+                "Cooks and couriers earn more",
+                "Restaurant wage bills go up",
+                "Cosmic Pizza keeps less profit"
+              ]
             },
             {
               "target_type": "dividend",
@@ -305,7 +400,11 @@
               "change_type": "percent",
               "value": -0.25,
               "delay_weeks": 1,
-              "consequence_text": "Bigger wage bills from Week 3 made Cosmic Pizza trim its dividend by a quarter."
+              "consequence_text": "Bigger wage bills from Week 3 made Cosmic Pizza trim its dividend by a quarter.",
+              "cause_chain": [
+                "Wage bills go up",
+                "Less profit left to share"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -313,7 +412,11 @@
               "change_type": "flat",
               "value": 0.06,
               "delay_weeks": 1,
-              "consequence_text": "Bigger wage bills from Week 3 squeezed Cosmic Pizza's cash - its bankruptcy risk crept up."
+              "consequence_text": "Bigger wage bills from Week 3 squeezed Cosmic Pizza's cash - its bankruptcy risk crept up.",
+              "cause_chain": [
+                "Wage bills go up",
+                "Less cash left each month"
+              ]
             }
           ]
         },
@@ -334,6 +437,16 @@
         "keramzyt": -0.015,
         "galac-kebab": -0.005
       },
+      "reports": {
+        "cosmic-pizza": {
+          "profit_margin": 0.09,
+          "fine_print": "New wage rules apply from this week. The dividend is reviewed every week."
+        },
+        "galac-kebab": {
+          "cash": 5.0,
+          "profit_margin": 0.02
+        }
+      },
       "events": [
         {
           "id": "w4-alien-takeover",
@@ -347,7 +460,11 @@
               "change_type": "percent",
               "value": -0.06,
               "delay_weeks": 0,
-              "consequence_text": "The hostile takeover attempt scared investors - Fabric of Keramzyt shares dipped right away."
+              "consequence_text": "The hostile takeover attempt scared investors - Fabric of Keramzyt shares dipped right away.",
+              "cause_chain": [
+                "Aliens grab a big stake",
+                "Investors fear chaos at the kilns"
+              ]
             }
           ]
         },
@@ -363,7 +480,11 @@
               "change_type": "percent",
               "value": -0.06,
               "delay_weeks": 0,
-              "consequence_text": "Customers switched to falafel - Galac-Kebab's sales and shares dipped the same week."
+              "consequence_text": "Customers switched to falafel - Galac-Kebab's sales and shares dipped the same week.",
+              "cause_chain": [
+                "Diners switch to falafel",
+                "Fewer kebabs sold"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -371,7 +492,11 @@
               "change_type": "flat",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Cold grills ate into Galac-Kebab's cash - its risk went up."
+              "consequence_text": "Cold grills ate into Galac-Kebab's cash - its risk went up.",
+              "cause_chain": [
+                "Fewer kebabs sold",
+                "Cash gets thinner"
+              ]
             }
           ]
         },
@@ -393,6 +518,14 @@
         "galac-kebab": 0.01,
         "laser-dzida": 0.015
       },
+      "reports": {
+        "cosmic-pizza": {
+          "cash": 17.0
+        },
+        "galac-kebab": {
+          "profit_margin": 0.05
+        }
+      },
       "events": [
         {
           "id": "w5-ipo-laser-dzida",
@@ -406,7 +539,12 @@
               "change_type": "percent",
               "value": 0.08,
               "delay_weeks": 0,
-              "consequence_text": "Investors loved the new laser-tip technology - Laser Dzida Works rose in its very first week."
+              "consequence_text": "Investors loved the new laser-tip technology - Laser Dzida Works rose in its very first week.",
+              "cause_chain": [
+                "Hyped new laser-tip spear",
+                "Pre-orders pour in",
+                "Investors expect big sales"
+              ]
             }
           ]
         },
@@ -422,7 +560,12 @@
               "change_type": "percent",
               "value": -0.07,
               "delay_weeks": 2,
-              "consequence_text": "The drought from Week 5 finally pushed up flour and tomato costs - pizza profits shrank."
+              "consequence_text": "The drought from Week 5 finally pushed up flour and tomato costs - pizza profits shrank.",
+              "cause_chain": [
+                "Drought shrinks wheat and tomato harvests",
+                "Flour and tomatoes cost more",
+                "Pizza profit shrinks"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -430,7 +573,11 @@
               "change_type": "flat",
               "value": 0.04,
               "delay_weeks": 2,
-              "consequence_text": "Pricier ingredients after the Week 5 drought added a little risk to Cosmic Pizza."
+              "consequence_text": "Pricier ingredients after the Week 5 drought added a little risk to Cosmic Pizza.",
+              "cause_chain": [
+                "Ingredients cost more",
+                "Less cash left each month"
+              ]
             }
           ]
         },
@@ -452,6 +599,22 @@
         "galac-kebab": 0.015,
         "laser-dzida": 0.005
       },
+      "reports": {
+        "keramzyt": {
+          "cash": 20.0,
+          "debt": 28.0,
+          "fine_print": "The moon kiln is paid for with a $22M loan. First pebbles are expected in about three weeks."
+        },
+        "galac-kebab": {
+          "cash": 6.0,
+          "profit_margin": 0.07,
+          "fine_print": "Approved for every orbital station. Most sales still come from spaceports and night markets."
+        },
+        "laser-dzida": {
+          "cash": 4.0,
+          "profit_margin": -0.25
+        }
+      },
       "events": [
         {
           "id": "w6-fire",
@@ -465,7 +628,12 @@
               "change_type": "percent",
               "value": -0.35,
               "delay_weeks": 0,
-              "consequence_text": "The factory fire hit Laser Dzida Works immediately - investors sold the same week, expecting months without sales."
+              "consequence_text": "The factory fire hit Laser Dzida Works immediately - investors sold the same week, expecting months without sales.",
+              "cause_chain": [
+                "The only factory burns down",
+                "No spears to sell",
+                "No sales, no profit"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -473,7 +641,11 @@
               "change_type": "flat",
               "value": 0.2,
               "delay_weeks": 0,
-              "consequence_text": "With its only factory offline and loans to repay, Laser Dzida Works' bankruptcy risk jumped."
+              "consequence_text": "With its only factory offline and loans to repay, Laser Dzida Works' bankruptcy risk jumped.",
+              "cause_chain": [
+                "No sales, but loans still due",
+                "Cash drains fast"
+              ]
             }
           ]
         },
@@ -489,7 +661,11 @@
               "change_type": "percent",
               "value": -0.03,
               "delay_weeks": 0,
-              "consequence_text": "At first, investors worried about the building costs."
+              "consequence_text": "At first, investors worried about the building costs.",
+              "cause_chain": [
+                "A huge moon kiln to build",
+                "Big bills come first"
+              ]
             },
             {
               "target_type": "stock_price",
@@ -497,7 +673,12 @@
               "change_type": "percent",
               "value": 0.12,
               "delay_weeks": 3,
-              "consequence_text": "The moon kiln announced in Week 6 started production - Fabric of Keramzyt's shares jumped."
+              "consequence_text": "The moon kiln announced in Week 6 started production - Fabric of Keramzyt's shares jumped.",
+              "cause_chain": [
+                "The moon kiln starts baking",
+                "New customers on space bases",
+                "Sales grow"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -505,7 +686,11 @@
               "change_type": "flat",
               "value": 0.06,
               "delay_weeks": 0,
-              "consequence_text": "Fabric of Keramzyt borrowed heavily to build the moon kiln - its bankruptcy risk rose."
+              "consequence_text": "Fabric of Keramzyt borrowed heavily to build the moon kiln - its bankruptcy risk rose.",
+              "cause_chain": [
+                "The kiln is built with borrowed money",
+                "More debt to repay"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -513,7 +698,11 @@
               "change_type": "flat",
               "value": -0.08,
               "delay_weeks": 3,
-              "consequence_text": "With the moon kiln earning money since Week 9, Fabric of Keramzyt's debt looks safer."
+              "consequence_text": "With the moon kiln earning money since Week 9, Fabric of Keramzyt's debt looks safer.",
+              "cause_chain": [
+                "The moon kiln earns money",
+                "Loans get easier to repay"
+              ]
             }
           ]
         },
@@ -536,6 +725,17 @@
         "laser-dzida": 0.01,
         "howl": 0.005
       },
+      "reports": {
+        "cosmic-pizza": {
+          "cash": 16.0,
+          "profit_margin": 0.07
+        },
+        "laser-dzida": {
+          "cash": 3.0,
+          "debt": 48.0,
+          "fine_print": "The insurance payout for the fire is not guaranteed. Loan payments are still due every week."
+        }
+      },
       "events": [
         {
           "id": "w7-ipo-howl",
@@ -549,7 +749,11 @@
               "change_type": "percent",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Howl's first week of trading ended a little above its listing price."
+              "consequence_text": "Howl's first week of trading ended a little above its listing price.",
+              "cause_chain": [
+                "A new shipyard joins the exchange",
+                "Investors want a piece"
+              ]
             }
           ]
         },
@@ -565,7 +769,11 @@
               "change_type": "percent",
               "value": -0.1,
               "delay_weeks": 0,
-              "consequence_text": "News of the insurance dispute pushed Laser Dzida Works shares lower right away."
+              "consequence_text": "News of the insurance dispute pushed Laser Dzida Works shares lower right away.",
+              "cause_chain": [
+                "The insurer may refuse to pay",
+                "No money to rebuild the factory"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -573,7 +781,12 @@
               "change_type": "flat",
               "value": 0.1,
               "delay_weeks": 1,
-              "consequence_text": "The insurance dispute from Week 7 turned into real cash trouble - without a payout, Laser Dzida Works' bankruptcy risk climbed again."
+              "consequence_text": "The insurance dispute from Week 7 turned into real cash trouble - without a payout, Laser Dzida Works' bankruptcy risk climbed again.",
+              "cause_chain": [
+                "No insurance payout",
+                "Cash runs out",
+                "Loans get harder to repay"
+              ]
             }
           ]
         },
@@ -596,6 +809,18 @@
         "laser-dzida": -0.01,
         "howl": -0.005
       },
+      "reports": {
+        "laser-dzida": {
+          "cash": 1.0,
+          "debt": 49.0,
+          "fine_print": "The bank has halved the credit line. Without new money, bills can't be paid for long."
+        },
+        "howl": {
+          "cash": 6.0,
+          "debt": 38.0,
+          "fine_print": "An $8M loan pays for the new Star Inquisition shipyard, due to open in about two weeks."
+        }
+      },
       "events": [
         {
           "id": "w8-credit",
@@ -609,7 +834,11 @@
               "change_type": "percent",
               "value": -0.15,
               "delay_weeks": 0,
-              "consequence_text": "Losing its bank credit sent Laser Dzida Works shares down immediately."
+              "consequence_text": "Losing its bank credit sent Laser Dzida Works shares down immediately.",
+              "cause_chain": [
+                "The bank cuts the credit line",
+                "No new money to borrow"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -617,7 +846,11 @@
               "change_type": "flat",
               "value": 0.2,
               "delay_weeks": 1,
-              "consequence_text": "The credit cut from Week 8 left Laser Dzida Works unable to pay its bills - its bankruptcy risk crossed the danger line."
+              "consequence_text": "The credit cut from Week 8 left Laser Dzida Works unable to pay its bills - its bankruptcy risk crossed the danger line.",
+              "cause_chain": [
+                "No new loans",
+                "Suppliers and bills go unpaid"
+              ]
             }
           ]
         },
@@ -633,7 +866,12 @@
               "change_type": "percent",
               "value": 0.18,
               "delay_weeks": 2,
-              "consequence_text": "The Star Inquisition shipyard announced in Week 8 opened - patrol-ship orders flowed in and Howl's shares took off."
+              "consequence_text": "The Star Inquisition shipyard announced in Week 8 opened - patrol-ship orders flowed in and Howl's shares took off.",
+              "cause_chain": [
+                "Star Inquisition needs 40 ships",
+                "A new shipyard opens to build them",
+                "A big order means more sales"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -641,7 +879,11 @@
               "change_type": "flat",
               "value": -0.1,
               "delay_weeks": 2,
-              "consequence_text": "A long contract with the Star Inquisition made Howl's loans easier to repay."
+              "consequence_text": "A long contract with the Star Inquisition made Howl's loans easier to repay.",
+              "cause_chain": [
+                "A long, steady contract",
+                "Loans get easier to repay"
+              ]
             }
           ]
         },
@@ -665,6 +907,15 @@
         "howl": -0.01,
         "lecicki": -0.015
       },
+      "reports": {
+        "keramzyt": {
+          "cash": 22.0,
+          "profit_margin": 0.21
+        },
+        "laser-dzida": {
+          "cash": 0.4
+        }
+      },
       "events": [
         {
           "id": "w9-ipo-lecicki",
@@ -678,7 +929,11 @@
               "change_type": "percent",
               "value": 0.03,
               "delay_weeks": 0,
-              "consequence_text": "Łęcicki's debut was calm - the money keeps coming in, whatever the walls look like."
+              "consequence_text": "Łęcicki's debut was calm - the money keeps coming in, whatever the walls look like.",
+              "cause_chain": [
+                "A steady family firm lists",
+                "Calm investors buy in"
+              ]
             }
           ]
         },
@@ -694,7 +949,12 @@
               "change_type": "percent",
               "value": -0.04,
               "delay_weeks": 0,
-              "consequence_text": "Higher rates mean fewer new buildings - Fabric of Keramzyt slipped right away."
+              "consequence_text": "Higher rates mean fewer new buildings - Fabric of Keramzyt slipped right away.",
+              "cause_chain": [
+                "Interest rates go up",
+                "Mortgages and big builds cost more",
+                "Fewer new buildings"
+              ]
             },
             {
               "target_type": "stock_price",
@@ -702,7 +962,12 @@
               "change_type": "percent",
               "value": 0.12,
               "delay_weeks": 1,
-              "consequence_text": "With new flats too expensive after the Week 9 rate rise, Valdorians fixed up their old ones instead - Łęcicki's order book filled up."
+              "consequence_text": "With new flats too expensive after the Week 9 rate rise, Valdorians fixed up their old ones instead - Łęcicki's order book filled up.",
+              "cause_chain": [
+                "Interest rates go up",
+                "New flats get too expensive",
+                "People renovate old flats instead"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -710,7 +975,23 @@
               "change_type": "flat",
               "value": 0.03,
               "delay_weeks": 0,
-              "consequence_text": "Higher interest rates make Fabric of Keramzyt's moon-kiln loans more expensive."
+              "consequence_text": "Higher interest rates make Fabric of Keramzyt's moon-kiln loans more expensive.",
+              "cause_chain": [
+                "Interest rates go up",
+                "Moon-kiln loans cost more"
+              ]
+            },
+            {
+              "target_type": "savings_rate",
+              "target_id": "global",
+              "change_type": "flat",
+              "value": 0.002,
+              "delay_weeks": 1,
+              "consequence_text": "The central bank's rate rise from Week 9 reached your bank - your savings account now pays more interest every week.",
+              "cause_chain": [
+                "The central bank raises its rate",
+                "Banks pay more for deposits"
+              ]
             }
           ]
         },
@@ -734,6 +1015,19 @@
         "howl": 0.01,
         "lecicki": 0.0
       },
+      "reports": {
+        "keramzyt": {
+          "debt": 29.0,
+          "profit_margin": 0.2
+        },
+        "howl": {
+          "cash": 7.0,
+          "profit_margin": 0.09
+        },
+        "lecicki": {
+          "profit_margin": 0.24
+        }
+      },
       "events": [
         {
           "id": "w10-fee",
@@ -747,7 +1041,12 @@
               "change_type": "flat",
               "value": 40,
               "delay_weeks": 2,
-              "consequence_text": "The maintenance fee approved in Week 10 has been added to your rent: +$40 a month."
+              "consequence_text": "The maintenance fee approved in Week 10 has been added to your rent: +$40 a month.",
+              "cause_chain": [
+                "Old elevators need repairs",
+                "Buildings add a monthly fee",
+                "The fee lands in your rent"
+              ]
             }
           ]
         },
@@ -763,7 +1062,12 @@
               "change_type": "percent",
               "value": -0.12,
               "delay_weeks": 0,
-              "consequence_text": "The strike froze Howl's deliveries the same week - its shares fell."
+              "consequence_text": "The strike froze Howl's deliveries the same week - its shares fell.",
+              "cause_chain": [
+                "Welders stop working",
+                "Half-built ships stand still",
+                "No finished ships, no income"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -771,7 +1075,11 @@
               "change_type": "flat",
               "value": 0.1,
               "delay_weeks": 0,
-              "consequence_text": "Weeks without finished ships mean weeks without income - Howl's risk went up."
+              "consequence_text": "Weeks without finished ships mean weeks without income - Howl's risk went up.",
+              "cause_chain": [
+                "No ships delivered",
+                "Cash gets thinner"
+              ]
             }
           ]
         },
@@ -795,6 +1103,25 @@
         "howl": -0.015,
         "lecicki": 0.015
       },
+      "reports": {
+        "cosmic-pizza": {
+          "cash": 17.0
+        },
+        "keramzyt": {
+          "cash": 25.0
+        },
+        "galac-kebab": {
+          "cash": 9.0,
+          "profit_margin": 0.08
+        },
+        "howl": {
+          "cash": 5.0,
+          "profit_margin": 0.06
+        },
+        "lecicki": {
+          "cash": 22.0
+        }
+      },
       "events": [
         {
           "id": "w11-new-colony",
@@ -808,7 +1135,12 @@
               "change_type": "flat",
               "value": 0.4,
               "delay_weeks": 1,
-              "consequence_text": "Łęcicki's bigger dividend promised in Week 11 is now being paid out."
+              "consequence_text": "Łęcicki's bigger dividend promised in Week 11 is now being paid out.",
+              "cause_chain": [
+                "10,000 new flats to finish",
+                "The order book fills up",
+                "More cash to share"
+              ]
             }
           ]
         },
@@ -824,7 +1156,12 @@
               "change_type": "percent",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Hungry football fans emptied every kebab grill - Galac-Kebab shares rose the same week."
+              "consequence_text": "Hungry football fans emptied every kebab grill - Galac-Kebab shares rose the same week.",
+              "cause_chain": [
+                "Football fans fly in",
+                "Kebab stands in every fan zone",
+                "Sales jump"
+              ]
             },
             {
               "target_type": "dividend",
@@ -832,7 +1169,11 @@
               "change_type": "flat",
               "value": 0.2,
               "delay_weeks": 1,
-              "consequence_text": "Galac-Kebab's bigger dividend promised in Week 11 is now being paid."
+              "consequence_text": "Galac-Kebab's bigger dividend promised in Week 11 is now being paid.",
+              "cause_chain": [
+                "Record fan-zone sales",
+                "More cash to share"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -840,7 +1181,11 @@
               "change_type": "flat",
               "value": -0.1,
               "delay_weeks": 0,
-              "consequence_text": "Record fan-zone sales gave Galac-Kebab a fat cash cushion - its risk fell."
+              "consequence_text": "Record fan-zone sales gave Galac-Kebab a fat cash cushion - its risk fell.",
+              "cause_chain": [
+                "Record fan-zone sales",
+                "A fat cash cushion"
+              ]
             }
           ]
         },
@@ -864,6 +1209,15 @@
         "howl": 0.0,
         "lecicki": 0.0
       },
+      "reports": {
+        "galac-kebab": {
+          "cash": 11.0,
+          "profit_margin": 0.09
+        },
+        "lecicki": {
+          "cash": 24.0
+        }
+      },
       "events": [
         {
           "id": "w12-league",
@@ -877,7 +1231,11 @@
               "change_type": "percent",
               "value": 0.1,
               "delay_weeks": 0,
-              "consequence_text": "The league deal lifted Galac-Kebab shares the same week it was announced."
+              "consequence_text": "The league deal lifted Galac-Kebab shares the same week it was announced.",
+              "cause_chain": [
+                "A two-year stadium deal",
+                "Steady crowds of hungry fans"
+              ]
             },
             {
               "target_type": "bankruptcy_risk",
@@ -885,7 +1243,11 @@
               "change_type": "flat",
               "value": -0.05,
               "delay_weeks": 0,
-              "consequence_text": "Two years of stadium crowds give Galac-Kebab a safer, steadier income."
+              "consequence_text": "Two years of stadium crowds give Galac-Kebab a safer, steadier income.",
+              "cause_chain": [
+                "Two years of steady income",
+                "Safer finances"
+              ]
             }
           ]
         },
@@ -901,7 +1263,11 @@
               "change_type": "flat",
               "value": 0.5,
               "delay_weeks": 0,
-              "consequence_text": "Łęcicki's year-end bonus was added to this week's dividend."
+              "consequence_text": "Łęcicki's year-end bonus was added to this week's dividend.",
+              "cause_chain": [
+                "A strong year",
+                "A one-off bonus for owners"
+              ]
             }
           ]
         },
@@ -919,62 +1285,122 @@
     "w1-noise-chef": {
       "related_company_id": "cosmic-pizza",
       "misleading_direction": "down",
-      "reveal": "One TV chef's opinion doesn't change how many pizzas people actually order. Cosmic Pizza's sales were not affected."
+      "reveal": "One TV chef's opinion doesn't change how many pizzas people actually order. Cosmic Pizza's sales were not affected.",
+      "misleading_chain": [
+        "A TV chef says pizza is out",
+        "Fans might stop ordering pizza",
+        "Cosmic Pizza could sell less"
+      ]
     },
     "w2-noise-clouds": {
       "related_company_id": "keramzyt",
       "misleading_direction": "down",
-      "reveal": "Keramzyt is baked clay - nothing hatches. A viral post isn't evidence: always ask who is behind a claim."
+      "reveal": "Keramzyt is baked clay - nothing hatches. A viral post isn't evidence: always ask who is behind a claim.",
+      "misleading_chain": [
+        "A viral post calls pebbles alien eggs",
+        "Builders might stop buying",
+        "Keramzyt could sell less"
+      ]
     },
     "w3-noise-takeover": {
       "related_company_id": "cosmic-pizza",
       "misleading_direction": "up",
-      "reveal": "No buyer ever showed up - the 'takeover' was an anonymous rumor. If Cosmic Pizza rose this week, it was thanks to the students from Week 1 moving into the dorms."
+      "reveal": "No buyer ever showed up - the 'takeover' was an anonymous rumor. If Cosmic Pizza rose this week, it was thanks to the students from Week 1 moving into the dorms.",
+      "misleading_chain": [
+        "A giant may buy Cosmic Pizza",
+        "Buyers usually pay a premium",
+        "Shareholders could cash in"
+      ]
     },
     "w4-noise-yacht": {
       "related_company_id": "galac-kebab",
       "misleading_direction": "down",
-      "reveal": "A blurry gossip photo says nothing about how a company is doing. Galac-Kebab's founder was at a food fair."
+      "reveal": "A blurry gossip photo says nothing about how a company is doing. Galac-Kebab's founder was at a food fair.",
+      "misleading_chain": [
+        "The boss is seen on a yacht",
+        "Maybe he wastes company money",
+        "Galac-Kebab could struggle"
+      ]
     },
     "w5-noise-astro": {
       "related_company_id": "keramzyt",
       "misleading_direction": "up",
-      "reveal": "Horoscopes don't set share prices. Fabric of Keramzyt moved because of real news - the dry spell, its record quarter and the alien takeover attempt."
+      "reveal": "Horoscopes don't set share prices. Fabric of Keramzyt moved because of real news - the dry spell, its record quarter and the alien takeover attempt.",
+      "misleading_chain": [
+        "An astrologer predicts a golden week",
+        "Her fans may rush to buy",
+        "Building stocks could jump"
+      ]
     },
     "w6-noise-fridge": {
       "related_company_id": "laser-dzida",
       "misleading_direction": "down",
-      "reveal": "The video was a joke. Laser Dzida Works' real problem this week was the factory fire caused by its own new technology."
+      "reveal": "The video was a joke. Laser Dzida Works' real problem this week was the factory fire caused by its own new technology.",
+      "misleading_chain": [
+        "Video: spears cut holes in time",
+        "Regulators might ban them",
+        "Laser Dzida could lose sales"
+      ]
     },
     "w7-noise-meme": {
       "related_company_id": "cosmic-pizza",
       "misleading_direction": "up",
-      "reveal": "A funny meme doesn't sell more pizza. Cosmic Pizza was really moved by students, wages and food prices."
+      "reveal": "A funny meme doesn't sell more pizza. Cosmic Pizza was really moved by students, wages and food prices.",
+      "misleading_chain": [
+        "A meme says pizza cures Mondays",
+        "Millions share the joke",
+        "More people might order pizza"
+      ]
     },
     "w8-noise-ufo": {
       "related_company_id": "howl",
       "misleading_direction": "up",
-      "reveal": "A glowing dot in a blurry video isn't a customer. Howl's real news was the Star Inquisition shipyard."
+      "reveal": "A glowing dot in a blurry video isn't a customer. Howl's real news was the Star Inquisition shipyard.",
+      "misleading_chain": [
+        "A UFO over the test field",
+        "Maybe aliens want ships",
+        "Howl could win huge orders"
+      ]
     },
     "w9-noise-reviews": {
       "related_company_id": "lecicki",
       "misleading_direction": "down",
-      "reveal": "Bad reviews didn't change the money: customers always pay, and Łęcicki just moves on to a district where nobody has read them. His income stayed exactly the same."
+      "reveal": "Bad reviews didn't change the money: customers always pay, and Łęcicki just moves on to a district where nobody has read them. His income stayed exactly the same.",
+      "misleading_chain": [
+        "Reviews give Łęcicki 1.1 stars",
+        "Customers might stay away",
+        "Łęcicki could lose orders"
+      ]
     },
     "w10-noise-ghost": {
       "related_company_id": "keramzyt",
       "misleading_direction": "down",
-      "reveal": "There is no ghost - just a noisy old kiln. Fabric of Keramzyt's real story was its moon kiln."
+      "reveal": "There is no ghost - just a noisy old kiln. Fabric of Keramzyt's real story was its moon kiln.",
+      "misleading_chain": [
+        "A ghost haunts the kiln",
+        "Night shifts might stop",
+        "Keramzyt output could drop"
+      ]
     },
     "w11-noise-diet": {
       "related_company_id": "cosmic-pizza",
       "misleading_direction": "down",
-      "reveal": "One celebrity's diet doesn't change what millions of people eat."
+      "reveal": "One celebrity's diet doesn't change what millions of people eat.",
+      "misleading_chain": [
+        "A pop star eats only purple food",
+        "Fans might copy her diet",
+        "Fewer pizzas ordered"
+      ]
     },
     "w12-noise-merger": {
       "related_company_id": "galac-kebab",
       "misleading_direction": "up",
-      "reveal": "There was no merger - both companies denied it, and nothing changed."
+      "reveal": "There was no merger - both companies denied it, and nothing changed.",
+      "misleading_chain": [
+        "Rumor: Galac-Kebab and Howl merge",
+        "Mergers can lift share prices",
+        "Galac-Kebab could jump"
+      ]
     }
   },
   "fallback_texts": {
@@ -994,7 +1420,10 @@
       "bankruptcy_note": "{names} went bankrupt. Its shares are now worth $0 and can no longer be traded.",
       "takeaway_delayed": "Today's headline can be next month's price move. Before you trade, look back at older news.",
       "takeaway_immediate": "Big surprises, like disasters, hit prices right away. Spreading your money across companies softens the blow.",
-      "takeaway_quiet": "Calm weeks are a good moment to check your plan and your cash reserve for upcoming bills."
+      "takeaway_quiet": "Calm weeks are a good moment to check your plan and your cash reserve for upcoming bills.",
+      "savings_note": "Your savings account paid you {amount} in interest ({rate} of your balance) - small, but completely safe.",
+      "savings_rent_note": "Your cash was short on rent day, so {amount} moved automatically from savings - exactly what a bill buffer is for.",
+      "savings_rate_note": "Interest rates rose because of news from Week {source_week}: your savings now earn {new} a week instead of {old}."
     },
     "glossary": {
       "Market lag": "The delay between a piece of news and its effect on prices. Some news needs weeks to show up.",
@@ -1005,7 +1434,13 @@
       "Noise": "News that sounds important but doesn't actually change anything.",
       "Diversification": "Spreading your money across different companies and industries, so one bad event can't sink you.",
       "ROI": "Return on investment: how much your money grew or shrank, shown in percent.",
-      "Excise tax": "An extra tax on specific products, such as fuel or electricity."
+      "Excise tax": "An extra tax on specific products, such as fuel or electricity.",
+      "Savings account": "A bank account that keeps your money safe and pays you a little interest for leaving it there.",
+      "Interest": "Money a bank pays you for keeping your savings with it - or that you pay when you borrow.",
+      "Interest rate": "The percentage a bank pays (or charges) for money. When the central bank raises it, savings earn more and loans cost more.",
+      "Profit margin": "How many cents of every dollar of sales a company keeps as profit.",
+      "Debt": "Money a company has borrowed and must pay back, usually with interest.",
+      "Emergency fund": "Savings kept only for bills and surprises, so you never have to sell investments in a hurry."
     },
     "advisor": {
       "accurate_delayed": "Keep an eye on {company} ({ticker}). '{event}' could {direction} its price {timing}. Markets often need time to catch up with news.",
@@ -1020,7 +1455,37 @@
       "timing_soon": "next week",
       "timing_later": "in a couple of weeks",
       "direction_up": "push up",
-      "direction_down": "pull down"
+      "direction_down": "pull down",
+      "accurate_savings": "'{event}' matters for your own money, not a company: your savings account could pay more interest {timing}. Safe money earns a bit more when rates go up.",
+      "quiet_chain": [
+        "No big news this week",
+        "Prices follow the old news",
+        "Stick to your plan, keep a bill buffer"
+      ],
+      "chain_middle": {
+        "stock_price:up": "{company} could earn more",
+        "stock_price:down": "{company} could earn less",
+        "dividend:up": "{company} has more cash to share",
+        "dividend:down": "{company} has less cash to share",
+        "bankruptcy_risk:up": "{company} could run short of money",
+        "bankruptcy_risk:down": "{company}'s money looks safer",
+        "rent:up": "Living costs go up",
+        "rent:down": "Living costs go down",
+        "savings_rate:up": "Banks pay more for deposits",
+        "savings_rate:down": "Banks pay less for deposits"
+      },
+      "chain_outcome": {
+        "stock_price:up": "Share price tends to rise",
+        "stock_price:down": "Share price tends to fall",
+        "dividend:up": "A bigger dividend for owners",
+        "dividend:down": "A smaller dividend for owners",
+        "bankruptcy_risk:up": "Bankruptcy risk climbs",
+        "bankruptcy_risk:down": "Bankruptcy risk eases",
+        "rent:up": "Your rent goes up",
+        "rent:down": "Your rent goes down",
+        "savings_rate:up": "Your savings earn more interest",
+        "savings_rate:down": "Your savings earn less interest"
+      }
     },
     "final_analysis": {
       "play_styles": {
@@ -1077,6 +1542,10 @@
         "patience": {
           "title": "Have a plan, not a reflex",
           "tip": "Decide why you are buying before you buy. A few well-reasoned trades usually beat many quick ones."
+        },
+        "savings": {
+          "title": "Give every dollar a job",
+          "tip": "Money for bills goes into a savings account, money you won't need for years can be invested. Cash lying around does neither."
         }
       },
       "overall_positive": "You finished with {net_worth} - a {roi} return. Great job turning headlines into decisions!",
@@ -1097,8 +1566,8 @@
           "detail": "You sold {ticker} after '{event}' appeared in Week {source_week} - before it pulled the price down in Week {trigger_week}."
         },
         "s_cash_reserve": {
-          "title": "You kept cash for the bills",
-          "detail": "You had {cash} in cash before the {rent} rent payment in Week {week}. The bill never caught you off guard."
+          "title": "You kept money ready for the bills",
+          "detail": "You had {cash} ready in cash and savings before the {rent} rent payment in Week {week}. The bill never caught you off guard."
         },
         "s_exited_risk": {
           "title": "You left a sinking ship in time",
@@ -1142,11 +1611,11 @@
         },
         "i_low_cash": {
           "title": "Rent nearly caught you",
-          "detail": "Before the {rent} rent payment in Week {week} you had only {cash} in cash. Keep a cushion for bills you know are coming."
+          "detail": "Before the {rent} rent payment in Week {week} you had only {cash} in cash and savings. Keep a cushion for bills you know are coming."
         },
         "i_liquidity": {
           "title": "Out of cash on rent day",
-          "detail": "After paying {rent} rent in Week {week} your cash fell to {cash}. Shares are not cash - sell in time or keep a reserve."
+          "detail": "After paying {rent} rent in Week {week} your cash fell to {cash}, and your savings were empty. Shares are not cash - sell in time or keep a reserve in savings."
         },
         "i_bankrupt_loss": {
           "title": "Held on until the very end",
@@ -1162,7 +1631,7 @@
         },
         "i_idle_cash": {
           "title": "Your cash sat on the bench",
-          "detail": "On average only {share} of your money was invested. Cash is safe, but it doesn't grow or pay dividends."
+          "detail": "On average only {share} of your money was invested, and most of the rest was plain cash. Even the savings vault would have paid interest on it."
         },
         "i_overtrading": {
           "title": "Lots of trades, lots of noise",
@@ -1171,6 +1640,90 @@
         "i_next_level": {
           "title": "Next level: plan around delays",
           "detail": "Next time, write down which news could matter later and check it every week. Timing your moves around market lag is the next skill to master."
+        },
+        "s_savings": {
+          "title": "Your safe money worked too",
+          "detail": "The savings vault paid you {interest} in interest without any risk, and you finished with {savings} in it."
+        },
+        "s_savings_rent": {
+          "title": "Your savings paid the rent",
+          "detail": "In Week {week} your cash was short, so {amount} moved automatically from savings to cover the {rent} rent. That is exactly what a bill buffer is for."
+        },
+        "i_bought_bad_news": {
+          "title": "You bought into bad news",
+          "detail": "In Week {buy_week} you bought {ticker} even though '{event}' (Week {source_week}) had already warned about it - in Week {trigger_week} it hit the price ({impact}), about {loss} on your shares."
+        }
+      },
+      "verdicts": {
+        "evicted": {
+          "approved": false,
+          "title": "Out of Cash",
+          "reason": "You couldn't pay the rent in Week {week}. Bills always come before investments."
+        },
+        "fomo": {
+          "approved": false,
+          "title": "FOMO Victim",
+          "reason": "In Week {week} you {action} {ticker} without checking what the headline really meant, and the season ended at {roi}."
+        },
+        "all_in": {
+          "approved": false,
+          "title": "All-In Gambler",
+          "reason": "Too much rode on {ticker} - one bad week can undo a whole season ({roi})."
+        },
+        "rookie": {
+          "approved": false,
+          "title": "Back to Training",
+          "reason": "The season ended at {roi}. Losing play money is the cheapest way to learn - the two weeks below show where."
+        },
+        "careful_saver": {
+          "approved": true,
+          "title": "Careful Saver",
+          "reason": "You protected your money and never missed a bill ({roi}). Next step: let a small part of it work."
+        },
+        "prudent": {
+          "approved": true,
+          "title": "Prudent Strategist",
+          "reason": "You read the news, kept money ready for the bills and grew your savings by {roi}."
+        },
+        "bold": {
+          "approved": true,
+          "title": "Bold Strategist",
+          "reason": "Big bets paid off this time ({roi}) - keep a bill buffer so one surprise can't sink you."
+        },
+        "steady": {
+          "approved": true,
+          "title": "Steady Hand",
+          "reason": "No disasters and every bill paid ({roi}) - a solid base to build on."
+        }
+      },
+      "habits": {
+        "emergency_fund": {
+          "title": "Build a bills buffer first",
+          "habit": "Keep at least one month of rent and bills in a separate savings account before you invest anything. Most banks let you open one in a few minutes in their app."
+        },
+        "cooling_off": {
+          "title": "Sleep on hot tips",
+          "habit": "Before you buy because of a viral post or a hot tip, wait 24 hours and check two independent sources. Real news is still true tomorrow."
+        },
+        "spread": {
+          "title": "Spread your savings",
+          "habit": "Never keep all your savings in one company. A fund that holds many companies spreads the risk for you."
+        },
+        "check_health": {
+          "title": "Read the hard numbers",
+          "habit": "Before you invest in a company, look at its debt and cash, not just the headlines. Rising debt with shrinking cash is a warning light."
+        },
+        "automate": {
+          "title": "Pay yourself first",
+          "habit": "Set up an automatic transfer to a savings account for the day your income arrives - even a small amount grows with interest, and you never forget it."
+        },
+        "review_monthly": {
+          "title": "A monthly money check-up",
+          "habit": "Once a month, open your bank statement: list your fixed bills, see what you saved and only then decide what to invest."
+        },
+        "fees": {
+          "title": "Count the fees",
+          "habit": "Every trade or transfer can cost a fee. Check your bank's price list once and plan fewer, bigger moves instead of many small ones."
         }
       }
     }

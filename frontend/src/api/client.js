@@ -51,6 +51,7 @@ export const api = {
   createSession: (payload) => request("/sessions", { method: "POST", body: payload }),
   getSession: (sessionId) => request(`/sessions/${sessionId}`),
   trade: (sessionId, payload) => request(`/sessions/${sessionId}/trade`, { method: "POST", body: payload }),
+  savings: (sessionId, payload) => request(`/sessions/${sessionId}/savings`, { method: "POST", body: payload }),
   askAdvisor: (sessionId) => request(`/sessions/${sessionId}/advisor`, { method: "POST" }),
   nextWeek: (sessionId) => request(`/sessions/${sessionId}/next-week`, { method: "POST" }),
   finalAnalysis: (sessionId) => request(`/sessions/${sessionId}/final-analysis`),

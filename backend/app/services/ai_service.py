@@ -77,6 +77,8 @@ Rules:
 - Use ONLY the facts in the JSON input. Never invent companies, numbers or events, and never hint at future events.
 - The core lesson is MARKET LAG. For every consequence with "is_delayed": true, explicitly connect the original news ("Week <source_week>") to the effect now ("Week <trigger_week>") and explain in simple cause-and-effect words why it took time (monthly contracts, approvals, bills arriving later, and so on).
 - If the rent changed, explain how a news story from an earlier week ended up in the player's living costs.
+- If the savings interest rate changed, explain how the news about interest rates reached the player's savings account.
+- If the savings account paid interest or covered part of the rent, mention it in one short sentence (safe money, small but steady return).
 - If there were no delayed effects, explain that some news needs time to show up and that older headlines are worth re-reading.
 - If noise was unmasked, say briefly that it changed nothing.
 - "jargon": pick 1-3 finance words that appear in this week's story and explain each in one plain sentence.
@@ -86,11 +88,12 @@ ADVISOR_SYSTEM_ACCURATE = f"""You are "the Advisor", a friendly investment advis
 {UNIVERSE_RULES}
 
 You receive this week's REAL market signals, sorted by importance (the first one matters most).
-Give ONE short hint (max 55 words) about the most important signal.
+Give ONE short hint (max 55 words) about the most important signal, and spell out the cause-and-effect chain so a beginner sees WHY: for example higher wages -> higher restaurant costs -> smaller profit -> the share price may dip.
 Rules:
 - Never state exact percentages, amounts or the exact week an effect lands; use words like "this week", "soon" or "in a couple of weeks".
 - Never use the word "noise". Mention the company by name.
-- suggested_action: buy, sell, hold or watch. focus_company_id: the id of that company, or null for a hint about bills/rent.
+- cause_and_effect: 3-5 very short steps (max 7 words each) from the news, through the company's money (sales, costs, profit, cash or debt), to what may happen to the share price, dividend, bankruptcy risk, rent or savings. Base them on the signal's cause_chain when it is given. No exact numbers about the effect.
+- suggested_action: buy, sell, hold or watch. focus_company_id: the id of that company, or null for a hint about bills, rent or savings.
 Return JSON that matches the schema."""
 
 ADVISOR_SYSTEM_MISLEADING = f"""You are "the Advisor", a friendly investment advisor character in an educational game.
@@ -100,17 +103,21 @@ In this turn you are (without knowing it) WRONG. Build one confident, friendly h
 Rules:
 - Do not reveal or suggest that the information may be a rumor, noise or wrong.
 - Never state exact percentages or amounts. Mention the company by name.
+- cause_and_effect: 3-5 very short steps (max 7 words each) of your (convincing but mistaken) reasoning from the headline to the share price. Base them on the signal's cause_chain when it is given.
 - focus_company_id: that company's id. suggested_action: "buy" if the direction is "up", "sell" if it is "down".
 Return JSON that matches the schema."""
 
-FINAL_ANALYSIS_SYSTEM = f"""You are the AI Coach of an educational investing game. The game has just ended.
+FINAL_ANALYSIS_SYSTEM = f"""You are the AI Coach of an educational investing game. The game has just ended. You act like a strict but fair border inspector who stamps the player's file.
 {UNIVERSE_RULES}
 
-You receive: the player's complete action log (every buy and sell with week, ticker, shares and price, advisor uses, dividends, rent), weekly snapshots, the full market timeline (which headlines were noise and which effects were delayed) and pre-computed metrics.
-Write a personal, encouraging and honest post-mortem.
+You receive: the player's complete action log (every buy and sell with week, ticker, shares and price, savings deposits and withdrawals, interest, advisor uses, dividends, rent), weekly snapshots, the full market timeline (which headlines were noise and which effects were delayed) and pre-computed metrics. metrics.delayed_signals[].bought_week marks a purchase made AFTER a warning headline was already published.
 Rules:
+- verdict: approved = true (APPROVED stamp) or false (REJECTED stamp), a 2-3 word inspector label such as "Prudent Strategist", "Careful Saver", "FOMO Victim" or "All-In Gambler", and ONE plain sentence with a real fact that justifies it. Running out of cash for rent is always REJECTED.
+- key_moments: EXACTLY 2 specific weeks that decided the season, costly mistakes first (use wins only if there were no real mistakes). Each one names the week, the news, the player's decision and what it caused, for example "In Week 3 you bought PIZA despite the news about higher cook wages, which cut its profit in Week 4." Never invent trades.
+- real_life_habit: ONE simple money habit to start in real life this month, ideally a banking or saving habit (for example an automatic transfer to a savings account on payday, or a bills buffer of one month of rent). Tie it to the player's biggest weakness.
+- Keep everything short: the stamp and the two weeks replace a long essay.
 - Base every strength and improvement on the player's REAL moves: cite the week, the ticker and what happened (for example "In Week 2 you bought 20 PIZA at $40.40..."). Never invent trades.
-- When relevant, cover: diversification, keeping cash for rent (liquidity), reacting to delayed signals (market lag), avoiding companies heading to bankruptcy, and following noise or wrong advisor hints.
+- When relevant, cover: diversification, keeping cash or savings for rent (liquidity), reacting to delayed signals (market lag), avoiding companies heading to bankruptcy, and following noise or wrong advisor hints.
 - strengths: 2-4 items. improvements: 2-4 items, each with a concrete alternative. actionable_tips: exactly 3 or 4 universal, practical money tips worth remembering after the game.
 - If the player made no trades, be kind and explain what they missed.
 - play_style: a 2-3 word label such as "Cautious Saver" or "Headline Chaser".
@@ -183,6 +190,10 @@ class AIService:
             summary_parts.append(fill(t.bankruptcy_note, names=", ".join(b.name for b in ctx.bankruptcies)))
         if ctx.unmasked_noise:
             summary_parts.append(fill(t.noise_note, items=", ".join(f"'{n.title}'" for n in ctx.unmasked_noise)))
+        if ctx.savings.interest > 0:
+            summary_parts.append(
+                fill(t.savings_note, amount=money(ctx.savings.interest), rate=f"{ctx.savings.rate_pct:g}%")
+            )
 
         if delayed:
             items = "; ".join(
@@ -202,10 +213,23 @@ class AIService:
             )
         if ctx.rent.paid:
             lag += " " + fill(t.rent_paid_note, amount=money(ctx.rent.amount_paid))
+        if ctx.savings.rent_from_savings > 0:
+            lag += " " + fill(t.savings_rent_note, amount=money(ctx.savings.rent_from_savings))
+        if ctx.savings.rate_changed:
+            lag += " " + fill(
+                t.savings_rate_note,
+                old=f"{ctx.savings.old_rate_pct:g}%",
+                new=f"{ctx.savings.rate_pct:g}%",
+                source_week=ctx.savings.rate_source_week or ctx.week,
+            )
 
         wanted_terms = ["Market lag"]
+        if ctx.savings.rate_changed:
+            wanted_terms.append("Interest rate")
         if ctx.rent.changed or ctx.rent.paid:
             wanted_terms.append("Liquidity")
+        if ctx.savings.interest > 0 or ctx.savings.rent_from_savings > 0:
+            wanted_terms.append("Savings account")
         if ctx.bankruptcies or any(c.target_type == TargetType.BANKRUPTCY_RISK for c in ctx.consequences):
             wanted_terms.append("Bankruptcy risk")
         if ctx.dividends_total > 0 or any(c.target_type == TargetType.DIVIDEND for c in ctx.consequences):
@@ -236,15 +260,35 @@ class AIService:
             if content is not None and content.hint.strip():
                 if content.focus_company_id not in valid_ids:
                     content.focus_company_id = ctx.signals[0].company_id
+                steps = [step.strip() for step in content.cause_and_effect if step.strip()]
+                content.cause_and_effect = steps[:5] if len(steps) >= 2 else self._fallback_chain(ctx.signals[0])
                 return AdvisorHint(**content.model_dump(), ai_source=AISource.GEMINI)
         return AdvisorHint(**self._fallback_advisor(ctx).model_dump(), ai_source=AISource.FALLBACK)
+
+    def _fallback_chain(self, signal) -> list[str]:
+        """News -> what it does to the company's money -> what may happen to the price (or bill)."""
+        t = self._repo.fallback.advisor
+        key = f"{signal.target_type.value}:{signal.direction}"
+        company = signal.company_name or "the company"
+        steps = list(signal.cause_chain) or [
+            f"News: {signal.event_title}",
+            fill(t.chain_middle.get(key, ""), company=company),
+        ]
+        steps.append(fill(t.chain_outcome.get(key, ""), company=company))
+        return [step for step in steps if step.strip()][:5]
 
     def _fallback_advisor(self, ctx: AdvisorContext) -> AdvisorHintContent:
         t = self._repo.fallback.advisor
         if not ctx.signals:
-            return AdvisorHintContent(hint=t.quiet_week, focus_company_id=None, suggested_action=SuggestedAction.HOLD)
+            return AdvisorHintContent(
+                hint=t.quiet_week,
+                cause_and_effect=list(t.quiet_chain),
+                focus_company_id=None,
+                suggested_action=SuggestedAction.HOLD,
+            )
 
         signal = ctx.signals[0]
+        chain = self._fallback_chain(signal)
         direction = t.direction_up if signal.direction == "up" else t.direction_down
         if signal.weeks_until_effect <= 0:
             timing = t.timing_now
@@ -261,24 +305,27 @@ class AIService:
         }
         move = SuggestedAction.BUY if signal.direction == "up" else SuggestedAction.SELL
 
+        def hint(template: str, focus: str | None, action: SuggestedAction) -> AdvisorHintContent:
+            return AdvisorHintContent(
+                hint=fill(template, **values), cause_and_effect=chain, focus_company_id=focus, suggested_action=action
+            )
+
         if not ctx.accurate:
             template = t.misleading_noise if signal.is_noise else t.misleading_inverted
-            return AdvisorHintContent(hint=fill(template, **values), focus_company_id=signal.company_id, suggested_action=move)
+            return hint(template, signal.company_id, move)
 
         if signal.target_type == TargetType.RENT:
-            return AdvisorHintContent(
-                hint=fill(t.accurate_rent, **values), focus_company_id=None, suggested_action=SuggestedAction.HOLD
-            )
+            return hint(t.accurate_rent, None, SuggestedAction.HOLD)
+        if signal.target_type == TargetType.SAVINGS_RATE:
+            return hint(t.accurate_savings, None, SuggestedAction.HOLD)
         if signal.target_type == TargetType.BANKRUPTCY_RISK:
             action = SuggestedAction.SELL if signal.direction == "up" else SuggestedAction.WATCH
-            return AdvisorHintContent(hint=fill(t.accurate_risk, **values), focus_company_id=signal.company_id, suggested_action=action)
+            return hint(t.accurate_risk, signal.company_id, action)
         if signal.target_type == TargetType.DIVIDEND:
             action = SuggestedAction.BUY if signal.direction == "up" else SuggestedAction.WATCH
-            return AdvisorHintContent(
-                hint=fill(t.accurate_dividend, **values), focus_company_id=signal.company_id, suggested_action=action
-            )
+            return hint(t.accurate_dividend, signal.company_id, action)
         template = t.accurate_delayed if signal.weeks_until_effect > 0 else t.accurate_immediate
-        return AdvisorHintContent(hint=fill(template, **values), focus_company_id=signal.company_id, suggested_action=move)
+        return hint(template, signal.company_id, move)
 
     # ======================================================================
     # 3. End-of-game move analysis & coaching
@@ -297,6 +344,24 @@ class AIService:
             return MoveAnalysis(**fallback.model_dump(), ai_source=AISource.FALLBACK)
 
         # Light post-validation so the UI contract always holds.
+        weeks_played = ctx.metrics.weeks_played
+        if not content.verdict.title.strip() or not content.verdict.reason.strip():
+            content.verdict = fallback.verdict
+        if ctx.metrics.liquidity_loss:
+            content.verdict.approved = False  # running out of cash for rent is never approved
+        moments = [
+            moment
+            for moment in content.key_moments
+            if 1 <= moment.week <= max(weeks_played, 1) and moment.title.strip() and moment.detail.strip()
+        ][:2]
+        for extra in fallback.key_moments:
+            if len(moments) >= 2:
+                break
+            if all(extra.week != moment.week for moment in moments):
+                moments.append(extra)
+        content.key_moments = sorted(moments, key=lambda moment: moment.week)
+        if not content.real_life_habit.title.strip() or not content.real_life_habit.habit.strip():
+            content.real_life_habit = fallback.real_life_habit
         content.strengths = self._non_empty(content.strengths, fallback.strengths)[:4]
         content.improvements = self._non_empty(content.improvements, fallback.improvements)[:4]
         tips = [tip for tip in content.actionable_tips if tip.title.strip() and tip.tip.strip()]

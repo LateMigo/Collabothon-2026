@@ -62,7 +62,11 @@ export default function Onboarding({ scenario, aiMode, onStart, busy }) {
           <p className="onboarding__lead">
             You start with {moneyCompact(cash)} and {startingCompanies} companies
             {interval ? `, and a new one joins the exchange every ${interval} weeks` : ""} &mdash; {companies} in total
-            over {weeks} weeks. Read the news, invest your money and keep enough cash for the rent.
+            over {weeks} weeks. Read the news, invest your money and keep enough cash for the rent
+            {scenario?.savings_weekly_rate_pct
+              ? ` — or park it safely in the ${scenario.savings_account_name} at ${scenario.savings_weekly_rate_pct}% interest a week`
+              : ""}
+            .
           </p>
 
           <form className="setup-card" onSubmit={submit}>

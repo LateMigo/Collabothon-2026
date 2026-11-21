@@ -10,12 +10,9 @@ function headlineFor(stats) {
   return "Lesson learned.";
 }
 
-// The stamp the review board slams on your file.
-function verdictFor(stats) {
-  if (stats.end_reason === "liquidity") return { text: "Evicted", tone: "red" };
-  if (stats.roi_pct >= 10) return { text: "Promoted", tone: "green" };
-  if (stats.roi_pct >= 0) return { text: "Approved", tone: "green" };
-  return { text: "Probation", tone: "red" };
+// The stamp the inspector slams on your file (decided by the AI coach / offline analysis).
+function verdictFor(analysis) {
+  return analysis.verdict.approved ? { text: "Approved", tone: "green" } : { text: "Rejected", tone: "red" };
 }
 
 function TradeHistory({ trades }) {
@@ -43,11 +40,12 @@ function TradeHistory({ trades }) {
 
 function Coach({ analysis }) {
   const gemini = analysis.ai_source === "gemini";
+  const verdict = analysis.verdict;
   return (
     <section className="coach" aria-labelledby="coach-title">
       <header className="coach__head">
         <div>
-          <p className="eyebrow">Post-game review</p>
+          <p className="eyebrow">Inspector&apos;s review</p>
           <h2 id="coach-title" className="section-title section-title--xl">
             Move Analysis &amp; Financial Coaching
           </h2>
@@ -57,47 +55,87 @@ function Coach({ analysis }) {
         </span>
       </header>
 
-      <div className="coach__style">
-        <span className="eyebrow">Your investing style</span>
-        <strong>{analysis.play_style}</strong>
-        <p>{analysis.play_style_summary}</p>
-      </div>
-      <p className="coach__overall">{analysis.overall_message}</p>
-
-      <div className="coach__columns">
-        <div className="coach-list coach-list--good">
-          <h3>What You Did Well</h3>
-          <ul>
-            {analysis.strengths.map((item, i) => (
-              <li key={i}>
-                <strong>{item.title}</strong>
-                <p>{item.detail}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="coach-list coach-list--change">
-          <h3>What You Could Change</h3>
-          <ul>
-            {analysis.improvements.map((item, i) => (
-              <li key={i}>
-                <strong>{item.title}</strong>
-                <p>{item.detail}</p>
-              </li>
-            ))}
-          </ul>
+      <div className={`inspector inspector--${verdict.approved ? "approved" : "rejected"}`}>
+        <span className={`stamp stamp--${verdict.approved ? "green" : "red"} stamp--drop inspector__stamp`}>
+          {verdict.approved ? "Approved" : "Rejected"}
+        </span>
+        <div className="inspector__body">
+          <span className="eyebrow">Inspector&apos;s verdict</span>
+          <strong className="inspector__title">{verdict.title}</strong>
+          <p>{verdict.reason}</p>
         </div>
       </div>
 
-      <h3 className="coach__tips-title">Practical Investing Tips</h3>
-      <div className="tip-cards">
-        {analysis.actionable_tips.map((tip, i) => (
-          <article key={i} className="tip-card">
-            <h4>{tip.title}</h4>
-            <p>{tip.tip}</p>
-          </article>
-        ))}
-      </div>
+      {analysis.key_moments.length > 0 && (
+        <div className="moments">
+          <h3 className="coach__tips-title">Two weeks that decided your season</h3>
+          <ol className="moments__list">
+            {analysis.key_moments.map((moment) => (
+              <li key={`${moment.week}-${moment.title}`} className={`moment moment--${moment.kind}`}>
+                <span className="moment__week">Week {moment.week}</span>
+                <span className={`badge ${moment.kind === "mistake" ? "badge--immediate" : "badge--real"}`}>
+                  {moment.kind === "mistake" ? "Costly move" : "Smart move"}
+                </span>
+                <strong>{moment.title}</strong>
+                <p>{moment.detail}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      <article className="habit-card">
+        <p className="eyebrow">One habit for real life</p>
+        <h3>{analysis.real_life_habit.title}</h3>
+        <p>{analysis.real_life_habit.habit}</p>
+      </article>
+
+      <details className="coach__more">
+        <summary>Open the full inspector&apos;s file</summary>
+        <div className="coach__more-body">
+          <div className="coach__style">
+            <span className="eyebrow">Your investing style</span>
+            <strong>{analysis.play_style}</strong>
+            <p>{analysis.play_style_summary}</p>
+          </div>
+          <p className="coach__overall">{analysis.overall_message}</p>
+
+          <div className="coach__columns">
+            <div className="coach-list coach-list--good">
+              <h3>What You Did Well</h3>
+              <ul>
+                {analysis.strengths.map((item, i) => (
+                  <li key={i}>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="coach-list coach-list--change">
+              <h3>What You Could Change</h3>
+              <ul>
+                {analysis.improvements.map((item, i) => (
+                  <li key={i}>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <h3 className="coach__tips-title">Practical Investing Tips</h3>
+          <div className="tip-cards">
+            {analysis.actionable_tips.map((tip, i) => (
+              <article key={i} className="tip-card">
+                <h4>{tip.title}</h4>
+                <p>{tip.tip}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }
@@ -184,7 +222,7 @@ export default function GameOverScreen({ game, onPlayAgain }) {
 
   const { stats, analysis } = data;
   const roiTone = tone(stats.roi_pct);
-  const verdict = verdictFor(stats);
+  const verdict = verdictFor(analysis);
 
   return (
     <main className="gameover">
@@ -205,8 +243,8 @@ export default function GameOverScreen({ game, onPlayAgain }) {
           <p className="eyebrow">Final net worth</p>
           <p className="result-box__value">{money(stats.final_net_worth)}</p>
           <p className="result-box__sub">
-            Started with {money(stats.starting_cash)} &middot; cash {money(stats.final_cash)} + shares{" "}
-            {money(stats.final_stocks_value)}
+            Started with {money(stats.starting_cash)} &middot; cash {money(stats.final_cash)} + savings{" "}
+            {money(stats.final_savings)} + shares {money(stats.final_stocks_value)}
           </p>
         </div>
 
@@ -219,6 +257,10 @@ export default function GameOverScreen({ game, onPlayAgain }) {
           <div>
             <dt>Dividends earned</dt>
             <dd className={stats.total_dividends > 0 ? "is-up" : ""}>{money(stats.total_dividends)}</dd>
+          </div>
+          <div>
+            <dt>Savings interest</dt>
+            <dd className={stats.total_interest > 0 ? "is-up" : ""}>{money(stats.total_interest)}</dd>
           </div>
           <div>
             <dt>Rent paid</dt>

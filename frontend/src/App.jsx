@@ -7,6 +7,8 @@ import HowToPlay from "./components/HowToPlay.jsx";
 import HudBar from "./components/HudBar.jsx";
 import NewsSidebar from "./components/NewsSidebar.jsx";
 import Onboarding from "./components/Onboarding.jsx";
+import SavingsModal from "./components/SavingsModal.jsx";
+import SavingsPanel from "./components/SavingsPanel.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import StockChart from "./components/StockChart.jsx";
 import TradeModal from "./components/TradeModal.jsx";
@@ -17,8 +19,11 @@ const SESSION_KEY = "fq.sessionId";
 
 function EndWeekBar({ game, busy, onNextWeek }) {
   const { rent, cash, current_week: week, total_weeks: total } = game;
+  const savings = game.savings.balance;
   const rentDueNow = rent.enabled && rent.next_due_week === week;
-  const short = rentDueNow && cash < rent.monthly_rent;
+  // Rent comes out of cash first; the savings account covers the rest automatically.
+  const short = rentDueNow && cash + savings < rent.monthly_rent;
+  const fromSavings = rentDueNow && !short && cash < rent.monthly_rent ? rent.monthly_rent - cash : 0;
   const lastWeek = week === total;
 
   return (
@@ -35,13 +40,16 @@ function EndWeekBar({ game, busy, onNextWeek }) {
         {short ? (
           <p role="alert">
             <strong>Rent of {moneyCompact(rent.monthly_rent)} is due at the end of this week</strong>, but you only have{" "}
-            {money(cash)} in cash. Sell some shares first &mdash; or the game ends.
+            {money(cash)} in cash{savings > 0 ? ` and ${money(savings)} in savings` : ""}. Sell some shares first
+            &mdash; or the game ends.
           </p>
         ) : (
           <p>
             Ending the week lets the market react to the news
             {game.modifiers.enable_dividends ? ", pays your dividends" : ""}
-            {rentDueNow ? ` and collects ${moneyCompact(rent.monthly_rent)} rent` : ""}.
+            {savings > 0 ? ", adds your savings interest" : ""}
+            {rentDueNow ? ` and collects ${moneyCompact(rent.monthly_rent)} rent` : ""}
+            {fromSavings > 0 ? ` (${money(fromSavings)} of it moves automatically from your savings)` : ""}.
           </p>
         )}
       </div>
@@ -59,6 +67,7 @@ export default function App() {
   const [game, setGame] = useState(null);
   const [summary, setSummary] = useState(null);
   const [tradeCompanyId, setTradeCompanyId] = useState(null);
+  const [savingsMode, setSavingsMode] = useState(null); // "deposit" | "withdraw" | null
   const [advice, setAdvice] = useState(null);
   const [busy, setBusy] = useState(null); // "start" | "advisor" | "next" | null
   const [error, setError] = useState(null);
@@ -135,6 +144,14 @@ export default function App() {
     return result;
   };
 
+  const moveSavings = async (action, amount) => {
+    // Like the trade form, the savings form closes itself after its stamp animation.
+    const result = await api.savings(game.session_id, { action, amount });
+    setGame(result.state);
+    showToast(result.message);
+    return result;
+  };
+
   const askAdvisor = async () => {
     setBusy("advisor");
     setError(null);
@@ -173,6 +190,7 @@ export default function App() {
     writeStorage("sessionStorage", SESSION_KEY, null);
     setGame(null);
     setSummary(null);
+    setSavingsMode(null);
     setAdvice(null);
     setPhase("onboarding");
     window.scrollTo({ top: 0 });
@@ -200,6 +218,7 @@ export default function App() {
           <HudBar game={game} />
           <div className="game-layout">
             <ScenarioPanel game={game}>
+              <SavingsPanel game={game} onOpen={setSavingsMode} disabled={busy === "next"} />
               <AdvisorWidget
                 advisor={game.advisor}
                 advice={advice}
@@ -255,6 +274,15 @@ export default function App() {
               onTrade={trade}
             />
           )}
+          {savingsMode && (
+            <SavingsModal
+              key={savingsMode}
+              game={game}
+              initialMode={savingsMode}
+              onClose={() => setSavingsMode(null)}
+              onSubmit={moveSavings}
+            />
+          )}
           {summary && <WeekSummaryModal summary={summary} onContinue={closeSummary} />}
         </>
       )}
@@ -275,7 +303,7 @@ export default function App() {
         </div>
       )}
 
-      {!summary && !tradeCompany && (
+      {!summary && !tradeCompany && !savingsMode && (
         <button type="button" className="help-fab" onClick={() => setHelpOpen(true)} aria-label="How to play">
           ?
         </button>

@@ -25,12 +25,14 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
   const cashAfter = mode === "buy" ? game.cash - total : game.cash + total;
 
   const rent = game.rent;
+  const savings = game.savings.balance;
+  // Savings cover the rent automatically, so only cash + savings below the rent is a problem.
   const rentWarning =
     mode === "buy" &&
     value > 0 &&
     rent.enabled &&
     rent.next_due_week !== null &&
-    cashAfter < rent.monthly_rent;
+    cashAfter + savings < rent.monthly_rent;
 
   const switchMode = (next) => {
     setMode(next);
@@ -182,8 +184,14 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
 
         {rentWarning && (
           <p className="warning-note" role="alert">
-            <strong>Careful:</strong> after this purchase you&apos;d have {money(cashAfter)} in cash, but{" "}
-            {money(rent.monthly_rent)} rent is due at the end of Week {rent.next_due_week}. Shares are not cash!
+            <strong>Careful:</strong> after this purchase you&apos;d have {money(cashAfter)} in cash
+            {savings > 0 ? ` and ${money(savings)} in savings` : ""}, but {money(rent.monthly_rent)} rent is due at the
+            end of Week {rent.next_due_week}. Shares are not cash!
+          </p>
+        )}
+        {company.fine_print && (
+          <p className="fine-print fine-print--form">
+            <strong>Fine print:</strong> {company.fine_print}
           </p>
         )}
         {error && (

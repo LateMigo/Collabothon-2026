@@ -1,5 +1,5 @@
 import Modal from "./Modal.jsx";
-import { money, moneyCompact, pct, signedMoney, tone } from "../utils/format.js";
+import { money, moneyCompact, pct, ratePct, signedMoney, tone } from "../utils/format.js";
 
 function headlineFor(summary) {
   if (summary.end_reason === "liquidity") return "Out of cash!";
@@ -62,7 +62,8 @@ export default function WeekSummaryModal({ summary, onContinue }) {
   const resultTone = tone(summary.net_worth_change);
   const verdict = verdictFor(summary);
   const rentPaid = summary.rent.paid ? summary.rent.amount_paid : 0;
-  const marketMove = summary.net_worth_change - summary.dividends_total + rentPaid;
+  const savings = summary.savings;
+  const marketMove = summary.net_worth_change - summary.dividends_total - savings.interest + rentPaid;
   const lesson = summary.lesson;
   const delayedCount = summary.triggered_consequences.filter((c) => c.is_delayed).length;
 
@@ -89,6 +90,10 @@ export default function WeekSummaryModal({ summary, onContinue }) {
           <div>
             <dt>Dividends</dt>
             <dd className={`is-${tone(summary.dividends_total)}`}>{signedMoney(summary.dividends_total)}</dd>
+          </div>
+          <div>
+            <dt>Savings interest</dt>
+            <dd className={`is-${tone(savings.interest)}`}>{signedMoney(savings.interest)}</dd>
           </div>
           <div>
             <dt>Rent</dt>
@@ -197,6 +202,21 @@ export default function WeekSummaryModal({ summary, onContinue }) {
                   <b>{money(d.amount)}</b>
                 </li>
               ))}
+              <li>
+                <span>Savings interest ({ratePct(savings.rate_pct)} a week)</span>
+                <b className={savings.interest > 0 ? "is-up" : ""}>{money(savings.interest)}</b>
+              </li>
+              {savings.rate_changed && (
+                <li className="money-moves__alert">
+                  <span>
+                    Savings rate changed {ratePct(savings.old_rate_pct)} &rarr; {ratePct(savings.rate_pct)}
+                    {savings.rate_source_week && <> (news from Week {savings.rate_source_week})</>}
+                  </span>
+                  <b className={savings.rate_pct > savings.old_rate_pct ? "is-up" : "is-down"}>
+                    {savings.rate_pct > savings.old_rate_pct ? "▲" : "▼"}
+                  </b>
+                </li>
+              )}
               {summary.rent.enabled ? (
                 <>
                   {summary.rent.changed && (
@@ -217,6 +237,12 @@ export default function WeekSummaryModal({ summary, onContinue }) {
                       {summary.rent.paid ? `−${money(summary.rent.amount_paid)}` : "$0.00"}
                     </b>
                   </li>
+                  {savings.rent_from_savings > 0 && (
+                    <li className="money-moves__sub">
+                      <span>Cash was short &mdash; moved automatically from savings</span>
+                      <b>{money(savings.rent_from_savings)}</b>
+                    </li>
+                  )}
                   <li className="money-moves__sub">
                     <span>
                       {summary.rent.next_due_week
@@ -233,6 +259,10 @@ export default function WeekSummaryModal({ summary, onContinue }) {
               <li className="money-moves__total">
                 <span>Cash now</span>
                 <b className={summary.cash_after < 0 ? "is-down" : ""}>{money(summary.cash_after)}</b>
+              </li>
+              <li className="money-moves__sub">
+                <span>In savings</span>
+                <b>{money(savings.balance_after)}</b>
               </li>
             </ul>
           </div>

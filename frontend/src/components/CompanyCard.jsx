@@ -1,7 +1,74 @@
 import { useState } from "react";
-import { money, pct, RISK_LABELS, tone } from "../utils/format.js";
+import InfoTip from "./InfoTip.jsx";
+import { millions, money, pct, RISK_LABELS, tone } from "../utils/format.js";
 
 const RISK_SEGMENTS = 10;
+
+/** Trend arrow for the hard data: green when the move is good news, red when it is a warning. */
+function Trend({ direction, goodWhen }) {
+  if (direction === "neutral") {
+    return (
+      <span className="trend trend--flat" title="No change since last week">
+        =<span className="sr-only"> no change since last week</span>
+      </span>
+    );
+  }
+  const good = direction === goodWhen;
+  return (
+    <span className={`trend ${good ? "trend--good" : "trend--bad"}`} title={`${direction === "up" ? "Up" : "Down"} since last week`}>
+      {direction === "up" ? "▲" : "▼"}
+      <span className="sr-only"> {direction === "up" ? "rising" : "falling"} since last week</span>
+    </span>
+  );
+}
+
+function HardData({ fundamentals: f }) {
+  const marginPct = Math.round(f.profit_margin * 100);
+  return (
+    <section className="hard-data" aria-label="Hard data">
+      <p className="hard-data__title">
+        Hard data <small>&middot; this week&apos;s report</small>
+      </p>
+      <dl className="hard-data__rows">
+        <div>
+          <dt>
+            Cash
+            <InfoTip term="Cash">
+              Money the company has in the bank right now. Little cash and big bills is a dangerous mix.
+            </InfoTip>
+          </dt>
+          <dd>
+            {millions(f.cash)} <Trend direction={f.cash_trend} goodWhen="up" />
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Debt
+            <InfoTip term="Debt">
+              Money the company borrowed and must pay back with interest. Rising debt is a warning light.
+            </InfoTip>
+          </dt>
+          <dd>
+            {millions(f.debt)} <Trend direction={f.debt_trend} goodWhen="down" />
+          </dd>
+        </div>
+        <div>
+          <dt>
+            Profit margin
+            <InfoTip term="Profit margin">
+              How many cents of every $1 of sales the company keeps as profit. Below zero means it loses money.
+            </InfoTip>
+          </dt>
+          <dd className={marginPct < 0 ? "is-down" : undefined}>
+            {marginPct < 0 ? "−" : ""}
+            {Math.abs(marginPct)}% <Trend direction={f.margin_trend} goodWhen="up" />
+          </dd>
+        </div>
+      </dl>
+      <p className="hard-data__hint">Headlines can hype. Numbers like these are harder to fake.</p>
+    </section>
+  );
+}
 
 function RiskMeter({ level, risk, trend }) {
   // 10 segments, one per 10% of bankruptcy risk, so 5% and 35% look different.
@@ -66,7 +133,16 @@ export default function CompanyCard({ company, onTrade, disabled }) {
 
           <dl className="company-card__stats">
             <div>
-              <dt>Dividend/share</dt>
+              <dt>
+                Dividend/share
+                <InfoTip term="Dividend/share">
+                  {c.dividend_per_share > 0
+                    ? `Cash the company pays you every week for each share you own: 10 shares would bring you ${money(
+                        c.dividend_per_share * 10,
+                      )} a week.`
+                    : "Cash a company pays its owners every week. This one pays nothing right now."}
+                </InfoTip>
+              </dt>
               <dd>
                 {money(c.dividend_per_share)}
                 <small> / week</small>
@@ -78,7 +154,13 @@ export default function CompanyCard({ company, onTrade, disabled }) {
               </dd>
             </div>
             <div>
-              <dt>Bankruptcy risk</dt>
+              <dt>
+                Bankruptcy risk
+                <InfoTip term="Bankruptcy risk">
+                  The chance that this company runs out of money. If it goes bankrupt, its shares drop to $0 and you
+                  lose 100% of what you put in.
+                </InfoTip>
+              </dt>
               <dd>
                 <RiskMeter level={c.risk_level} risk={c.bankruptcy_risk} trend={c.risk_trend} />
               </dd>
@@ -93,8 +175,13 @@ export default function CompanyCard({ company, onTrade, disabled }) {
           </dl>
 
           <div className="company-card__actions">
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFlipped(true)}>
+            <button type="button" className="btn btn--ghost btn--sm company-card__flip" onClick={() => setFlipped(true)}>
               Details (Flip)
+              {c.fundamentals.changed_this_week && !c.is_bankrupt && (
+                <span className="report-dot" title="New hard data this week">
+                  <span className="sr-only"> &middot; new hard data this week</span>
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -105,6 +192,12 @@ export default function CompanyCard({ company, onTrade, disabled }) {
               Buy / Sell
             </button>
           </div>
+
+          {c.fine_print && (
+            <p className="fine-print">
+              <span aria-hidden="true">*</span> {c.fine_print}
+            </p>
+          )}
 
           {c.is_bankrupt && (
             <div className="bankrupt-stamp" role="status">
@@ -122,7 +215,8 @@ export default function CompanyCard({ company, onTrade, disabled }) {
           </div>
           <h3 className="company-card__name">{c.name}</h3>
           <p className="company-card__desc">{c.description}</p>
-          <dl className="company-card__facts">
+          <HardData fundamentals={c.fundamentals} />
+          <dl className="company-card__facts company-card__facts--pair">
             <div>
               <dt>Country</dt>
               <dd>{c.country}</dd>
@@ -131,6 +225,8 @@ export default function CompanyCard({ company, onTrade, disabled }) {
               <dt>Owner</dt>
               <dd>{c.owner}</dd>
             </div>
+          </dl>
+          <dl className="company-card__facts">
             <div>
               <dt>Condition</dt>
               <dd>{c.condition}</dd>

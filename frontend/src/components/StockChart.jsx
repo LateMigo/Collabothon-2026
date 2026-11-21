@@ -45,8 +45,15 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
   const H = height;
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
-  const base = history[0]?.prices ?? {};
   const lastWeek = history[history.length - 1]?.week ?? 0;
+  // Companies join the exchange mid-season: a series starts at its first listed price.
+  const has = (point, id) => point.prices[id] !== undefined;
+  const base = {};
+  for (const point of history) {
+    for (const [id, price] of Object.entries(point.prices)) {
+      if (base[id] === undefined) base[id] = price;
+    }
+  }
 
   const valueOf = (point, id) => {
     const price = point.prices[id] ?? 0;
@@ -55,9 +62,12 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
   };
 
   const scale = useMemo(() => {
-    const values = history.flatMap((point) => companies.map((c) => valueOf(point, c.id)));
+    const values = history.flatMap((point) => companies.filter((c) => has(point, c.id)).map((c) => valueOf(point, c.id)));
     return buildScale(values.length ? values : [0], mode);
   }, [history, companies, mode]);
+
+  // With many weeks, label every other week so the axis stays readable.
+  const labelEvery = totalWeeks > 10 ? 2 : 1;
 
   const x = (week) => PAD.left + (week / totalWeeks) * innerW;
   const y = (value) => PAD.top + (1 - (value - scale.lo) / (scale.hi - scale.lo || 1)) * innerH;
@@ -115,16 +125,19 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
           {weeks.map((week) => (
             <g key={week} className={`stock-chart__week ${week > lastWeek ? "is-future" : ""} ${week === hoverWeek ? "is-hover" : ""}`}>
               <line x1={x(week)} x2={x(week)} y1={PAD.top} y2={PAD.top + innerH} />
-              <text x={x(week)} y={H - 12} textAnchor="middle">
-                {week === 0 ? "Start" : `W${week}`}
-              </text>
+              {(week === 0 || week % labelEvery === 0) && (
+                <text x={x(week)} y={H - 12} textAnchor="middle">
+                  {week === 0 ? "Start" : `W${week}`}
+                </text>
+              )}
             </g>
           ))}
 
           {companies.map((company) => {
             const dimmed = focusId && focusId !== company.id;
             const focused = focusId === company.id;
-            const d = history
+            const points = history.filter((point) => has(point, company.id));
+            const d = points
               .map((point, i) => `${i === 0 ? "M" : "L"}${x(point.week).toFixed(1)},${y(valueOf(point, company.id)).toFixed(1)}`)
               .join(" ");
             return (
@@ -133,8 +146,8 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
                 className={`stock-chart__series ${dimmed ? "is-dimmed" : ""} ${focused ? "is-focused" : ""}`}
                 style={{ "--series": company.color }}
               >
-                {history.length > 1 && <path d={d} className="stock-chart__line" />}
-                {history.map((point) => {
+                {points.length > 1 && <path d={d} className="stock-chart__line" />}
+                {points.map((point) => {
                   const bankrupt = (point.prices[company.id] ?? 0) <= 0;
                   const cx = x(point.week);
                   const cy = y(valueOf(point, company.id));
@@ -172,6 +185,7 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
           >
             <strong>{hoverPoint.week === 0 ? "Start" : `Week ${hoverPoint.week}`}</strong>
             {companies
+              .filter((c) => has(hoverPoint, c.id))
               .map((c) => ({ ...c, value: valueOf(hoverPoint, c.id) }))
               .sort((a, b) => b.value - a.value)
               .map((c) => (
@@ -187,7 +201,9 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
 
       <ul className="chart-legend" aria-label="Highlight a company">
         {companies.map((company) => {
-          const latest = history[history.length - 1]?.prices[company.id] ?? 0;
+          // A company listed this week has no closed week yet: show its listing price instead.
+          const lastPoint = [...history].reverse().find((point) => has(point, company.id));
+          const latest = lastPoint ? lastPoint.prices[company.id] : company.price;
           return (
             <li key={company.id}>
               <button
@@ -198,7 +214,9 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
               >
                 <i style={{ background: company.color }} aria-hidden="true" />
                 <span className="chart-legend__ticker">{company.ticker}</span>
-                <span className="chart-legend__value">{latest <= 0 ? "Bankrupt" : money(latest)}</span>
+                <span className="chart-legend__value">
+                  {latest === undefined ? "New" : latest <= 0 ? "Bankrupt" : money(latest)}
+                </span>
               </button>
             </li>
           );
@@ -222,7 +240,7 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
             <tr key={point.week}>
               <th scope="row">{point.week === 0 ? "Start" : `Week ${point.week}`}</th>
               {companies.map((c) => (
-                <td key={c.id}>{money(point.prices[c.id] ?? 0)}</td>
+                <td key={c.id}>{has(point, c.id) ? money(point.prices[c.id]) : "not listed"}</td>
               ))}
             </tr>
           ))}

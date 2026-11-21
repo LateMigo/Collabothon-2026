@@ -151,6 +151,7 @@ export default function WeekSummaryModal({ summary, onContinue }) {
                   <th scope="col">Before</th>
                   <th scope="col">After</th>
                   <th scope="col">Change</th>
+                  <th scope="col">Risk</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,6 +164,18 @@ export default function WeekSummaryModal({ summary, onContinue }) {
                     <td>{money(p.old_price)}</td>
                     <td>{p.is_bankrupt ? "Bankrupt" : money(p.new_price)}</td>
                     <td className={`is-${tone(p.change_pct, 0.05)}`}>{pct(p.change_pct)}</td>
+                    <td
+                      className={`recap-risk is-${tone(p.risk_before - p.risk_after, 0.004)}`}
+                      title="Bankruptcy risk before and after this week"
+                    >
+                      {Math.round(p.risk_before * 100)}%
+                      {Math.abs(p.risk_after - p.risk_before) >= 0.005 && (
+                        <>
+                          {" "}
+                          {p.risk_after > p.risk_before ? "\u2191" : "\u2193"} {Math.round(p.risk_after * 100)}%
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

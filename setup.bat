@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title Finance Quest - setup
+title CosmiCash - setup
 cd /d "%~dp0"
 
 echo.

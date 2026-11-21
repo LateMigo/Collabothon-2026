@@ -50,7 +50,7 @@ except ImportError:  # pragma: no cover - exercised only when the SDK is missing
     genai_errors = None
     genai_types = None
 
-logger = logging.getLogger("finance_quest.ai")
+logger = logging.getLogger("cosmicash.ai")
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -61,7 +61,7 @@ TRANSIENT_STATUS_CODES = {500, 502, 503, 504}
 # =============================================================================
 
 UNIVERSE_RULES = (
-    "The game 'Finance Quest' takes place in a 100% fictional universe: fictional companies, "
+    "The game 'CosmiCash' takes place in a 100% fictional universe: fictional companies, "
     "countries, people and a fictional dollar ($). Never mention real companies, brands, people "
     "or real-world markets. Write for players of every generation - teenagers, working adults and "
     "seniors - in clear, warm, plain English: short sentences, no slang, no unexplained jargon, "

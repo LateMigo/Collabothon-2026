@@ -1,32 +1,6 @@
-const ACTION_LABELS = { buy: "Buy", sell: "Sell", hold: "Hold", watch: "Watch" };
+import InvestorAvatar from "./InvestorAvatar.jsx";
 
-/** Agent Gloop: a three-eyed alien on a crackly video channel, drawn on purpose like a 5-minute doodle. */
-function AdvisorIcon() {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className="advisor__icon">
-      <defs>
-        <filter id="advisor-wobble">
-          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" />
-          <feDisplacementMap in="SourceGraphic" scale="2.5" />
-        </filter>
-      </defs>
-      <rect x="2" y="2" width="60" height="60" rx="6" fill="#1b2a52" stroke="#111" strokeWidth="3" />
-      <g className="crude" filter="url(#advisor-wobble)">
-        <path d="M33 20 L27 8" stroke="#111" strokeWidth="3" />
-        <circle cx="26" cy="7" r="3.5" fill="var(--magenta)" stroke="#111" strokeWidth="2" />
-        <ellipse cx="32" cy="35" rx="18" ry="15" fill="var(--alien)" stroke="#111" strokeWidth="3" />
-        <circle cx="23" cy="32" r="4.5" fill="#fff" stroke="#111" strokeWidth="2" />
-        <circle cx="32" cy="28" r="5" fill="#fff" stroke="#111" strokeWidth="2" />
-        <circle cx="41" cy="32" r="4" fill="#fff" stroke="#111" strokeWidth="2" />
-        <circle cx="24.5" cy="33" r="1.8" fill="#111" />
-        <circle cx="33.5" cy="29" r="2" fill="#111" />
-        <circle cx="42" cy="33" r="1.6" fill="#111" />
-        <path d="M24 42 Q31 47 41 40" fill="none" stroke="#111" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M30 50 L35 50 L36 61 L32 63 L29 61 Z" fill="var(--stamp-red)" stroke="#111" strokeWidth="2" />
-      </g>
-    </svg>
-  );
-}
+const ACTION_LABELS = { buy: "Buy", sell: "Sell", hold: "Hold", watch: "Watch" };
 
 export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAsk }) {
   const hint = advice && advice.week === currentWeek ? advice : null;
@@ -38,7 +12,9 @@ export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAs
   return (
     <section className="advisor" aria-labelledby="advisor-title">
       <header className="advisor__head">
-        <AdvisorIcon />
+        <span className="advisor__icon">
+          <InvestorAvatar size={52} />
+        </span>
         <div>
           <p className="advisor__channel">Channel 7 &middot; Agent Gloop</p>
           <h2 id="advisor-title">Investment Advisor</h2>

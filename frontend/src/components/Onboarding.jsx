@@ -1,6 +1,5 @@
 import { useId, useState } from "react";
 import HeroIllustration from "./HeroIllustration.jsx";
-import { ReadabilityToggle } from "./HudBar.jsx";
 import { moneyCompact } from "../utils/format.js";
 
 function YesNo({ label, description, value, onChange }) {
@@ -26,12 +25,14 @@ function YesNo({ label, description, value, onChange }) {
 }
 
 /** Universal start screen: no age groups, one clear path into the game. */
-export default function Onboarding({ scenario, aiMode, highReadability, onToggleReadability, onStart, busy }) {
+export default function Onboarding({ scenario, aiMode, onStart, busy }) {
   const [enableDividends, setEnableDividends] = useState(true);
   const [enableLivingCosts, setEnableLivingCosts] = useState(true);
 
   const weeks = scenario?.total_weeks ?? 6;
-  const companies = scenario?.companies_count ?? 4;
+  const companies = scenario?.companies_count ?? 10;
+  const startingCompanies = scenario?.starting_companies ?? 4;
+  const interval = scenario?.listing_interval_weeks;
   const cash = scenario?.starting_cash ?? 2000;
   const rent = scenario?.initial_monthly_rent ?? 400;
   const period = scenario?.rent_period_weeks ?? 4;
@@ -55,25 +56,14 @@ export default function Onboarding({ scenario, aiMode, highReadability, onToggle
           </span>
           <p className="eyebrow">An investing game for every generation</p>
           <h1 className="onboarding__title">
-            <span className="onboarding__title-ink">Finance</span>
-            <span className="onboarding__title-outline">Quest</span>
+            <span className="onboarding__title-ink">Cosmi</span>
+            <span className="onboarding__title-outline">Cash</span>
           </h1>
           <p className="onboarding__lead">
-            You have {moneyCompact(cash)}, {companies} companies and {weeks} weeks. Read the news, invest your money
-            &mdash; and keep enough cash for the rent.
+            You start with {moneyCompact(cash)} and {startingCompanies} companies
+            {interval ? `, and a new one joins the exchange every ${interval} weeks` : ""} &mdash; {companies} in total
+            over {weeks} weeks. Read the news, invest your money and keep enough cash for the rent.
           </p>
-
-          <ul className="onboarding__stats">
-            <li>
-              <b>{weeks}</b> weeks
-            </li>
-            <li>
-              <b>{companies}</b> companies
-            </li>
-            <li>
-              <b>0</b> guarantees
-            </li>
-          </ul>
 
           <form className="setup-card" onSubmit={submit}>
             <p className="setup-card__head">Form R-1 &middot; Investor registration</p>
@@ -107,12 +97,6 @@ export default function Onboarding({ scenario, aiMode, highReadability, onToggle
                 value={enableLivingCosts}
                 onChange={setEnableLivingCosts}
               />
-            </fieldset>
-
-            <fieldset className="setup-group setup-group--row">
-              <legend>C &middot; Comfort</legend>
-              <p className="yesno__desc">Bigger text, stronger contrast and upright letters &mdash; switch it any time.</p>
-              <ReadabilityToggle enabled={highReadability} onToggle={onToggleReadability} variant="light" />
             </fieldset>
 
             <button type="submit" className="btn btn--red btn--xl btn--block" disabled={busy}>

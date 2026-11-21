@@ -169,7 +169,13 @@ def validate_cross_references(data: GameData) -> None:
     if len(set(tickers)) != len(tickers):
         errors.append("Company tickers must be unique")
 
+    listed_week = {c.id: c.listed_week for c in data.companies}
+    if not any(week == 1 for week in listed_week.values()):
+        errors.append("At least one company must be listed in week 1")
+
     for company in data.companies:
+        if company.listed_week > scenario.total_weeks:
+            errors.append(f"Company '{company.id}' lists after the final week")
         if company.industry not in data.industries:
             errors.append(f"Company '{company.id}' uses unknown industry '{company.industry}'")
         if company.id in data.industries or company.id == GLOBAL_TARGET:
@@ -188,6 +194,8 @@ def validate_cross_references(data: GameData) -> None:
         for company_id in week.market_drift:
             if company_id not in valid_company_targets:
                 errors.append(f"Week {week.week}: market_drift references unknown company '{company_id}'")
+            elif listed_week[company_id] > week.week:
+                errors.append(f"Week {week.week}: market_drift for '{company_id}' before it is listed")
         for event in week.events:
             if event.id in event_ids:
                 errors.append(f"Duplicate event id '{event.id}'")
@@ -200,6 +208,8 @@ def validate_cross_references(data: GameData) -> None:
                 elif effect.target_id not in valid_company_targets | valid_industry_targets | {GLOBAL_TARGET}:
                     errors.append(f"{where}: unknown target_id '{effect.target_id}'")
                 trigger = week.week + effect.delay_weeks
+                if effect.target_id in listed_week and trigger < listed_week[effect.target_id]:
+                    errors.append(f"{where}: effect lands before '{effect.target_id}' is listed")
                 if trigger > scenario.total_weeks:
                     errors.append(
                         f"{where}: effect triggers in week {trigger}, after the final week "

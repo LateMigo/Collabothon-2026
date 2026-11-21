@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal.jsx";
 import { clamp, money, plural } from "../utils/format.js";
 
-const QUICK_SHARES = [0.25, 0.5, 0.75, 1];
-
 export default function TradeModal({ company, game, onClose, onTrade }) {
   const canBuy = company.max_affordable > 0;
   const [mode, setMode] = useState(!canBuy && company.shares_owned > 0 ? "sell" : "buy");
@@ -16,10 +14,14 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
   useEffect(() => () => clearTimeout(closeTimer.current), []);
 
   const price = company.price;
+  // Selling pays the market price minus the selling fee (spread).
+  const unitPrice = mode === "buy" ? price : company.sell_price;
+  const feePct = game.sell_spread_pct;
+  const breakEvenPct = feePct > 0 ? (100 / (100 - feePct) - 1) * 100 : 0;
   // Auto-clamping: buy <= floor(cash / price), sell <= shares owned, never below 0.
   const max = mode === "buy" ? Math.max(0, Math.floor((game.cash + 1e-9) / price)) : company.shares_owned;
   const value = clamp(shares, 0, max);
-  const total = value * price;
+  const total = value * unitPrice;
   const cashAfter = mode === "buy" ? game.cash - total : game.cash + total;
 
   const rent = game.rent;
@@ -94,8 +96,8 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
 
         <dl className="trade-facts">
           <div>
-            <dt>Price per share</dt>
-            <dd>{money(price)}</dd>
+            <dt>{mode === "buy" ? "Price per share" : "You get per share"}</dt>
+            <dd>{money(unitPrice)}</dd>
           </div>
           <div>
             <dt>Your cash</dt>
@@ -133,25 +135,6 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
               +
             </button>
           </div>
-          <div className="quick-picks" role="group" aria-label="Quick amounts">
-            {QUICK_SHARES.map((share) => {
-              const amount = Math.floor(max * share);
-              return (
-                <button
-                  key={share}
-                  type="button"
-                  className={value === amount && amount > 0 ? "is-active" : ""}
-                  onClick={() => setShares(amount)}
-                  disabled={max === 0}
-                >
-                  {share * 100}%
-                </button>
-              );
-            })}
-            <button type="button" className="quick-picks__max" onClick={() => setShares(max)} disabled={max === 0}>
-              Max
-            </button>
-          </div>
         </div>
 
         <p id="trade-hint" className="trade-hint">
@@ -161,6 +144,30 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
               : "You don't own any shares of this company yet."
             : `Numbers above ${max} are adjusted automatically.`}
         </p>
+
+        {feePct > 0 && (
+          <p className="fee-note">
+            {mode === "buy" ? (
+              <>
+                <strong>Selling costs {feePct}%.</strong> If you sell later, you get {money(company.sell_price)} per share
+                at today&apos;s price. The price has to rise about {breakEvenPct.toFixed(1)}% before selling breaks even.
+              </>
+            ) : (
+              <>
+                <strong>Selling fee {feePct}%:</strong> market price {money(price)} &minus; {feePct}% ={" "}
+                {money(company.sell_price)} per share.
+                {company.avg_cost > 0 && (
+                  <>
+                    {" "}
+                    You paid {money(company.avg_cost)} on average, so selling now{" "}
+                    {company.sell_price >= company.avg_cost ? "is a gain" : "means a loss"} of{" "}
+                    {money(Math.abs(company.sell_price - company.avg_cost) * value)} on these shares.
+                  </>
+                )}
+              </>
+            )}
+          </p>
+        )}
 
         <div className="trade-total" aria-live="polite">
           <div>

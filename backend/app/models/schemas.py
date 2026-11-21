@@ -1,4 +1,4 @@
-"""Pydantic v2 models for Finance Quest.
+"""Pydantic v2 models for CosmiCash.
 
 Sections:
   1. Enums
@@ -142,6 +142,7 @@ class CompanyDefinition(_StrictModel):
     country: str
     owner: str
     condition: str
+    listed_week: int = Field(default=1, ge=1, description="Week the company joins the exchange (IPO).")
 
 
 class IndustryDefinition(_StrictModel):
@@ -179,7 +180,16 @@ class ScenarioSettings(_StrictModel):
     starting_cash: float = Field(gt=0)
     initial_monthly_rent: float = Field(ge=0)
     rent_period_weeks: int = Field(ge=1)
+    sell_spread: float = Field(
+        default=0.0, ge=0.0, lt=1.0, description="Selling fee/spread: you sell at price x (1 - sell_spread)."
+    )
     bankruptcy_threshold: float = Field(gt=0, le=1)
+    risk_sensitivity: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=5.0,
+        description="Weekly risk change = -risk_sensitivity x price change (falling prices raise risk).",
+    )
     risk_thresholds: RiskThresholds
     advisor_uses_per_game: int = Field(ge=0)
     advisor_max_per_week: int = Field(ge=1)
@@ -455,7 +465,10 @@ class CompanyView(BaseModel):
     condition: str
     price: float
     previous_price: float
+    sell_price: float
     change_pct: float | None
+    listed_week: int
+    just_listed: bool
     dividend_per_share: float
     previous_dividend: float
     bankruptcy_risk: float
@@ -523,6 +536,7 @@ class GameStateResponse(BaseModel):
     starting_cash: float
     roi_pct: float
     total_dividends: float
+    sell_spread_pct: float
     rent: RentView
     advisor: AdvisorView
     companies: list[CompanyView]
@@ -543,6 +557,8 @@ class ScenarioInfo(BaseModel):
     initial_monthly_rent: float
     rent_period_weeks: int
     companies_count: int
+    starting_companies: int
+    listing_interval_weeks: int | None
     available_modes: list[GameMode]
     coming_soon_modes: list[GameMode]
 
@@ -555,6 +571,7 @@ class TradeResponse(BaseModel):
     executed_shares: int
     was_clamped: bool
     price: float
+    market_price: float
     total: float
     message: str
     state: GameStateResponse
@@ -595,6 +612,8 @@ class PriceChange(BaseModel):
     old_price: float
     new_price: float
     change_pct: float
+    risk_before: float
+    risk_after: float
     is_bankrupt: bool
     shares_owned: int
 

@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title Finance Quest - launcher
+title CosmiCash - launcher
 cd /d "%~dp0"
 
 echo.
@@ -27,7 +27,7 @@ rem ---------- Backend on port 8000 ----------
 netstat -ano | findstr /R /C:":8000 .*LISTENING" >nul
 if errorlevel 1 (
     echo [1/2] Starting backend on http://localhost:8000 ...
-    start "Finance Quest - backend (port 8000)" /D "%~dp0backend" cmd /k ".venv\Scripts\python.exe -m uvicorn app.main:app --port 8000"
+    start "CosmiCash - backend (port 8000)" /D "%~dp0backend" cmd /k ".venv\Scripts\python.exe -m uvicorn app.main:app --port 8000"
 ) else (
     echo [1/2] Port 8000 is already in use - assuming the backend is already running.
 )
@@ -36,7 +36,7 @@ rem ---------- Frontend on port 5173 ----------
 netstat -ano | findstr /R /C:":5173 .*LISTENING" >nul
 if errorlevel 1 (
     echo [2/2] Starting frontend on http://localhost:5173 ...
-    start "Finance Quest - frontend (port 5173)" /D "%~dp0frontend" cmd /k "npm run dev"
+    start "CosmiCash - frontend (port 5173)" /D "%~dp0frontend" cmd /k "npm run dev"
 ) else (
     echo [2/2] Port 5173 is already in use - assuming the frontend is already running.
 )

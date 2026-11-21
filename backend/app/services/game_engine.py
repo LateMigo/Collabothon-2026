@@ -1,4 +1,4 @@
-"""Finance Quest simulation engine.
+"""CosmiCash simulation engine.
 
 Turn model ("close the week"):
   * During Week N the player reads Week N's headlines (title + description only)
@@ -151,6 +151,8 @@ class GameEngine:
             initial_monthly_rent=s.initial_monthly_rent,
             rent_period_weeks=s.rent_period_weeks,
             companies_count=len(self.repo.companies),
+            starting_companies=sum(1 for c in self.repo.companies if c.listed_week <= 1),
+            listing_interval_weeks=self._listing_interval(),
             available_modes=[GameMode.SINGLE_INVESTOR],
             coming_soon_modes=[GameMode.CEO],
         )
@@ -190,7 +192,13 @@ class GameEngine:
             monthly_rent=s.initial_monthly_rent,
             previous_monthly_rent=s.initial_monthly_rent,
             companies=companies,
-            price_history=[PricePoint(week=0, label="Start", prices={cid: c.price for cid, c in companies.items()})],
+            price_history=[
+                PricePoint(
+                    week=0,
+                    label="Start",
+                    prices={cid: c.price for cid, c in companies.items() if self._is_listed(cid, 1)},
+                )
+            ],
             advisor_uses_left=s.advisor_uses_per_game,
         )
         await self.store.save(session)
@@ -207,11 +215,16 @@ class GameEngine:
                 raise CompanyNotFoundError(f"Unknown company '{request.company_id}'.")
             if state.is_bankrupt:
                 raise TradingHaltedError(f"{company.name} is bankrupt - trading has been stopped.")
+            if not self._is_listed(company.id, session.current_week):
+                raise TradingHaltedError(f"{company.name} joins the exchange in Week {company.listed_week}.")
 
             position = session.portfolio.get(company.id) or PortfolioPosition(
                 company_id=company.id, instrument_type=InstrumentType.STOCK
             )
-            price = state.price
+            market_price = state.price
+            # Selling is a bit worse than buying (spread/fee), like on a real exchange:
+            # flipping a stock right after buying it always loses money.
+            price = market_price if request.action == TradeAction.BUY else self._sell_price(market_price)
 
             # Server-side auto-clamping (mirrors the frontend clamp).
             if request.action == TradeAction.BUY:
@@ -251,11 +264,14 @@ class GameEngine:
                 price=price,
                 amount=total,
                 note=f"{verb} {executed} {company.ticker} at {money(price)}",
-                details={"requested_shares": request.shares, "was_clamped": was_clamped},
+                details={"requested_shares": request.shares, "was_clamped": was_clamped, "market_price": market_price},
             )
             await self.store.save(session)
 
             message = f"{verb} {executed} {company.ticker} share{'s' if executed != 1 else ''} for {money(total)}."
+            if request.action == TradeAction.SELL and price < market_price:
+                fee_pct = self.repo.scenario.sell_spread * 100
+                message += f" (Market price {money(market_price)} minus the {fee_pct:g}% selling fee.)"
             if was_clamped:
                 message += f" (Adjusted from {request.shares} to the maximum possible: {executed}.)"
             return TradeResponse(
@@ -266,6 +282,7 @@ class GameEngine:
                 executed_shares=executed,
                 was_clamped=was_clamped,
                 price=price,
+                market_price=market_price,
                 total=total,
                 message=message,
                 state=self._build_state(session),
@@ -330,7 +347,7 @@ class GameEngine:
                 raise GameOverError("There is no scripted content for this week.")
 
             net_worth_before = self._net_worth(session)
-            prices_before = {cid: c.price for cid, c in session.companies.items()}
+            prices_before = {cid: c.price for cid, c in session.companies.items() if self._is_listed(cid, week)}
             holdings_before = {cid: p.shares for cid, p in session.portfolio.items()}
             rent_before = session.monthly_rent
             for company in session.companies.values():
@@ -384,8 +401,20 @@ class GameEngine:
             # 2b. Scripted everyday market wiggle (deterministic, from game_data.json).
             for company_id, drift in week_def.market_drift.items():
                 company = session.companies.get(company_id)
-                if company and not company.is_bankrupt and drift:
+                if company and not company.is_bankrupt and drift and self._is_listed(company_id, week):
                     company.price = r2(max(MIN_ACTIVE_PRICE, company.price * (1 + drift)))
+
+            # 2c. Market mood: a falling share price raises a company's bankruptcy risk, a rising one lowers it.
+            sensitivity = s.risk_sensitivity
+            if sensitivity:
+                for company_id, before in prices_before.items():
+                    company = session.companies[company_id]
+                    if company.is_bankrupt or before <= 0:
+                        continue
+                    change = (company.price - before) / before
+                    company.bankruptcy_risk = round(
+                        min(1.0, max(0.02, company.bankruptcy_risk - sensitivity * change)), 4
+                    )
 
             # 3. Rent update: a "rent" effect changes monthly_rent right away (paid on the next due date).
             rent_changed = abs(session.monthly_rent - rent_before) > 1e-9
@@ -406,7 +435,11 @@ class GameEngine:
             dividends_total = r2(sum(d.amount for d in dividends))
             # 4c. Price history for the SVG chart.
             session.price_history.append(
-                PricePoint(week=week, label=f"W{week}", prices={cid: c.price for cid, c in session.companies.items()})
+                PricePoint(
+                    week=week,
+                    label=f"W{week}",
+                    prices={cid: c.price for cid, c in session.companies.items() if self._is_listed(cid, week)},
+                )
             )
             # 4d. Rent settlement every `rent_period_weeks` weeks.
             payment = self._settle_rent(session, week)
@@ -419,7 +452,7 @@ class GameEngine:
                     stocks_value=stocks_value,
                     net_worth=r2(session.cash + stocks_value),
                     holdings={cid: p.shares for cid, p in session.portfolio.items() if p.shares > 0},
-                    prices={cid: c.price for cid, c in session.companies.items()},
+                    prices={cid: c.price for cid, c in session.companies.items() if self._is_listed(cid, week)},
                     dividends_received=dividends_total,
                     rent_paid=payment.amount if payment else 0.0,
                     monthly_rent=session.monthly_rent,
@@ -447,10 +480,13 @@ class GameEngine:
                     change_pct=round((c.price - prices_before[cid]) / prices_before[cid] * 100, 2)
                     if prices_before[cid] > 0
                     else 0.0,
+                    risk_before=round(c.previous_risk, 4),
+                    risk_after=round(c.bankruptcy_risk, 4),
                     is_bankrupt=c.is_bankrupt,
                     shares_owned=holdings_before.get(cid, 0),
                 )
                 for cid, c in session.companies.items()
+                if cid in prices_before
             ]
             unmasked = []
             for event in week_def.events:
@@ -562,6 +598,7 @@ class GameEngine:
                     is_bankrupt=session.companies[c.id].is_bankrupt,
                 )
                 for c in self.repo.companies
+                if self._is_listed(c.id, session.current_week)
             ]
             analysis = await self.ai.generate_final_analysis(
                 FinalAnalysisContext(
@@ -640,7 +677,7 @@ class GameEngine:
         else:
             for company_id in self.repo.resolve_company_ids(effect.target_id):
                 state = session.companies[company_id]
-                if state.is_bankrupt:
+                if state.is_bankrupt or not self._is_listed(company_id, trigger_week):
                     continue
                 if effect.target_type == TargetType.STOCK_PRICE:
                     before = state.price
@@ -718,7 +755,7 @@ class GameEngine:
         threshold = self.repo.scenario.bankruptcy_threshold
         notices = []
         for company_id, state in session.companies.items():
-            if state.is_bankrupt or state.bankruptcy_risk < threshold:
+            if state.is_bankrupt or state.bankruptcy_risk < threshold or not self._is_listed(company_id, week):
                 continue
             company = self.repo.company(company_id)
             last_price = state.price
@@ -844,7 +881,7 @@ class GameEngine:
                 shares_owned=session.portfolio[c.id].shares if c.id in session.portfolio else 0,
             )
             for c in self.repo.companies
-            if not session.companies[c.id].is_bankrupt
+            if not session.companies[c.id].is_bankrupt and self._is_listed(c.id, week)
         ]
 
         real: list[tuple[float, AdvisorSignal]] = []
@@ -872,7 +909,7 @@ class GameEngine:
                 return
             for company_id in self.repo.resolve_company_ids(effect.target_id):
                 state = session.companies[company_id]
-                if state.is_bankrupt:
+                if state.is_bankrupt or not self._is_listed(company_id, week):
                     continue
                 company = self.repo.company(company_id)
                 if effect.target_type == TargetType.STOCK_PRICE:
@@ -915,7 +952,8 @@ class GameEngine:
                     insight = self.repo.noise_insight(event.id) if event.is_noise else None
                     if not insight or not insight.related_company_id:
                         continue
-                    if session.companies[insight.related_company_id].is_bankrupt:
+                    related = insight.related_company_id
+                    if session.companies[related].is_bankrupt or not self._is_listed(related, week):
                         continue
                     company = self.repo.company(insight.related_company_id)
                     signals.append(
@@ -963,6 +1001,20 @@ class GameEngine:
     def _ensure_running(session: GameSession) -> None:
         if session.is_game_over:
             raise GameOverError("This game is over. Start a new game to play again.")
+
+    def _is_listed(self, company_id: str, week: int) -> bool:
+        company = self.repo.company(company_id)
+        return company is not None and company.listed_week <= week
+
+    def _listing_interval(self) -> int | None:
+        weeks = sorted({c.listed_week for c in self.repo.companies if c.listed_week > 1})
+        if len(weeks) < 2:
+            return None
+        gaps = {b - a for a, b in zip(weeks, weeks[1:])}
+        return gaps.pop() if len(gaps) == 1 else None
+
+    def _sell_price(self, market_price: float) -> float:
+        return r2(market_price * (1 - self.repo.scenario.sell_spread))
 
     @staticmethod
     def _max_affordable(cash: float, price: float) -> int:
@@ -1075,6 +1127,9 @@ class GameEngine:
         position = session.portfolio.get(company_id)
         shares = position.shares if position else 0
         has_history = len(session.price_history) > 1
+        just_listed = (
+            company.listed_week > 1 and company.listed_week == session.current_week and not session.is_game_over
+        )
         change_pct = None
         if has_history and state.previous_price > 0:
             change_pct = round((state.price - state.previous_price) / state.previous_price * 100, 2)
@@ -1098,7 +1153,10 @@ class GameEngine:
             condition=company.condition,
             price=state.price,
             previous_price=state.previous_price,
-            change_pct=change_pct,
+            sell_price=0.0 if state.is_bankrupt else self._sell_price(state.price),
+            change_pct=None if just_listed else change_pct,
+            listed_week=company.listed_week,
+            just_listed=just_listed,
             dividend_per_share=state.dividend_per_share,
             previous_dividend=state.previous_dividend,
             bankruptcy_risk=state.bankruptcy_risk,
@@ -1175,9 +1233,14 @@ class GameEngine:
             # ROI = investment return before living costs (rent is shown separately).
             roi_pct=round((net_worth + session.total_rent_paid - session.starting_cash) / session.starting_cash * 100, 2),
             total_dividends=session.total_dividends,
+            sell_spread_pct=round(s.sell_spread * 100, 2),
             rent=rent,
             advisor=advisor,
-            companies=[self._company_view(session, c.id) for c in self.repo.companies],
+            companies=[
+                self._company_view(session, c.id)
+                for c in self.repo.companies
+                if self._is_listed(c.id, session.current_week)
+            ],
             news=news,
             price_history=session.price_history,
             net_worth_history=history,

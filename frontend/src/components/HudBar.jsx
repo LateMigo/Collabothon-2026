@@ -3,29 +3,6 @@ import { money, moneyCompact, pct, plural, readStorage, tone, writeStorage } fro
 
 const COLLAPSED_KEY = "fq.hudCollapsed";
 
-export function ReadabilityToggle({ enabled, onToggle, variant = "dark" }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={enabled}
-      aria-label="High Readability"
-      className={`readability-toggle readability-toggle--${variant} ${enabled ? "is-on" : ""}`}
-      onClick={onToggle}
-    >
-      <span className="readability-toggle__icon" aria-hidden="true">
-        Aa
-      </span>
-      <span className="readability-toggle__label" aria-hidden="true">
-        High Readability
-      </span>
-      <span className="readability-toggle__track" aria-hidden="true">
-        <span className="readability-toggle__thumb" />
-      </span>
-    </button>
-  );
-}
-
 /** Crude little planet - the exchange's "official" emblem. */
 function BrandMark() {
   return (
@@ -90,34 +67,7 @@ function RentIndicator({ rent, cash }) {
   );
 }
 
-/** One-line summary shown while the panel is collapsed. */
-function CompactReadout({ game, change }) {
-  const { rent, cash } = game;
-  const status = rent.enabled ? rentStatus(rent, cash) : null;
-  return (
-    <p className="hud-compact">
-      <span>
-        <b>Cash</b> {money(cash)}
-      </span>
-      <span>
-        <b>Net worth</b> {money(game.net_worth)} <span className={`is-${tone(change)}`}>{pct(change)}</span>
-      </span>
-      {status ? (
-        <span className={`hud-compact__rent ${status.danger ? "is-danger" : ""} ${status.changed ? "is-changed" : ""}`}>
-          <b>Rent</b> {moneyCompact(rent.monthly_rent)}
-          {status.changed && ` ${status.up ? "▲" : "▼"} ${status.delta}`} &middot;{" "}
-          {status.danger ? `${status.dueText} Not enough cash!` : status.dueText}
-        </span>
-      ) : (
-        <span>
-          <b>Rent</b> off
-        </span>
-      )}
-    </p>
-  );
-}
-
-export default function HudBar({ game, highReadability, onToggleReadability }) {
+export default function HudBar({ game }) {
   const [collapsed, setCollapsed] = useState(() => readStorage("localStorage", COLLAPSED_KEY) === "1");
   const { current_week: week, total_weeks: total, cash, stocks_value: stocks, net_worth: netWorth } = game;
   const change = ((netWorth - game.starting_cash) / game.starting_cash) * 100;
@@ -127,13 +77,32 @@ export default function HudBar({ game, highReadability, onToggleReadability }) {
     writeStorage("localStorage", COLLAPSED_KEY, collapsed ? "1" : "0");
   }, [collapsed]);
 
+  if (collapsed) {
+    const danger = game.rent.enabled && rentStatus(game.rent, cash).danger;
+    return (
+      <div className="hud-tab-wrap">
+        <button
+          type="button"
+          className={`hud-tab ${danger ? "hud-tab--danger" : ""}`}
+          aria-expanded="false"
+          aria-controls="hud-details"
+          onClick={() => setCollapsed(false)}
+          title={danger ? "Rent is due and you are short of cash - open the panel" : "Show the top panel"}
+        >
+          <span aria-hidden="true">{"▾"}</span> Show panel
+          {danger && <span className="hud-tab__alert"> &middot; Rent alert!</span>}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <header className={`hud ${collapsed ? "is-collapsed" : ""}`}>
+    <header className="hud">
       <div className="hud__inner">
-        <div className="brand" aria-label="Finance Quest">
+        <div className="brand" aria-label="CosmiCash">
           <BrandMark />
           <span className="brand__text">
-            <span>Finance</span> <span className="brand__accent">Quest</span>
+            <span>Cosmi</span><span className="brand__accent">Cash</span>
             <small>Galactic Exchange &middot; Booth 7</small>
           </span>
         </div>
@@ -144,9 +113,7 @@ export default function HudBar({ game, highReadability, onToggleReadability }) {
           <span className="hud-week__of">/{total}</span>
         </div>
 
-        {collapsed && <CompactReadout game={game} change={change} />}
-
-        <dl id="hud-details" className="hud-stats" hidden={collapsed}>
+        <dl id="hud-details" className="hud-stats">
           <div className="hud-stat">
             <dt>Cash</dt>
             <dd>{money(cash)}</dd>
@@ -168,20 +135,19 @@ export default function HudBar({ game, highReadability, onToggleReadability }) {
         </dl>
 
         <div className="hud__controls">
-          <ReadabilityToggle enabled={highReadability} onToggle={onToggleReadability} />
           <button
             type="button"
             className="hud__collapse"
-            aria-expanded={!collapsed}
+            aria-expanded="true"
             aria-controls="hud-details"
-            aria-label={collapsed ? "Show top panel" : "Hide top panel"}
-            title={collapsed ? "Show top panel" : "Hide top panel"}
-            onClick={() => setCollapsed((value) => !value)}
+            aria-label="Hide top panel"
+            title="Hide top panel"
+            onClick={() => setCollapsed(true)}
           >
             <span aria-hidden="true" className="hud__collapse-icon">
-              {collapsed ? "▾" : "▴"}
+              {"▴"}
             </span>
-            <span className="hud__collapse-text">{collapsed ? "Show" : "Hide"}</span>
+            <span className="hud__collapse-text">Hide</span>
           </button>
         </div>
       </div>

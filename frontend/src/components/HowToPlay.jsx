@@ -7,7 +7,11 @@ const STEPS = [
   },
   {
     title: "Buy or sell",
-    text: "Press “Buy / Sell” on a company card. Flip a card with “Details” to learn who runs the company and how it is doing.",
+    text: "Press “Buy / Sell” on a company card. Selling costs a 5% fee, so selling right after buying loses money — plan to hold. Flip a card with “Details” to learn more.",
+  },
+  {
+    title: "Meet new companies",
+    text: "The season lasts 12 weeks. You start with 2 companies and a new one joins the exchange every 2 weeks (Weeks 3, 5, 7 and 9) \u2014 look for the \u201cJust listed\u201d stamp.",
   },
   {
     title: "End the week",

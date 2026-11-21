@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { money, pct, RISK_LABELS, tone } from "../utils/format.js";
 
+const RISK_SEGMENTS = 10;
+
 function RiskMeter({ level, risk, trend }) {
-  const levels = ["low", "elevated", "critical"];
-  const activeIndex = levels.indexOf(level);
+  // 10 segments, one per 10% of bankruptcy risk, so 5% and 35% look different.
+  const lit = Math.max(1, Math.min(RISK_SEGMENTS, Math.round(risk * RISK_SEGMENTS)));
   return (
     <span className={`risk-meter risk-meter--${level}`}>
       <span className="risk-meter__bars" aria-hidden="true">
-        {levels.map((l, i) => (
-          <span key={l} className={i <= activeIndex ? "is-lit" : ""} />
+        {Array.from({ length: RISK_SEGMENTS }, (_, i) => (
+          <span key={i} className={i < lit ? "is-lit" : ""} />
         ))}
       </span>
       <span className="risk-meter__label">
@@ -50,7 +52,10 @@ export default function CompanyCard({ company, onTrade, disabled }) {
             </span>
           </div>
 
-          <p className="eyebrow">{c.industry_label}</p>
+          <p className="eyebrow">
+            {c.industry_label}
+            {c.just_listed && <span className="badge badge--listed">Just listed</span>}
+          </p>
           <h3 className="company-card__name">{c.name}</h3>
           <p className="company-card__product">{c.main_product}</p>
 

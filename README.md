@@ -1,9 +1,9 @@
-# Finance Quest
+# CosmiCash
 
 **A turn-based investing game for every generation.**
 Built for the hackathon theme **"Innovations for all generations"**.
 
-You start with **$2,000**, four fictional companies and **six weeks**. Every week brings new headlines. Some move prices immediately, some only weeks later, and some are just noise. You buy and sell shares, collect dividends, pay rent every four weeks and try not to back a company that is heading for bankruptcy. When the season ends, an AI coach looks at every move you made and explains what worked, what to change and which money habits to keep.
+You start with **$3,000** and two fictional companies, and a new company joins the exchange **every 2 weeks** (Weeks 3, 5, 7 and 9 - 6 in total) during a **12-week season** (about 3 months). Every week brings new headlines. Some move prices immediately, some only weeks later, and some are just noise. You buy and sell shares, collect dividends, pay rent every four weeks and try not to back a company that is heading for bankruptcy. When the season ends, an AI coach looks at every move you made and explains what worked, what to change and which money habits to keep.
 
 The universe is entirely made up: the companies, countries, people, events and the dollar ($) are fictional. Players can experiment and lose money without any real-world consequences.
 
@@ -15,7 +15,6 @@ The universe is entirely made up: the companies, countries, people, events and t
 | --- | --- |
 | **Universal design, no age profiles** | The game never asks for your age. The same clear interface works for teenagers, parents and grandparents. |
 | **Plain-language AI** | Gemini is told to write short sentences and to explain every finance word it uses. Each week has a 2-minute lesson with a small glossary called the "jargon corner". |
-| **High Readability mode** | A single switch, available on every screen, makes the text larger, raises the contrast to the maximum, swaps the pixel and typewriter fonts for Atkinson Hyperlegible (a typeface designed for low-vision readers), straightens tilted papers and stamps, removes the starfield, scanlines and glow effects, and stops all animation. |
 | **Real-life money mechanics** | Rent and living costs, dividends, bankruptcy risk and "market lag" are the lessons that carry over to real life. |
 | **Safe to fail** | A fictional universe and a scripted scenario. Running out of cash is part of the lesson, and there are no real consequences. |
 
@@ -34,7 +33,9 @@ The game is styled as **Booth 7 of a shabby Galactic Exchange**: you sit at an o
 - **Server-side secrecy.** During a turn the API sends only each headline's `title` and `description`. Fields such as `is_noise`, `effects` and `delay_weeks` are never sent, so players have to work out cause and effect themselves.
 - **SVG stock chart** built in plain React with no chart library. It has a legend you can click to highlight one company, a $ price / % change toggle, week markers, a "coming weeks" zone, tooltips on hover and a data table that screen readers can read.
 - **3D flip company cards** made with CSS only. The front shows the price, % change, dividend per share, bankruptcy risk (Low, Elevated or Critical) and the shares you hold. The back shows the country, the owner, the company's condition and its latest news.
-- **Buy and sell with auto-clamping.** The frontend and the backend both clamp trades: a purchase is capped at `floor(cash / price)` and a sale at the number of shares you own. There are 25 / 50 / 75 / 100% buttons, a **Max** button and a warning when a purchase would leave you short for rent.
+- **Buy and sell with auto-clamping.** The frontend and the backend both clamp trades: a purchase is capped at `floor(cash / price)` and a sale at the number of shares you own. You type the number of shares (or use the − / + buttons); anything above the limit is adjusted automatically, and a warning appears when a purchase would leave you short for rent.
+- **New companies every 2 weeks.** The season starts with Sizzle & Co. and Voltara Power; MediPulse Labs (Week 3), PixelNest (5), Orbitra Freight (7) and Vaultline Bank (9) list during the game (`listed_week` in `game_data.json`). A new company shows a *Just listed* stamp, appears on the chart from its listing week and can't be traded before it lists.
+- **Selling fee (spread).** Selling pays the market price minus 5% (`sell_spread` in `game_data.json`), just like the buy/sell spread on a real exchange. Selling right after buying always loses money: a price has to rise about 5.3% before selling breaks even. The trade window shows the sell price, the break-even rise and your gain or loss per sale.
 - **Rent and living costs.** Rent is collected when `week % 4 == 0`. The HUD shows a countdown and highlights changes, for example **Rent: $480 (+$80)**. If your cash falls below zero after paying rent, the game ends with a liquidity loss.
 - **Dividends.** At the end of every week you receive `shares × dividend_per_share`. News can raise or cut a company's dividend.
 - **Bankruptcy.** When a company's `bankruptcy_risk` reaches 0.85 or more, its share price drops to $0 and trading in it is stopped.
@@ -42,7 +43,7 @@ The game is styled as **Booth 7 of a shabby Galactic Exchange**: you sit at an o
 - **Week summary.** Two sections: **"What Just Hit the Market"**, which separates immediate from delayed effects, and **"Financial Recap & Market Lag Lesson"**, which shows the price table, dividends, rent, the headlines revealed as noise and the AI micro-lesson.
 - **End-of-game Move Analysis & Financial Coaching.** It shows your playing style, strengths and improvements that refer to your actual trades, 3–4 practical tips, your final net worth, ROI, dividends, rent paid, the final chart, your trade history and a timeline of "what really happened".
 - **Gemini with an automatic fallback.** If the API key is missing, the network fails, a call times out, the quota is used up or Gemini returns malformed JSON, the game quietly switches to deterministic answers and marks them `ai_source: "fallback"`.
-- **High Readability mode**, keyboard support everywhere (focus trap in dialogs, skip link, visible focus ring) and support for `prefers-reduced-motion`.
+- Keyboard support everywhere (focus trap in dialogs, skip link, visible focus ring) and support for `prefers-reduced-motion`.
 
 ### Roadmap (Day 2, extension points already in the code)
 
@@ -96,7 +97,7 @@ flowchart LR
 
 | Layer | File | Responsibility |
 | --- | --- | --- |
-| Data | `backend/data/game_data.json` | The whole fictional universe: companies, industries, 6 weeks of events, noise explanations and every fallback text. **The engine contains no company or event names.** |
+| Data | `backend/data/game_data.json` | The whole fictional universe: 6 companies (with the week each one lists), industries, 12 weeks of events, noise explanations and every fallback text. **The engine contains no company or event names.** |
 | Contract | `app/models/schemas.py` | Pydantic v2 models for the scenario file, session state, the public API, AI inputs and outputs, and the Day-2 types. |
 | Loading | `app/services/data_loader.py` | Validates `game_data.json` when the app starts: unknown targets, delayed effects that would land after the last week, missing texts. Then it indexes the data. |
 | Engine | `app/services/game_engine.py` | Turn processing, the effects queue, trades, advisor, settlements, game over and the final report. |
@@ -127,7 +128,7 @@ The engine closes Week *N* in this exact order:
    - **Rent.** When `N % 4 == 0`, `monthly_rent` is deducted (if living costs are enabled).
    - **`weekly_snapshots`.** Cash, stock value, net worth, holdings and prices are saved.
 5. **AI micro-lesson.** `ai_service.generate_week_summary(...)` receives the triggered consequences (including `source_week`), the price changes, the headlines revealed as noise, rent and dividends. It returns a 2-minute lesson about market lag.
-6. **Game over?** The game ends if Week 6 has been closed (`completed`) or if cash is below zero after rent (`liquidity`). Otherwise `current_week = N + 1` and the next week's headlines are returned.
+6. **Game over?** The game ends if the final week (Week 12) has been closed (`completed`) or if cash is below zero after rent (`liquidity`). Otherwise `current_week = N + 1` and the next week's headlines are returned.
 
 ### End-of-game analysis
 
@@ -232,7 +233,7 @@ If `GEMINI_API_KEY` is empty, the game runs entirely on the deterministic fallba
 backend/
   requirements.txt
   .env.example
-  data/game_data.json          # the whole scenario (6 weeks, 4 companies, all texts)
+  data/game_data.json          # the whole scenario (12 weeks, 6 companies, all texts)
   app/
     main.py                    # FastAPI app, CORS, error mapping
     config.py                  # settings from .env
@@ -253,7 +254,7 @@ frontend/
     main.jsx, App.jsx
     api/client.js
     utils/format.js
-    styles/main.css            # design system, High Readability, flip cards, chart
+    styles/main.css            # design system, stamps, flip cards, CRT chart
     components/
       Onboarding.jsx, HeroIllustration.jsx, HudBar.jsx, ScenarioPanel.jsx,
       StockChart.jsx, CompanyCard.jsx, TradeModal.jsx, NewsSidebar.jsx,
@@ -267,7 +268,7 @@ frontend/
 
 1. **Delayed effect (Week 1 → Week 3).** In Week 1, buy SZZL after reading "Record harvest". End Weeks 1 and 2: Sizzle & Co. barely moves. End Week 3: the summary shows **"Effect from Week 1"** with a +20% rise for food stocks, and the chart shows the jump.
 2. **Rent increase (Week 2 → Week 3).** "Parliament raises the energy excise tax" appears in Week 2. After closing Week 3, the summary lists **"Effect from Week 2"** with monthly rent +$80, and the HUD shows **Rent: $480 (+$80)** and *Due at the end of this week!*
-3. **Rent payment (Week 4).** Closing Week 4 deducts **$480**, shown in the summary's "Your money moves" panel and in `Rent paid` on the end screen. To test the liquidity rule, start a new game, spend all your cash on shares and end four weeks without selling. The game ends with **Out of cash**.
-4. **Immediate factory fire (Week 3).** Hold PIXN when Week 3 closes. The summary shows two **Immediate Effect** entries (share price −35% and bankruptcy risk +30 pts). The card's risk meter goes to *Elevated*, then *Critical* in Week 6, and PixelNest goes bankrupt when Week 6 closes.
-5. **High Readability.** Switch it on in the onboarding screen or the HUD. Text gets larger, contrast increases, pixel/typewriter fonts switch to Atkinson Hyperlegible, papers and stamps straighten, the starfield, CRT scanlines and animations disappear, and the setting is kept after a page refresh.
-6. **Personal move analysis.** Finish Week 6, then check **Move Analysis & Financial Coaching**. The strengths and improvements quote your actual trades (week, ticker, shares) and there are 3–4 tip cards. The badge reads *AI Coach · Gemini* when a key is set and *Smart Offline Analysis* when it isn't.
+3. **Rent payment (Week 4).** Rent is collected in Weeks 4, 8 and 12. Closing Week 4 deducts **$480**, shown in the summary's "Your money moves" panel and in `Rent paid` on the end screen. To test the liquidity rule, start a new game, spend all your cash on shares and end four weeks without selling. The game ends with **Out of cash**.
+4. **Immediate factory fire (Week 6).** PixelNest lists in Week 5; hold PIXN when Week 6 closes. The summary shows two **Immediate Effect** entries (share price −35% and bankruptcy risk +30 pts). The card's risk meter goes to *Elevated*, then *Critical* in Week 9, and PixelNest goes bankrupt when Week 9 closes.
+5. **Top panel.** Press **▴ Hide** in the top-right corner: the top panel disappears and only a small **▾ Show panel** tab stays (it flashes red with a rent alert if you are short of cash). The choice is kept after a page refresh.
+6. **Personal move analysis.** Finish Week 12, then check **Move Analysis & Financial Coaching**. The strengths and improvements quote your actual trades (week, ticker, shares) and there are 3–4 tip cards. The badge reads *AI Coach · Gemini* when a key is set and *Smart Offline Analysis* when it isn't.

@@ -18,7 +18,7 @@ from app.services.recommender import DefaultScenarioRecommender
 from app.services.session_store import InMemorySessionStore
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-logger = logging.getLogger("finance_quest")
+logger = logging.getLogger("cosmicash")
 
 settings = get_settings()
 
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     app.state.engine = GameEngine(repo, store, ai)
     app.state.recommender = DefaultScenarioRecommender(repo)
     logger.info(
-        "Finance Quest ready: scenario '%s', %d weeks, AI mode = %s%s",
+        "CosmiCash ready: scenario '%s', %d weeks, AI mode = %s%s",
         repo.scenario.title,
         repo.scenario.total_weeks,
         ai.mode.value,
@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Finance Quest API",
+    title="CosmiCash API",
     version="0.1.0",
     description="Turn-based investing game with a delayed-effects market engine and an AI coach.",
     lifespan=lifespan,
@@ -66,4 +66,4 @@ app.include_router(router)
 
 @app.get("/", include_in_schema=False)
 async def root() -> dict:
-    return {"name": "Finance Quest API", "docs": "/docs", "health": "/api/health"}
+    return {"name": "CosmiCash API", "docs": "/docs", "health": "/api/health"}

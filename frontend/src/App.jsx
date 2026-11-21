@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api/client.js";
 import AdvisorWidget from "./components/AdvisorWidget.jsx";
-import CompanyCard from "./components/CompanyCard.jsx";
+import CompanyCarousel from "./components/CompanyCarousel.jsx";
 import GameOverScreen from "./components/GameOverScreen.jsx";
 import HowToPlay from "./components/HowToPlay.jsx";
 import HudBar from "./components/HudBar.jsx";
@@ -13,7 +13,6 @@ import TradeModal from "./components/TradeModal.jsx";
 import WeekSummaryModal from "./components/WeekSummaryModal.jsx";
 import { money, moneyCompact, readStorage, writeStorage } from "./utils/format.js";
 
-const READABILITY_KEY = "fq.highReadability";
 const SESSION_KEY = "fq.sessionId";
 
 function EndWeekBar({ game, busy, onNextWeek }) {
@@ -24,6 +23,13 @@ function EndWeekBar({ game, busy, onNextWeek }) {
 
   return (
     <div className={`action-bar ${short ? "action-bar--danger" : ""}`}>
+      <div className="action-bar__lip" aria-hidden="true">
+        <span>&#9650;</span>
+        {short ? "Rent alert · " : ""}
+        {lastWeek ? "Finish the season" : `End Week ${week}`}
+        <span>&#9650;</span>
+      </div>
+      <div className="action-bar__row">
       <div className="action-bar__text">
         <p className="eyebrow">{lastWeek ? "Final week" : "Ready?"}</p>
         {short ? (
@@ -43,12 +49,12 @@ function EndWeekBar({ game, busy, onNextWeek }) {
         <span>{busy ? "The market is reacting…" : lastWeek ? "Finish the season" : `End Week ${week}`}</span>
         <span aria-hidden="true">&rarr;</span>
       </button>
+      </div>
     </div>
   );
 }
 
 export default function App() {
-  const [highReadability, setHighReadability] = useState(() => readStorage("localStorage", READABILITY_KEY) === "1");
   const [phase, setPhase] = useState("onboarding"); // onboarding | playing | gameover
   const [game, setGame] = useState(null);
   const [summary, setSummary] = useState(null);
@@ -62,11 +68,6 @@ export default function App() {
   const [aiMode, setAiMode] = useState(null);
   const toastTimer = useRef(null);
 
-  // High Readability mode lives on <html data-readability="high">.
-  useEffect(() => {
-    document.documentElement.dataset.readability = highReadability ? "high" : "default";
-    writeStorage("localStorage", READABILITY_KEY, highReadability ? "1" : "0");
-  }, [highReadability]);
 
   // Onboarding info + AI status.
   useEffect(() => {
@@ -177,7 +178,6 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
-  const toggleReadability = () => setHighReadability((value) => !value);
   const tradeCompany = game?.companies.find((c) => c.id === tradeCompanyId) ?? null;
 
   return (
@@ -190,8 +190,6 @@ export default function App() {
         <Onboarding
           scenario={scenario}
           aiMode={aiMode}
-          highReadability={highReadability}
-          onToggleReadability={toggleReadability}
           onStart={startGame}
           busy={busy === "start"}
         />
@@ -199,7 +197,7 @@ export default function App() {
 
       {phase === "playing" && game && (
         <>
-          <HudBar game={game} highReadability={highReadability} onToggleReadability={toggleReadability} />
+          <HudBar game={game} />
           <div className="game-layout">
             <ScenarioPanel game={game}>
               <AdvisorWidget
@@ -233,17 +231,13 @@ export default function App() {
                     totalWeeks={game.total_weeks}
                     title="Stock market"
                     subtitle="Watch for moves that come weeks after the news."
+                    height={210}
                   />
-                  <section className="companies" aria-label="Companies">
-                    {game.companies.map((company) => (
-                      <CompanyCard
-                        key={company.id}
-                        company={company}
-                        onTrade={setTradeCompanyId}
-                        disabled={busy === "next"}
-                      />
-                    ))}
-                  </section>
+                  <CompanyCarousel
+                    companies={game.companies}
+                    onTrade={setTradeCompanyId}
+                    disabled={busy === "next"}
+                  />
                 </div>
                 <NewsSidebar week={game.current_week} news={game.news} />
               </div>

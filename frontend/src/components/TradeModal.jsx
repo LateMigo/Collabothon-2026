@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal.jsx";
 import { clamp, everyWeeks, money, plural, whenWeek } from "../utils/format.js";
+import InfoTip from "./InfoTip.jsx";
+
+const REASONS = [
+  { id: "news", label: "A news story" },
+  { id: "trend", label: "Price trend" },
+  { id: "advisor", label: "Advisor's tip" },
+  { id: "gut", label: "Gut feeling" },
+  { id: "cash", label: "I need cash" },
+];
 
 export default function TradeModal({ company, game, onClose, onTrade }) {
+  const [reason, setReason] = useState(null);
   const canBuy = company.max_affordable > 0;
   const [mode, setMode] = useState(!canBuy && company.shares_owned > 0 ? "sell" : "buy");
   const [shares, setShares] = useState(0);
@@ -14,11 +24,9 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
   useEffect(() => () => clearTimeout(closeTimer.current), []);
 
   const price = company.price;
-  // Selling pays the market price minus the selling fee (spread).
   const unitPrice = mode === "buy" ? price : company.sell_price;
   const feePct = game.sell_spread_pct;
   const breakEvenPct = feePct > 0 ? (100 / (100 - feePct) - 1) * 100 : 0;
-  // Auto-clamping: buy <= floor(cash / price), sell <= shares owned, never below 0.
   const max = mode === "buy" ? Math.max(0, Math.floor((game.cash + 1e-9) / price)) : company.shares_owned;
   const value = clamp(shares, 0, max);
   const total = value * unitPrice;
@@ -26,7 +34,6 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
 
   const rent = game.rent;
   const savings = game.savings.balance;
-  // Savings cover the rent automatically (and bonds that pay back this week add cash), so only less than that is a problem.
   const rentWarning =
     mode === "buy" &&
     value > 0 &&
@@ -53,8 +60,7 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
     setSubmitting(true);
     setError(null);
     try {
-      await onTrade(company.id, mode, value);
-      // Let the "Approved" stamp land on the form before the window closes.
+      await onTrade(company.id, mode, value, reason);
       setApproved(true);
       closeTimer.current = setTimeout(onClose, 900);
     } catch (err) {
@@ -139,6 +145,25 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
           </div>
         </div>
 
+        <div className="trade-reason" role="group" aria-label="Why are you trading? (optional)">
+          <span className="trade-reason__label">
+            Why? <small>(optional - the coach reviews your reasons at the end of the week)</small>
+          </span>
+          <span className="trade-reason__chips">
+            {REASONS.filter((r) => mode === "sell" || r.id !== "cash").map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className={reason === r.id ? "is-on" : ""}
+                aria-pressed={reason === r.id}
+                onClick={() => setReason(reason === r.id ? null : r.id)}
+              >
+                {r.label}
+              </button>
+            ))}
+          </span>
+        </div>
+
         <p id="trade-hint" className="trade-hint">
           {max === 0
             ? mode === "buy"
@@ -151,12 +176,12 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
           <p className="fee-note">
             {mode === "buy" ? (
               <>
-                <strong>Selling costs {feePct}%.</strong> If you sell later, you get {money(company.sell_price)} per share
+                <strong>Selling costs {feePct}%.</strong> <InfoTip entry="sellFee" /> If you sell later, you get {money(company.sell_price)} per share
                 at today&apos;s price. The price has to rise about {breakEvenPct.toFixed(1)}% before selling breaks even.
               </>
             ) : (
               <>
-                <strong>Selling fee {feePct}%:</strong> market price {money(price)} &minus; {feePct}% ={" "}
+                <strong>Selling fee {feePct}%:</strong> <InfoTip entry="sellFee" /> market price {money(price)} &minus; {feePct}% ={" "}
                 {money(company.sell_price)} per share.
                 {company.avg_cost > 0 && (
                   <>

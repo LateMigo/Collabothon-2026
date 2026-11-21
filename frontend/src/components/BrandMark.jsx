@@ -1,7 +1,3 @@
-/**
- * CosmiCash emblem (original 32x32 pixel art): a green three-fingered alien claw reaching in from the
- * lower right and snatching a gold "$" coin - ivory talons hooked into the coin's rim. One character per pixel.
- */
 const ROWS = [
   "................................",
   "................................",
@@ -38,20 +34,20 @@ const ROWS = [
 ];
 
 const COLORS = {
-  K: "#0b0c0a", // outline
-  G: "#6fc23f", // alien skin
-  g: "#3d7a24", // skin shadow
-  h: "#b3ec78", // skin highlight
-  s: "#2f6a1b", // scales and knuckles
-  C: "#f4ecd2", // talons
-  c: "#b9ad86", // talon shade
-  k: "#5a5040", // talon tips
-  Y: "#f4b23e", // gold
-  y: "#c98a1d", // gold shade
-  o: "#8a5a12", // rim shadow
-  L: "#ffe39a", // gold light
-  W: "#fff8e0", // shine
-  D: "#4d2c06", // $ sign
+  K: "#0b0c0a",
+  G: "#6fc23f",
+  g: "#3d7a24",
+  h: "#b3ec78",
+  s: "#2f6a1b",
+  C: "#f4ecd2",
+  c: "#b9ad86",
+  k: "#5a5040",
+  Y: "#f4b23e",
+  y: "#c98a1d",
+  o: "#8a5a12",
+  L: "#ffe39a",
+  W: "#fff8e0",
+  D: "#4d2c06",
 };
 
 const PIXELS = ROWS.flatMap((row, y) =>

@@ -4,7 +4,6 @@ import { clamp, money, ratePct } from "../utils/format.js";
 
 const round2 = (value) => Math.round(value * 100) / 100;
 
-/** Form S-2: move money between cash and the savings account. */
 export default function SavingsModal({ game, initialMode, onClose, onSubmit }) {
   const [mode, setMode] = useState(initialMode);
   const [amountText, setAmountText] = useState("");
@@ -38,7 +37,6 @@ export default function SavingsModal({ game, initialMode, onClose, onSubmit }) {
   };
 
   const onInput = (event) => {
-    // digits and one decimal point with up to 2 decimals; anything above the maximum is adjusted
     let text = event.target.value.replace(",", ".").replace(/[^0-9.]/g, "");
     const [whole, ...rest] = text.split(".");
     text = rest.length ? `${whole}.${rest.join("").slice(0, 2)}` : whole;

@@ -40,11 +40,6 @@ KEY_MOMENTS = 2
 DEFAULT_TIP_ORDER = ["delayed_signals", "diversify", "cash_reserve", "savings", "noise", "patience", "dividends"]
 
 
-# =============================================================================
-# Formatting helpers (shared with the AI fallback)
-# =============================================================================
-
-
 def money(value: float) -> str:
     sign = "-" if value < 0 else ""
     return f"{sign}${abs(value):,.2f}"
@@ -73,11 +68,6 @@ def fill(template: str, **values: Any) -> str:
     return string.Formatter().vformat(template, (), _SafeDict(**values))
 
 
-# =============================================================================
-# Metrics
-# =============================================================================
-
-
 def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> PlayerMetrics:
     trades = [a for a in session.action_log if a.action_type in (ActionType.BUY, ActionType.SELL)]
     buys = [a for a in trades if a.action_type == ActionType.BUY]
@@ -90,7 +80,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
         company = repo.company(company_id)
         return company.ticker if company else company_id
 
-    # --- diversification & invested share (from end-of-week snapshots) -----
     max_concentration = 0.0
     max_ticker: str | None = None
     invested_ratios: list[float] = []
@@ -98,7 +87,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
     for snap in session.weekly_snapshots:
         if snap.net_worth > 0:
             invested_ratios.append(max(0.0, min(1.0, snap.stocks_value / snap.net_worth)))
-            # "safe money": the savings vault plus bonds and term deposits
             safe = snap.savings + snap.fixed_income_value
             savings_ratios.append(max(0.0, min(1.0, safe / snap.net_worth)))
         meaningful = snap.net_worth > 0 and snap.stocks_value / snap.net_worth >= 0.2
@@ -110,7 +98,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
     avg_invested = sum(invested_ratios) / len(invested_ratios) if invested_ratios else 0.0
     avg_savings = sum(savings_ratios) / len(savings_ratios) if savings_ratios else 0.0
 
-    # --- delayed signals & immediate shocks --------------------------------
     delayed: list[DelayedSignalOutcome] = []
     shocks: list[ShockOutcome] = []
     for consequence in session.consequence_log:
@@ -123,7 +110,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
                     outcome = "caught" if impact.player_shares > 0 else "missed"
                 elif impact.player_shares > 0:
                     outcome = "hit"
-                    # Did the player BUY after the warning headline was already out?
                     bought_week = next(
                         (
                             b.week
@@ -167,7 +153,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
                     )
                 )
 
-    # --- bankruptcies --------------------------------------------------------
     bankruptcy_outcomes: list[BankruptcyOutcome] = []
     for record in session.bankruptcies:
         if record.player_shares > 0:
@@ -187,7 +172,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
             )
         )
 
-    # --- noise ---------------------------------------------------------------
     weeks_played = len(session.weekly_snapshots)
     noise_total = 0
     noise_followed: list[NoiseFollow] = []
@@ -219,7 +203,6 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
                 )
             )
 
-    # --- advisor -------------------------------------------------------------
     advisor_uses: list[AdvisorUse] = []
     for entry in session.action_log:
         if entry.action_type != ActionType.ADVISOR:
@@ -248,10 +231,9 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
             )
         )
 
-    # --- rent / liquidity ----------------------------------------------------
     rent_checks = []
     for payment in session.rent_payments:
-        ready = payment.cash_before + payment.savings_before  # savings cover rent automatically
+        ready = payment.cash_before + payment.savings_before
         if payment.cash_after < 0:
             status = "short"
         elif ready < payment.amount * 1.5:
@@ -272,10 +254,12 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
     liquidity_week = session.rent_payments[-1].week if liquidity_loss and session.rent_payments else None
 
     final_net_worth = session.weekly_snapshots[-1].net_worth if session.weekly_snapshots else session.cash
-    # ROI measures investing skill: market gains + dividends + interest, before living costs (rent).
-    roi = (final_net_worth + session.total_rent_paid - session.starting_cash) / session.starting_cash * 100
+    roi = (
+        (final_net_worth + session.total_rent_paid + session.total_expenses - session.starting_cash)
+        / session.starting_cash
+        * 100
+    )
 
-    # --- bonds & term deposits ----------------------------------------------
     fi_defaults = [a for a in session.action_log if a.action_type == ActionType.FIXED_INCOME_DEFAULT]
     fi_interest = session.total_fixed_income_interest + sum(
         h.accrued_interest for h in session.fixed_income if h.status == "active"
@@ -291,6 +275,8 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
         roi_pct=round(roi, 2),
         total_dividends=round(session.total_dividends, 2),
         total_rent_paid=round(session.total_rent_paid, 2),
+        total_expenses=round(session.total_expenses, 2),
+        expenses_paid_by_selling=sum(1 for e in session.expense_payments if e.from_shares > 0),
         trades_count=len(trades),
         buys_count=len(buys),
         sells_count=len(sells),
@@ -337,11 +323,6 @@ def classify_play_style(m: PlayerMetrics) -> str:
     return "balanced"
 
 
-# =============================================================================
-# Offline ("Smart Offline Analysis") coach
-# =============================================================================
-
-
 def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveAnalysisContent:
     texts = repo.fallback.final_analysis
     insights = texts.insights
@@ -353,7 +334,6 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
     strengths: list[AnalysisPoint] = []
     improvements: list[AnalysisPoint] = []
     tip_keys: list[str] = []
-    # Candidate "weeks that decided the season": (kind, severity, moment).
     moments: list[tuple[str, float, KeyMoment]] = []
     busy_threshold = 2 * max(m.weeks_played, 1) + 2
 
@@ -367,7 +347,6 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
             kind = "win" if bucket is strengths else "mistake"
             moments.append((kind, severity, KeyMoment(week=week, kind=kind, title=p.title, detail=p.detail)))
 
-    # ---------------- strengths ----------------
     for signal in [d for d in m.delayed_signals if d.outcome == "caught"][:2]:
         note(
             strengths,
@@ -423,7 +402,6 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
     if not strengths:
         note(strengths, "s_finished", weeks=m.weeks_played)
 
-    # ---------------- improvements (most severe first) ----------------
     if m.liquidity_loss:
         last = m.rent_checks[-1] if m.rent_checks else None
         note(
@@ -556,7 +534,6 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
         note(improvements, "i_next_level")
         tip_keys.append("delayed_signals")
 
-    # ---------------- tips: 4 unique cards ----------------
     ordered: list[str] = []
     for key in tip_keys + DEFAULT_TIP_ORDER:
         if key in texts.tips and key not in ordered:
@@ -587,11 +564,6 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
     )
 
 
-# =============================================================================
-# Inspector mode: verdict stamp, two decisive weeks, one real-life habit
-# =============================================================================
-
-
 def _bad_news_buys(m: PlayerMetrics) -> list[DelayedSignalOutcome]:
     return [d for d in m.delayed_signals if d.outcome == "hit" and d.bought_week is not None]
 
@@ -605,13 +577,18 @@ def verdict_key(m: PlayerMetrics) -> str:
         return "fomo"
     if m.play_style_key == "reactive" and m.roi_pct < 2:
         return "fomo"
-    if bankrupt_loss or (m.play_style_key in ("concentrated", "aggressive") and m.roi_pct < 0):
+    concentrated = m.max_concentration_pct >= 60 or m.distinct_companies <= 1
+    if (bankrupt_loss and (concentrated or m.roi_pct < 0)) or (
+        m.play_style_key in ("concentrated", "aggressive") and m.roi_pct < 0
+    ):
         return "all_in"
+    if bankrupt_loss:
+        return "survivor"
     if m.roi_pct < -2:
         return "rookie"
     if m.play_style_key == "cautious":
         return "careful_saver"
-    if m.roi_pct >= 5 and not m.noise_followed:
+    if m.roi_pct >= 5 and not m.noise_followed and not concentrated:
         return "prudent"
     if m.play_style_key in ("concentrated", "aggressive"):
         return "bold"
@@ -631,7 +608,7 @@ def build_verdict(m: PlayerMetrics, repo: GameDataRepository) -> InspectorVerdic
         elif _bad_news_buys(m):
             buy = _bad_news_buys(m)[0]
             values.update(week=buy.bought_week, ticker=buy.ticker, action="bought")
-    elif key == "all_in":
+    elif key in ("all_in", "survivor"):
         loss = next((b for b in m.bankruptcies if b.outcome == "loss"), None)
         values["ticker"] = loss.ticker if loss else (m.max_concentration_ticker or "one company")
     return InspectorVerdict(approved=template.approved, title=template.title, reason=fill(template.reason, **values))

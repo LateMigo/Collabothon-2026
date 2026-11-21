@@ -27,9 +27,4 @@ class DefaultScenarioRecommender(ScenarioRecommender):
         self._default_id = repo.scenario.id
 
     def recommend_scenario(self, risk_score: float, past_roi: float | None = None) -> str:
-        # DAY-2 HOOK: with several scenario files loaded, rank them by difficulty, e.g.
-        #   - risk_score > 0.7 and past_roi < 0  -> a "slow and steady" dividend scenario
-        #   - risk_score < 0.3                    -> a scenario that rewards diversification
-        #   - past_roi > 15                       -> a harder scenario with more noise and longer lags
-        # and/or ask the AIService to personalise the choice.
         return self._default_id

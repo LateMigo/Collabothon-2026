@@ -95,7 +95,6 @@ class GameDataRepository:
         }
         self._fixed_income: dict[str, FixedIncomeProduct] = {p.id: p for p in data.fixed_income}
 
-    # --- scenario -----------------------------------------------------------
     @property
     def scenario(self) -> ScenarioSettings:
         return self.data.scenario
@@ -104,7 +103,6 @@ class GameDataRepository:
     def fallback(self):
         return self.data.fallback_texts
 
-    # --- companies & industries --------------------------------------------
     @property
     def companies(self) -> list[CompanyDefinition]:
         return self.data.companies
@@ -137,6 +135,8 @@ class GameDataRepository:
             return "Your monthly rent"
         if target_type == TargetType.SAVINGS_RATE:
             return "Your savings interest"
+        if target_type == TargetType.EXPENSE:
+            return "Your wallet"
         if target_id == GLOBAL_TARGET:
             return "All companies"
         company = self.company(target_id)
@@ -144,7 +144,6 @@ class GameDataRepository:
             return f"{company.name} ({company.ticker})"
         return f"{self.industry_label(target_id)} sector"
 
-    # --- weeks & events -----------------------------------------------------
     def week(self, week_number: int) -> WeekDefinition | None:
         return self._weeks.get(week_number)
 
@@ -159,7 +158,6 @@ class GameDataRepository:
             for event in week.events:
                 yield week.week, event
 
-    # --- dividends ------------------------------------------------------------
     def dividend_weeks(self, company_id: str) -> list[int]:
         """Every company has its own payout calendar (every 2, 3, 4... weeks), like a real one."""
         company = self.company(company_id)
@@ -175,7 +173,6 @@ class GameDataRepository:
     def next_dividend_week(self, company_id: str, from_week: int) -> int | None:
         return next((w for w in self.dividend_weeks(company_id) if w >= from_week), None)
 
-    # --- bonds & term deposits ------------------------------------------------
     @property
     def fixed_income_products(self) -> list[FixedIncomeProduct]:
         return self.data.fixed_income
@@ -195,11 +192,6 @@ class GameDataRepository:
         if product.maturity_week is not None:
             return product.maturity_week - 1
         return self.scenario.total_weeks - (product.term_weeks or 1) + 1
-
-
-# =============================================================================
-# Loading & cross-reference validation
-# =============================================================================
 
 
 def load_game_data(path: Path) -> GameDataRepository:
@@ -264,7 +256,7 @@ def validate_cross_references(data: GameData) -> None:
             event_ids.add(event.id)
             for effect in event.effects:
                 where = f"Event '{event.id}' (week {week.week})"
-                if effect.target_type in (TargetType.RENT, TargetType.SAVINGS_RATE):
+                if effect.target_type in (TargetType.RENT, TargetType.SAVINGS_RATE, TargetType.EXPENSE):
                     if effect.target_id != GLOBAL_TARGET:
                         errors.append(f"{where}: {effect.target_type.value} effects must target 'global'")
                 elif effect.target_id not in valid_company_targets | valid_industry_targets | {GLOBAL_TARGET}:

@@ -2,14 +2,9 @@ import { useEffect, useState } from "react";
 
 const DISPATCH_TIMES = ["08:00", "09:30", "11:15", "13:40", "15:05"];
 
-/**
- * The weekly newspaper, one story at a time. The backend sends ONLY id, title and description -
- * the player has to work out which company a story is about, whether it matters, how much, and when.
- */
 export default function NewsSidebar({ week, news }) {
   const [index, setIndex] = useState(0);
 
-  // A new week brings a new edition: start from the front page again.
   useEffect(() => {
     setIndex(0);
   }, [week]);

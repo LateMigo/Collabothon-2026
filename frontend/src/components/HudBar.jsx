@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { money, moneyCompact, pct, plural, readStorage, readyForRent, tone, writeStorage } from "../utils/format.js";
 import BrandMark from "./BrandMark.jsx";
+import InfoTip from "./InfoTip.jsx";
 
 const COLLAPSED_KEY = "fq.hudCollapsed";
 
-/** Shared rent logic for the full readout and the collapsed strip. `ready` = cash + savings. */
 function rentStatus(rent, ready) {
   const changed = Math.abs(rent.rent_delta) > 0.001;
   const up = rent.rent_delta > 0;
@@ -60,7 +60,6 @@ export default function HudBar({ game, onMenu }) {
   const { current_week: week, total_weeks: total, cash, stocks_value: stocks, net_worth: netWorth } = game;
   const savings = game.savings.balance;
   const ready = readyForRent(game);
-  // Investing result: rent is a living cost, not an investment loss - so it is added back here.
   const investing = game.roi_pct;
   const progress = Math.min(100, ((week - (game.is_game_over ? 0 : 1)) / total) * 100);
 
@@ -114,7 +113,9 @@ export default function HudBar({ game, onMenu }) {
             <dd>{money(stocks)}</dd>
           </div>
           <div className="hud-stat" title={`${game.savings.account_name}: ${game.savings.weekly_rate_pct}% interest a week`}>
-            <dt>Savings</dt>
+            <dt>
+              Savings <InfoTip entry="savings" />
+            </dt>
             <dd>{money(savings)}</dd>
           </div>
           <div className="hud-stat" title="Bonds and term deposits: money lent for a fixed interest, plus the interest earned so far">
@@ -122,7 +123,9 @@ export default function HudBar({ game, onMenu }) {
             <dd>{money(game.fixed_income_value)}</dd>
           </div>
           <div className="hud-stat hud-stat--accent">
-            <dt>Net worth</dt>
+            <dt>
+              Net worth <InfoTip entry="netWorth" />
+            </dt>
             <dd>{money(netWorth)}</dd>
             <span
               className={`hud-invest is-${tone(investing)}`}

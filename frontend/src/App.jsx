@@ -6,8 +6,16 @@ import FixedIncomeModal from "./components/FixedIncomeModal.jsx";
 import FixedIncomePanel from "./components/FixedIncomePanel.jsx";
 import GameOverScreen from "./components/GameOverScreen.jsx";
 import HoldingsPanel from "./components/HoldingsPanel.jsx";
+import GuidedTour from "./components/GuidedTour.jsx";
 import HowToPlay from "./components/HowToPlay.jsx";
 import HudBar from "./components/HudBar.jsx";
+import KpiDashboard from "./components/KpiDashboard.jsx";
+import LearnModal from "./components/LearnModal.jsx";
+import LessonNudge, { pickNudge } from "./components/LessonNudge.jsx";
+import { readAiPrefs } from "./utils/aiPrefs.js";
+import { readQuizScore } from "./utils/quiz.js";
+import LexoPanel from "./components/LexoPanel.jsx";
+import NewsBoard from "./components/NewsBoard.jsx";
 import NewsSidebar from "./components/NewsSidebar.jsx";
 import Onboarding from "./components/Onboarding.jsx";
 import RentAlertModal from "./components/RentAlertModal.jsx";
@@ -18,10 +26,11 @@ import StockChart from "./components/StockChart.jsx";
 import TradeModal from "./components/TradeModal.jsx";
 import WeekSummaryModal from "./components/WeekSummaryModal.jsx";
 import { money, moneyCompact, readStorage, rentCheck, writeStorage } from "./utils/format.js";
+import { LESSONS, readLessonsDone } from "./utils/lessons.js";
 
 const SESSION_KEY = "fq.sessionId";
+const TOUR_KEY = "fq.tourDone";
 
-/** What closing the week will do - shown in the drawer that slides up behind the End Week button. */
 function weekEndText(game, check) {
   const { rent } = game;
   const parts = ["the market reacts to the news"];
@@ -45,29 +54,12 @@ function EndWeekBar({ game, busy, onEndWeek }) {
   const lastWeek = week === total;
   const label = busy ? "The market is reacting…" : lastWeek ? "Finish the season" : `End Week ${week}`;
 
-  // The drawer stays tucked under the screen edge with the End Week button inside it;
-  // a small red tab on its handle hints that the button is waiting there.
   return (
-    <div className={`action-bar ${check.short ? "action-bar--danger" : ""} ${open ? "action-bar--open" : ""}`}>
-      <button
-        type="button"
-        className="action-bar__lip"
-        aria-expanded={open}
-        aria-controls="week-end-details"
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span aria-hidden="true">{open ? "▼" : "▲"}</span>
-        {check.short ? "Rent alert · not enough money for the rent" : "What happens when the week ends?"}
-        <span aria-hidden="true">{open ? "▼" : "▲"}</span>
-        <span className="action-bar__peek" aria-hidden="true">
-          {lastWeek ? "Finish" : `End Week ${week}`} <span>▲</span>
-        </span>
-      </button>
-      <div className="action-bar__row" id="week-end-details">
-        <div className="action-bar__text">
-          <p className="eyebrow">{lastWeek ? "Final week" : "Ready?"}</p>
+    <div className={`action-bar ${check.short ? "action-bar--danger" : ""}`}>
+      {open && (
+        <div className="action-bar__details" id="week-end-details">
           {check.short ? (
-            <p role="alert">
+            <p>
               <strong>Rent of {moneyCompact(rent.monthly_rent)} is due at the end of this week</strong>, but you can
               only count on {money(check.ready)} (cash, savings and bonds that pay back now)
               {check.onlyIfDividends
@@ -79,16 +71,30 @@ function EndWeekBar({ game, busy, onEndWeek }) {
             <p>When you end the week, {weekEndText(game, check)}.</p>
           )}
         </div>
+      )}
+      <div className="action-bar__row">
         <button
           type="button"
-          className={`btn btn--red btn--xl end-week-btn ${check.short ? "end-week-btn--danger" : ""}`}
+          className="action-bar__info"
+          aria-expanded={open}
+          aria-controls="week-end-details"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span className="action-bar__week">{lastWeek ? "Final week" : `Week ${week}/${total}`}</span>
+          <span className="action-bar__summary" role={check.short ? "alert" : undefined}>
+            {check.short ? "Rent alert: not enough money for the rent" : `Next: ${weekEndText(game, check)}`}
+          </span>
+          <span className="action-bar__more" aria-hidden="true">
+            {open ? "Hide ▼" : "Details ▲"}
+          </span>
+        </button>
+        <button
+          type="button"
+          className={`btn btn--red end-week-btn ${check.short ? "end-week-btn--danger" : ""}`}
           onClick={onEndWeek}
           disabled={busy}
         >
-          <span>
-            {check.short && !busy && <small className="end-week-btn__alert">Rent alert</small>}
-            {label}
-          </span>
+          <span>{label}</span>
           <span aria-hidden="true">&rarr;</span>
         </button>
       </div>
@@ -97,23 +103,40 @@ function EndWeekBar({ game, busy, onEndWeek }) {
 }
 
 export default function App() {
-  const [phase, setPhase] = useState("onboarding"); // onboarding | playing | gameover
+  const [phase, setPhase] = useState("onboarding");
   const [game, setGame] = useState(null);
   const [summary, setSummary] = useState(null);
   const [tradeCompanyId, setTradeCompanyId] = useState(null);
-  const [savingsMode, setSavingsMode] = useState(null); // "deposit" | "withdraw" | null
+  const [savingsMode, setSavingsMode] = useState(null);
   const [bondsOpen, setBondsOpen] = useState(false);
   const [rentAlertOpen, setRentAlertOpen] = useState(false);
   const [advice, setAdvice] = useState(null);
-  const [busy, setBusy] = useState(null); // "start" | "advisor" | "next" | null
+  const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [learnOpen, setLearnOpen] = useState(false);
+  const [learnLesson, setLearnLesson] = useState(null);
+  const [nudge, setNudge] = useState(null);
+  const nudged = useRef([]);
+  const dismissNudge = useCallback(() => setNudge(null), []);
+  const openLearn = (lessonId = null) => {
+    setNudge(null);
+    setLearnLesson(lessonId);
+    setLearnOpen(true);
+  };
+  const [lessonsDone, setLessonsDone] = useState(() => readLessonsDone().length);
+  const [bankView, setBankView] = useState(() => window.location.hash === "#bank");
+  useEffect(() => {
+    const onHash = () => setBankView(window.location.hash === "#bank");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
   const [scenario, setScenario] = useState(null);
   const [aiMode, setAiMode] = useState(null);
   const toastTimer = useRef(null);
 
-  // Onboarding info + AI status.
   useEffect(() => {
     api.scenario().then(setScenario).catch(() => {});
     api
@@ -122,7 +145,6 @@ export default function App() {
       .catch((err) => setError(err.message));
   }, []);
 
-  // Resume a running game after a page refresh (same tab).
   useEffect(() => {
     const savedId = readStorage("sessionStorage", SESSION_KEY);
     if (!savedId) return;
@@ -153,11 +175,15 @@ export default function App() {
     }
   }, []);
 
-  const startGame = async (config) => {
+  const startGame = async (config, challenge = null) => {
     setBusy("start");
     setError(null);
     try {
       const state = await api.createSession(config);
+      if (challenge) {
+        api.kpiEvent({ event: "challenge_joined", session_id: state.session_id });
+        window.history.replaceState(null, "", window.location.pathname);
+      }
       writeStorage("sessionStorage", SESSION_KEY, state.session_id);
       setGame(state);
       setAdvice(null);
@@ -171,16 +197,19 @@ export default function App() {
     }
   };
 
-  const trade = async (companyId, action, shares) => {
-    // The trade form closes itself after its "Approved" stamp animation.
-    const result = await api.trade(game.session_id, { company_id: companyId, action, shares });
+  const trade = async (companyId, action, shares, reason = null) => {
+    const result = await api.trade(game.session_id, {
+      company_id: companyId,
+      action,
+      shares,
+      ...(reason ? { reason } : {}),
+    });
     setGame(result.state);
     showToast(result.message);
     return result;
   };
 
   const moveSavings = async (action, amount) => {
-    // Like the trade form, the savings form closes itself after its stamp animation.
     const result = await api.savings(game.session_id, { action, amount });
     setGame(result.state);
     showToast(result.message);
@@ -213,7 +242,7 @@ export default function App() {
     setBusy("next");
     setError(null);
     try {
-      const result = await api.nextWeek(game.session_id);
+      const result = await api.nextWeek(game.session_id, readAiPrefs());
       setSummary(result.summary);
       setGame(result.state);
     } catch (err) {
@@ -223,19 +252,24 @@ export default function App() {
     }
   };
 
-  // Not enough money for the rent? Ask first - ending the week now would end the game.
   const endWeek = () => {
     if (rentCheck(game).short) setRentAlertOpen(true);
     else nextWeek();
   };
 
   const closeSummary = () => {
+    if (summary && !game?.is_game_over) {
+      const pick = pickNudge(summary, readQuizScore(game.session_id), readLessonsDone(), nudged.current);
+      if (pick) {
+        nudged.current = [...nudged.current, pick.lessonId];
+        setNudge(pick);
+      }
+    }
     setSummary(null);
     if (game?.is_game_over) setPhase("gameover");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Back to the main menu: the running game is kept, so it can be continued from there.
   const goToMenu = () => {
     setTradeCompanyId(null);
     setSavingsMode(null);
@@ -263,6 +297,24 @@ export default function App() {
 
   const tradeCompany = game?.companies.find((c) => c.id === tradeCompanyId) ?? null;
   const anyModal = summary || tradeCompany || savingsMode || bondsOpen || rentAlertOpen;
+
+  const inFirstWeek = phase === "playing" && game?.current_week === 1 && !game?.is_game_over;
+  useEffect(() => {
+    if (inFirstWeek && !anyModal && !helpOpen && !readStorage("localStorage", TOUR_KEY)) setTourOpen(true);
+  }, [inFirstWeek, anyModal, helpOpen]);
+
+  const closeTour = () => {
+    writeStorage("localStorage", TOUR_KEY, "1");
+    setTourOpen(false);
+  };
+
+  if (bankView) {
+    return (
+      <div className="app">
+        <KpiDashboard onExit={() => (window.location.hash = "")} />
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -294,6 +346,8 @@ export default function App() {
                 currentWeek={game.current_week}
                 busy={busy === "advisor"}
                 onAsk={askAdvisor}
+                companies={game.companies}
+                onResearch={(companyId, prefs) => api.research(game.session_id, companyId, prefs)}
               />
             </ScenarioPanel>
 
@@ -306,9 +360,17 @@ export default function App() {
                   </p>
                   <h2 className="market__title">What is the market saying?</h2>
                 </div>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setHelpOpen(true)}>
-                  How to play
-                </button>
+                <span className="market__help">
+                  <button type="button" className="btn btn--yellow btn--sm" onClick={() => openLearn()}>
+                    Learn &middot; {lessonsDone}/{LESSONS.length}
+                  </button>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setTourOpen(true)}>
+                    Quick tour
+                  </button>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setHelpOpen(true)}>
+                    How to play
+                  </button>
+                </span>
               </header>
 
               <div className="market__grid">
@@ -328,6 +390,7 @@ export default function App() {
                     onTrade={setTradeCompanyId}
                     disabled={busy === "next"}
                   />
+                  <NewsBoard archive={game.news_archive ?? []} currentWeek={game.current_week} />
                 </div>
                 <div className="market__side">
                   <NewsSidebar week={game.current_week} news={game.news} />
@@ -337,6 +400,7 @@ export default function App() {
                     onOpenBonds={() => setBondsOpen(true)}
                     disabled={busy === "next"}
                   />
+                  <LexoPanel onAsk={api.askLexo} />
                 </div>
               </div>
 
@@ -378,7 +442,16 @@ export default function App() {
               }}
             />
           )}
-          {summary && <WeekSummaryModal summary={summary} onContinue={closeSummary} />}
+          {summary && <WeekSummaryModal summary={summary} sessionId={game.session_id} onContinue={closeSummary} />}
+          {!summary && !learnOpen && <LessonNudge nudge={nudge} onOpen={openLearn} onDismiss={dismissNudge} />}
+          {learnOpen && (
+            <LearnModal
+              sessionId={game.session_id}
+              initialLesson={learnLesson}
+              onClose={() => setLearnOpen(false)}
+              onProgress={setLessonsDone}
+            />
+          )}
         </>
       )}
 
@@ -404,6 +477,7 @@ export default function App() {
         </button>
       )}
       {helpOpen && <HowToPlay onClose={() => setHelpOpen(false)} />}
+      {tourOpen && phase === "playing" && game && <GuidedTour onClose={closeTour} />}
     </div>
   );
 }

@@ -24,21 +24,30 @@ from app.models.schemas import (
     AdvisorContext,
     AdvisorProposal,
     AdvisorResponse,
+    AIPrefs,
+    BudgetNumbers,
+    BudgetPlan,
+    BudgetRequest,
     AdvisorSignal,
     AdvisorView,
     BankruptcyNotice,
     BankruptcyRecord,
     CEODecisionRequest,
     ChangeType,
+    ChallengeEntry,
     ChartCompany,
     CompanyImpact,
     CompanyState,
+    CompanyResearchContext,
+    CompanyResearchResponse,
     CompanyView,
     ConsequenceView,
     CreateSessionRequest,
+    DecisionReview,
     DividendItem,
     EffectDefinition,
     EndReason,
+    ExpensePayment,
     FinalAnalysisContext,
     FinalAnalysisResponse,
     FinalStats,
@@ -61,6 +70,7 @@ from app.models.schemas import (
     GameStateResponse,
     InstrumentType,
     NetWorthPoint,
+    NewsArchiveWeek,
     NewsItem,
     NextWeekResponse,
     PendingEffect,
@@ -70,6 +80,8 @@ from app.models.schemas import (
     RentPayment,
     RentUpdate,
     RentView,
+    ResearchCompanyBrief,
+    ResearchHeadline,
     RiskLevel,
     RiskScale,
     SavingsAction,
@@ -79,6 +91,7 @@ from app.models.schemas import (
     SavingsView,
     ScenarioInfo,
     ScenarioView,
+    TRADE_REASON_LABELS,
     TargetType,
     TimelineEntry,
     TradeAction,
@@ -90,19 +103,16 @@ from app.models.schemas import (
     WeeklySnapshot,
     WeekSummaryContext,
     WeekSummaryResponse,
+    WhatIfResponse,
 )
 from app.services.ai_service import AIService
 from app.services.analytics import compute_player_metrics, money, rate_pct
+from app.services.bank_bridge import OFFER_DISCLAIMER, challenges, recommend_next_steps, tracker
 from app.services.data_loader import GameDataRepository
 from app.services.session_store import SessionStore
 
 MIN_ACTIVE_PRICE = 0.5
 ADVISOR_DISCLAIMER = "Remember: even experts make mistakes — advisor hints are not 100% guaranteed."
-
-
-# =============================================================================
-# Domain errors (mapped to HTTP responses in main.py)
-# =============================================================================
 
 
 class GameError(Exception):
@@ -155,10 +165,61 @@ class GameEngine:
         self.repo = repo
         self.store = store
         self.ai = ai
+        self._what_if_cache: dict[tuple[str, str, str], WhatIfResponse] = {}
 
-    # =====================================================================
-    # Queries
-    # =====================================================================
+    async def what_if(self, session_id: str, prefs: AIPrefs | None = None) -> WhatIfResponse:
+        """Replays the finished season with two textbook strategies (cached per session and language)."""
+        from app.services.what_if import build_what_if
+
+        prefs = prefs or AIPrefs()
+        key = (session_id, prefs.level, prefs.language)
+        if key in self._what_if_cache:
+            return self._what_if_cache[key]
+        async with self.store.lock(session_id):
+            session = await self._load(session_id)
+            if not session.is_game_over:
+                raise GameNotFinishedError("The 'what if' replay is available once the season is over.")
+        result = await build_what_if(self, session, prefs)
+        if len(self._what_if_cache) > 200:
+            self._what_if_cache.clear()
+        self._what_if_cache[key] = result
+        return result
+
+    async def budget_plan(self, request: BudgetRequest) -> BudgetPlan:
+        """Berg's plan for the player's REAL monthly budget. Numbers are computed here; the AI only explains them."""
+        income = r2(request.income)
+        essentials = r2(request.housing + request.food)
+        spending = r2(essentials + request.other)
+        left = r2(income - spending)
+        savings_target = r2(income * 0.2)
+        suggested = r2(max(0.0, min(left, savings_target))) if left > 0 else 0.0
+        fund_target = r2(essentials * 3)
+        missing = max(0.0, fund_target - request.savings_now)
+        months = None if suggested <= 0 else (0 if missing <= 0 else int(-(-missing // suggested)))
+        numbers = BudgetNumbers(
+            currency=request.currency,
+            income=income,
+            spending=spending,
+            left_over=left,
+            needs=r2(income * 0.5),
+            wants=r2(income * 0.3),
+            savings_target=savings_target,
+            suggested_monthly_saving=suggested,
+            emergency_fund_target=fund_target,
+            months_to_emergency_fund=months,
+        )
+        prefs = AIPrefs(level=request.level, language=request.language)
+        advice, source = await self.ai.budget_advice(
+            numbers, request.model_dump(exclude={"level", "language"}), prefs
+        )
+        tracker.record("budget_plan")
+        return BudgetPlan(
+            **advice.model_dump(),
+            numbers=numbers,
+            ai_source=source,
+            disclaimer="A simple plan to get started - not financial advice. Your numbers are not stored.",
+        )
+
     def scenario_info(self) -> ScenarioInfo:
         s = self.repo.scenario
         return ScenarioInfo(
@@ -183,12 +244,8 @@ class GameEngine:
     async def get_state(self, session_id: str) -> GameStateResponse:
         return self._build_state(await self._load(session_id))
 
-    # =====================================================================
-    # Commands
-    # =====================================================================
     async def create_session(self, request: CreateSessionRequest) -> GameStateResponse:
         if request.game_mode != GameMode.SINGLE_INVESTOR:
-            # DAY-2 HOOK: route GameMode.CEO to a CEO-specific session factory.
             raise FeatureNotAvailableError("CEO mode is coming soon (Phase 2). Please start a Single Investor game.")
 
         s = self.repo.scenario
@@ -213,6 +270,7 @@ class GameEngine:
             game_mode=request.game_mode,
             modifiers=request.modifiers,
             seed=request.seed if request.seed is not None else random.SystemRandom().randrange(1, 2_000_000_000),
+            nickname=request.nickname.strip()[:20],
             starting_cash=s.starting_cash,
             cash=s.starting_cash,
             monthly_rent=s.initial_monthly_rent,
@@ -231,9 +289,9 @@ class GameEngine:
         )
         self._publish_reports(session, 1)
         await self.store.save(session)
+        tracker.record("game_started", session.session_id)
         return self._build_state(session)
 
-    # ------------------------------------------------------------------ trade
     async def trade(self, session_id: str, request: TradeRequest) -> TradeResponse:
         async with self.store.lock(session_id):
             session = await self._load(session_id)
@@ -251,11 +309,8 @@ class GameEngine:
                 company_id=company.id, instrument_type=InstrumentType.STOCK
             )
             market_price = state.price
-            # Selling is a bit worse than buying (spread/fee), like on a real exchange:
-            # flipping a stock right after buying it always loses money.
             price = market_price if request.action == TradeAction.BUY else self._sell_price(market_price)
 
-            # Server-side auto-clamping (mirrors the frontend clamp).
             if request.action == TradeAction.BUY:
                 max_shares = self._max_affordable(session.cash, price)
             else:
@@ -293,7 +348,12 @@ class GameEngine:
                 price=price,
                 amount=total,
                 note=f"{verb} {executed} {company.ticker} at {money(price)}",
-                details={"requested_shares": request.shares, "was_clamped": was_clamped, "market_price": market_price},
+                details={
+                    "requested_shares": request.shares,
+                    "was_clamped": was_clamped,
+                    "market_price": market_price,
+                    "reason": request.reason,
+                },
             )
             await self.store.save(session)
 
@@ -317,7 +377,6 @@ class GameEngine:
                 state=self._build_state(session),
             )
 
-    # ---------------------------------------------------------------- savings
     async def move_savings(self, session_id: str, request: SavingsRequest) -> SavingsResponse:
         """Deposit cash into (or withdraw it from) the safe savings account. No fee, no risk."""
         async with self.store.lock(session_id):
@@ -362,7 +421,6 @@ class GameEngine:
                 state=self._build_state(session),
             )
 
-    # ----------------------------------------------------- bonds & deposits
     async def fixed_income(self, session_id: str, request: FixedIncomeRequest) -> FixedIncomeResponse:
         """Buy a bond / open a term deposit with cash, or cash one out before it matures."""
         async with self.store.lock(session_id):
@@ -474,7 +532,6 @@ class GameEngine:
                 state=self._build_state(session),
             )
 
-    # ---------------------------------------------------------------- advisor
     async def use_advisor(self, session_id: str) -> AdvisorResponse:
         async with self.store.lock(session_id):
             session = await self._load(session_id)
@@ -486,7 +543,6 @@ class GameEngine:
             if next_week > session.current_week:
                 raise AdvisorUnavailableError(f"The advisor is busy - you can ask again in Week {next_week}.")
 
-            # Seeded draw: the same seed reproduces the same advisor luck (useful for demos).
             rng = random.Random(f"{session.seed}:advisor:{session.current_week}:{session.advisor_uses_left}")
             accurate = rng.random() < s.advisor_accuracy
 
@@ -524,14 +580,87 @@ class GameEngine:
                 state=self._build_state(session),
             )
 
+    async def research_company(
+        self, session_id: str, company_id: str, prefs: AIPrefs | None = None
+    ) -> CompanyResearchResponse:
+        """The advisor studies one company. It reads only public information (the card, the hard data and
+        the published headlines), so it can never leak which story is noise or when an effect lands.
+        Research is free and does not use up advisor hints."""
+        async with self.store.lock(session_id):
+            session = await self._load(session_id)
+            company = self.repo.company(company_id)
+            if company is None or company_id not in session.companies:
+                raise CompanyNotFoundError(f"Unknown company '{company_id}'.")
+            if not self._is_listed(company_id, session.current_week):
+                raise CompanyNotFoundError(f"{company.name} is not on the exchange yet.")
+            ctx = self._build_research_context(session, company_id)
+
+        report = await self.ai.research_company(ctx, prefs)
+        tracker.record("research_used", session_id)
+        return CompanyResearchResponse(
+            **report.model_dump(),
+            company_id=company.id,
+            company_name=company.name,
+            ticker=company.ticker,
+            week=session.current_week,
+            disclaimer="Research explains the numbers and the news - it is not a promise about the price.",
+        )
+
+    def _build_research_context(self, session: GameSession, company_id: str) -> CompanyResearchContext:
+        view = self._company_view(session, company_id)
+        f = view.fundamentals
+        prices = [
+            point.prices[company_id]
+            for point in session.price_history
+            if company_id in point.prices and point.prices[company_id] is not None
+        ]
+        first = prices[0] if prices else view.price
+        brief = ResearchCompanyBrief(
+            name=view.name,
+            ticker=view.ticker,
+            industry=view.industry_label,
+            main_product=view.main_product,
+            description=view.description,
+            condition=view.condition,
+            fine_print=view.fine_print,
+            listed_week=view.listed_week,
+            price=view.price,
+            price_history=prices[-12:],
+            change_since_listing_pct=round((view.price / first - 1) * 100, 1) if first > 0 else 0.0,
+            dividend_per_share=view.dividend_per_share,
+            dividend_every_weeks=view.dividend_every_weeks,
+            next_dividend_week=view.next_dividend_week,
+            bankruptcy_risk_pct=round(view.bankruptcy_risk * 100, 1),
+            risk_level=view.risk_level,
+            risk_trend=view.risk_trend,
+            is_bankrupt=view.is_bankrupt,
+            cash_millions=f.cash,
+            debt_millions=f.debt,
+            profit_margin_pct=round(f.profit_margin * 100, 1),
+            cash_trend=f.cash_trend,
+            debt_trend=f.debt_trend,
+            margin_trend=f.margin_trend,
+            shares_owned=view.shares_owned,
+            avg_cost=view.avg_cost,
+        )
+        last_week = session.current_week
+        headlines = []
+        for week in range(1, last_week + 1):
+            week_def = self.repo.week(week)
+            if week_def is None:
+                continue
+            headlines += [ResearchHeadline(week=week, title=e.title, description=e.description) for e in week_def.events]
+        return CompanyResearchContext(
+            week=session.current_week, total_weeks=self.repo.scenario.total_weeks, company=brief, headlines=headlines
+        )
+
     def _advisor_next_week(self, session) -> int:
         """First week the advisor can be asked again (one hint per `advisor_cooldown_weeks`)."""
         if not session.advisor_used_weeks:
             return 1
         return max(session.advisor_used_weeks) + self.repo.scenario.advisor_cooldown_weeks
 
-    # -------------------------------------------------------------- next week
-    async def next_week(self, session_id: str) -> NextWeekResponse:
+    async def next_week(self, session_id: str, prefs: AIPrefs | None = None) -> NextWeekResponse:
         async with self.store.lock(session_id):
             session = await self._load(session_id)
             self._ensure_running(session)
@@ -555,7 +684,6 @@ class GameEngine:
 
             triggered: list[TriggeredConsequence] = []
 
-            # 1. Activate delayed effects scheduled for this week, then drop them from the queue.
             due = [p for p in session.pending_effects if p.trigger_week == week]
             session.pending_effects = [p for p in session.pending_effects if p.trigger_week != week]
             for pending in due:
@@ -571,7 +699,6 @@ class GameEngine:
                     )
                 )
 
-            # 2. This week's news: immediate effects now, delayed effects into the queue.
             for event in week_def.events:
                 for effect in event.effects:
                     if effect.delay_weeks == 0:
@@ -596,13 +723,11 @@ class GameEngine:
                                 effect=effect,
                             )
                         )
-            # 2b. Scripted everyday market wiggle (deterministic, from game_data.json).
             for company_id, drift in week_def.market_drift.items():
                 company = session.companies.get(company_id)
                 if company and not company.is_bankrupt and drift and self._is_listed(company_id, week):
                     company.price = r2(max(MIN_ACTIVE_PRICE, company.price * (1 + drift)))
 
-            # 2c. Market mood: a falling share price raises a company's bankruptcy risk, a rising one lowers it.
             sensitivity = s.risk_sensitivity
             if sensitivity:
                 for company_id, before in prices_before.items():
@@ -614,7 +739,6 @@ class GameEngine:
                         min(1.0, max(0.02, company.bankruptcy_risk - sensitivity * change)), 4
                     )
 
-            # 3. Rent update: a "rent" effect changes monthly_rent right away (paid on the next due date).
             rent_changed = abs(session.monthly_rent - rent_before) > 1e-9
             rent_source_week = None
             if rent_changed:
@@ -626,7 +750,6 @@ class GameEngine:
                 session.rent_changed_week = week
                 session.rent_change_source_week = rent_source_week
 
-            # 3b. Savings-rate update (e.g. the central bank raised its rate a while ago).
             rate_changed = abs(session.savings_rate - rate_before) > 1e-12
             rate_source_week = None
             if rate_changed:
@@ -637,15 +760,11 @@ class GameEngine:
                 session.savings_rate_changed_week = week
                 session.savings_rate_source_week = rate_source_week
 
-            # 4a. Bankruptcy check (a bankrupt issuer's bonds default too).
             bankruptcies, defaults = self._check_bankruptcies(session, week)
             stocks_change = r2(self._stocks_value(session) - stocks_before)
-            # 4b. Dividends (each company pays on its own calendar).
             dividends = self._pay_dividends(session, week)
             dividends_total = r2(sum(d.amount for d in dividends))
-            # 4b'. Interest on the savings account (credited to the account itself).
             interest = self._pay_interest(session, week)
-            # 4b''. Bonds & term deposits: weekly interest, then pay back whatever matures this week.
             fi_interest = self._accrue_fixed_income(session)
             matured = self._mature_fixed_income(session, week)
             fixed_income_update = FixedIncomeUpdate(
@@ -654,7 +773,6 @@ class GameEngine:
                 defaulted=defaults,
                 value_after=self._fixed_income_value(session),
             )
-            # 4c. Price history for the SVG chart.
             session.price_history.append(
                 PricePoint(
                     week=week,
@@ -662,10 +780,8 @@ class GameEngine:
                     prices={cid: c.price for cid, c in session.companies.items() if self._is_listed(cid, week)},
                 )
             )
-            # 4d. Rent settlement every `rent_period_weeks` weeks (cash first, then savings).
             payment = self._settle_rent(session, week)
             rent_from_savings = payment.from_savings if payment else 0.0
-            # 4e. Weekly snapshot for the end-of-game analysis.
             stocks_value = self._stocks_value(session)
             fixed_income_value = self._fixed_income_value(session)
             session.weekly_snapshots.append(
@@ -693,7 +809,6 @@ class GameEngine:
             )
             session.consequence_log.extend(triggered)
 
-            # Build the turn recap.
             consequence_views = [self._consequence_view(c) for c in triggered]
             price_changes = [
                 PriceChange(
@@ -706,8 +821,8 @@ class GameEngine:
                     change_pct=round((c.price - prices_before[cid]) / prices_before[cid] * 100, 2)
                     if prices_before[cid] > 0
                     else 0.0,
-                    risk_before=round(c.previous_risk, 4),
-                    risk_after=round(c.bankruptcy_risk, 4),
+                    risk_before=self._shown_risk(c.previous_risk),
+                    risk_after=self._shown_risk(c.bankruptcy_risk),
                     risk_level=self._risk_level(c.bankruptcy_risk),
                     is_bankrupt=c.is_bankrupt,
                     shares_owned=holdings_before.get(cid, 0),
@@ -755,10 +870,11 @@ class GameEngine:
             )
             net_worth_after = self._net_worth(session)
             rent_paid = payment.amount if payment else 0.0
-            # Investing result = everything except living costs: rent is a bill, not an investment loss.
-            investment_change = r2(net_worth_after - net_worth_before + rent_paid)
+            week_expenses = [e for e in session.expense_payments if e.week == week]
+            decisions = self._decision_reviews(session, week)
+            expenses_paid = sum(e.amount - e.unpaid for e in week_expenses)
+            investment_change = r2(net_worth_after - net_worth_before + rent_paid + expenses_paid)
 
-            # 5. AI micro-lesson about market lag (Gemini or fallback).
             lesson = await self.ai.generate_week_summary(
                 WeekSummaryContext(
                     week=week,
@@ -773,17 +889,18 @@ class GameEngine:
                     bankruptcies=bankruptcies,
                     net_worth_change=r2(net_worth_after - net_worth_before),
                     investment_change=investment_change,
-                )
+                    expenses=week_expenses,
+                    decisions=decisions,
+                ),
+                prefs,
             )
 
-            # 6. Game over: last week finished or cash below zero after rent (liquidity loss).
             if session.cash < 0:
                 session.is_game_over, session.end_reason = True, EndReason.LIQUIDITY
             elif week >= s.total_weeks:
                 session.is_game_over, session.end_reason = True, EndReason.COMPLETED
             else:
                 session.current_week = week + 1
-                # The new week's hard data (cash, debt, margin) is published with its newspaper.
                 self._publish_reports(session, week + 1)
 
             await self.store.save(session)
@@ -801,6 +918,8 @@ class GameEngine:
                 bankruptcies=bankruptcies,
                 unmasked_noise=unmasked,
                 lesson=lesson,
+                expenses=week_expenses,
+                decisions=decisions,
                 stocks_change=stocks_change,
                 investment_change=investment_change,
                 investment_change_pct=round(investment_change / net_worth_before * 100, 2)
@@ -816,10 +935,10 @@ class GameEngine:
                 is_game_over=session.is_game_over,
                 end_reason=session.end_reason,
             )
+            tracker.record("week_completed", session.session_id)
             return NextWeekResponse(summary=summary, state=self._build_state(session))
 
-    # --------------------------------------------------------- final analysis
-    async def final_analysis(self, session_id: str) -> FinalAnalysisResponse:
+    async def final_analysis(self, session_id: str, prefs: AIPrefs | None = None) -> FinalAnalysisResponse:
         async with self.store.lock(session_id):
             session = await self._load(session_id)
             if not session.is_game_over:
@@ -865,7 +984,8 @@ class GameEngine:
                     weekly_snapshots=session.weekly_snapshots,
                     market_timeline=timeline,
                     companies=companies,
-                )
+                ),
+                prefs,
             )
 
             weekly_results = []
@@ -883,6 +1003,9 @@ class GameEngine:
                 previous = snap.net_worth
 
             response = FinalAnalysisResponse(
+                next_steps=recommend_next_steps(metrics),
+                offer_disclaimer=OFFER_DISCLAIMER,
+                seed=session.seed,
                 session_id=session.session_id,
                 stats=stats,
                 analysis=analysis,
@@ -894,13 +1017,24 @@ class GameEngine:
                 companies=companies,
                 market_timeline=timeline,
             )
+            tracker.record("game_finished", session.session_id)
+            tracker.record("offers_shown", session.session_id)
+            challenges.add(
+                session.seed,
+                ChallengeEntry(
+                    session_id=session.session_id,
+                    nickname=session.nickname or "Player",
+                    final_net_worth=stats.final_net_worth,
+                    roi_pct=stats.roi_pct,
+                    verdict=analysis.verdict.title,
+                    approved=analysis.verdict.approved,
+                    weeks_played=stats.weeks_played,
+                ),
+            )
             session.final_analysis = response
             await self.store.save(session)
             return response
 
-    # =====================================================================
-    # DAY-2 HOOKS (CEO mode) - architecture only
-    # =====================================================================
     async def generate_ceo_proposals(self, session_id: str) -> list[AdvisorProposal]:
         """DAY-2 HOOK: ask the CFO and CTO advisors (AIService) for two competing proposals."""
         raise FeatureNotAvailableError("CEO mode is coming soon (Phase 2).")
@@ -910,9 +1044,6 @@ class GameEngine:
         by turning the chosen proposals into EffectDefinitions pushed into pending_effects."""
         raise FeatureNotAvailableError("CEO mode is coming soon (Phase 2).")
 
-    # =====================================================================
-    # Internals - effects
-    # =====================================================================
     def _apply_effect(
         self,
         session: GameSession,
@@ -936,6 +1067,9 @@ class GameEngine:
             rate_before = session.savings_rate
             session.savings_rate = round(max(0.0, self._changed(session.savings_rate, effect)), 6)
             rate_after = session.savings_rate
+        elif effect.target_type == TargetType.EXPENSE:
+            if session.modifiers.enable_living_costs:
+                self._pay_expense(session, abs(effect.value), event_title, trigger_week)
         else:
             for company_id in self.repo.resolve_company_ids(effect.target_id):
                 state = session.companies[company_id]
@@ -949,7 +1083,7 @@ class GameEngine:
                     before = state.dividend_per_share
                     state.dividend_per_share = round(max(0.0, self._changed(state.dividend_per_share, effect)), 4)
                     after = state.dividend_per_share
-                else:  # BANKRUPTCY_RISK
+                else:
                     before = state.bankruptcy_risk
                     state.bankruptcy_risk = round(min(1.0, max(0.0, self._changed(state.bankruptcy_risk, effect))), 4)
                     after = state.bankruptcy_risk
@@ -1009,6 +1143,8 @@ class GameEngine:
             amount = f"{sign}{abs(v) * 100:.0f}%"
         else:
             amount = f"{sign}${abs(v):,.2f}".replace(".00", "")
+        if effect.target_type == TargetType.EXPENSE:
+            return f"one-off bill ${abs(v):,.0f}"
         noun = {
             TargetType.STOCK_PRICE: "share price",
             TargetType.DIVIDEND: "dividend per share",
@@ -1016,9 +1152,105 @@ class GameEngine:
         }[effect.target_type]
         return f"{noun} {amount}"
 
-    # =====================================================================
-    # Internals - settlements
-    # =====================================================================
+    def _decision_reviews(self, session: GameSession, week: int) -> list[DecisionReview]:
+        """Decision journal: this week's own trades (not the forced sales for bills), with their reason and
+        what the share price did between the trade and the end of the week."""
+        reviews: list[DecisionReview] = []
+        for entry in session.action_log:
+            if entry.week != week or entry.action_type not in (ActionType.BUY, ActionType.SELL):
+                continue
+            if entry.details.get("forced_by_expense") or not entry.company_id:
+                continue
+            state = session.companies[entry.company_id]
+            market_at_trade = float(entry.details.get("market_price") or entry.price or 0)
+            if market_at_trade <= 0:
+                continue
+            now = 0.0 if state.is_bankrupt else state.price
+            change = round((now / market_at_trade - 1) * 100, 1)
+            action = TradeAction.BUY if entry.action_type == ActionType.BUY else TradeAction.SELL
+            reason = entry.details.get("reason")
+            reviews.append(
+                DecisionReview(
+                    ticker=entry.ticker or "",
+                    company_name=self.repo.company(entry.company_id).name,
+                    action=action,
+                    shares=entry.shares or 0,
+                    reason=reason,
+                    reason_label=TRADE_REASON_LABELS.get(reason, "no reason given"),
+                    trade_price=round(market_at_trade, 2),
+                    price_now=round(now, 2),
+                    change_pct=change,
+                    went_your_way=(change > 0) if action == TradeAction.BUY else (change < 0),
+                )
+            )
+        return reviews
+
+    def _pay_expense(self, session: GameSession, amount: float, title: str, week: int) -> ExpensePayment:
+        """A surprise bill: cash first, then savings, then shares sold in a hurry (biggest position first).
+        This is the lesson: an emergency fund in savings means you never have to sell at a bad moment."""
+        rest = r2(amount)
+        from_cash = min(max(session.cash, 0.0), rest)
+        session.cash = r2(session.cash - from_cash)
+        rest = r2(rest - from_cash)
+        from_savings = min(session.savings, rest)
+        session.savings = r2(session.savings - from_savings)
+        rest = r2(rest - from_savings)
+
+        sold: list[str] = []
+        from_shares = 0.0
+        if rest > 0:
+            positions = sorted(
+                (
+                    (pos.shares * session.companies[cid].price, cid, pos)
+                    for cid, pos in session.portfolio.items()
+                    if pos.shares > 0 and not session.companies[cid].is_bankrupt
+                ),
+                reverse=True,
+            )
+            for _, cid, pos in positions:
+                if rest <= 0:
+                    break
+                price = self._sell_price(session.companies[cid].price)
+                if price <= 0:
+                    continue
+                needed = min(pos.shares, int(-(-rest // price)))
+                proceeds = r2(needed * price)
+                pos.shares -= needed
+                if pos.shares == 0:
+                    pos.avg_cost = 0.0
+                ticker = self.repo.company(cid).ticker
+                sold.append(f"{needed} x {ticker}")
+                paid = min(proceeds, rest)
+                session.cash = r2(session.cash + proceeds - paid)
+                from_shares = r2(from_shares + paid)
+                rest = r2(rest - paid)
+                self._log(
+                    session,
+                    action_type=ActionType.SELL,
+                    company_id=cid,
+                    ticker=ticker,
+                    shares=needed,
+                    price=price,
+                    amount=proceeds,
+                    note=f"Sold in a hurry to pay a surprise bill: {title}",
+                    details={"forced_by_expense": True},
+                    week=week,
+                )
+
+        payment = ExpensePayment(
+            week=week,
+            title=title,
+            amount=r2(amount),
+            from_cash=r2(from_cash),
+            from_savings=r2(from_savings),
+            from_shares=r2(from_shares),
+            sold=sold,
+            unpaid=max(0.0, rest),
+        )
+        session.expense_payments.append(payment)
+        session.total_expenses = r2(session.total_expenses + amount - payment.unpaid)
+        return payment
+
     def _check_bankruptcies(
         self, session: GameSession, week: int
     ) -> tuple[list[BankruptcyNotice], list[FixedIncomeDefault]]:
@@ -1087,7 +1319,7 @@ class GameEngine:
             if position.shares <= 0 or state.is_bankrupt or state.dividend_per_share <= 0:
                 continue
             if not self.repo.pays_dividend(company_id, week):
-                continue  # not this company's payout week - owning the shares on payout day is what counts
+                continue
             amount = r2(position.shares * state.dividend_per_share)
             if amount <= 0:
                 continue
@@ -1134,7 +1366,6 @@ class GameEngine:
         )
         return interest
 
-    # ------------------------------------------------------ bonds & deposits
     def _accrue_fixed_income(self, session: GameSession) -> float:
         """Simple interest: every active holding earns principal x weekly rate at each week's close."""
         total = 0.0
@@ -1247,7 +1478,6 @@ class GameEngine:
         rent = session.monthly_rent
         cash_before = session.cash
         savings_before = session.savings
-        # Cash pays first; the savings account covers any shortfall automatically.
         from_savings = 0.0
         if session.cash < rent and session.savings > 0:
             from_savings = r2(min(session.savings, rent - session.cash))
@@ -1291,9 +1521,6 @@ class GameEngine:
         due = math.ceil(week / period) * period
         return due if due <= self.repo.scenario.total_weeks else None
 
-    # =====================================================================
-    # Internals - advisor
-    # =====================================================================
     def _build_advisor_context(self, session: GameSession, accurate: bool) -> AdvisorContext:
         week = session.current_week
         week_def = self.repo.week(week)
@@ -1317,7 +1544,7 @@ class GameEngine:
         real: list[tuple[float, AdvisorSignal]] = []
 
         def add_real(title: str, effect: EffectDefinition, weeks_until: int) -> None:
-            if effect.value == 0:
+            if effect.value == 0 or effect.target_type == TargetType.EXPENSE:
                 return
             direction = "up" if effect.value > 0 else "down"
             if effect.target_type in (TargetType.RENT, TargetType.SAVINGS_RATE):
@@ -1405,10 +1632,8 @@ class GameEngine:
                         )
                     )
             if not signals:
-                # No rumor available: misread a real signal by flipping its direction.
                 company_signals = [sig for sig in real_signals if sig.company_id]
                 if company_signals:
-                    # A misread keeps the headline but flips the conclusion, so its reasoning is generic.
                     flipped = company_signals[0].model_copy(
                         update={
                             "direction": "down" if company_signals[0].direction == "up" else "up",
@@ -1430,9 +1655,6 @@ class GameEngine:
             monthly_rent=session.monthly_rent,
         )
 
-    # =====================================================================
-    # Internals - views
-    # =====================================================================
     async def _load(self, session_id: str) -> GameSession:
         session = await self.store.get(session_id)
         if session is None:
@@ -1479,7 +1701,6 @@ class GameEngine:
     def _net_worth(self, session: GameSession) -> float:
         return r2(session.cash + session.savings + self._stocks_value(session) + self._fixed_income_value(session))
 
-    # ------------------------------------------------------------ hard data
     def _publish_reports(self, session: GameSession, week: int) -> None:
         """Start of a week: every company's hard data rolls over and this week's reports are applied."""
         week_def = self.repo.week(week)
@@ -1517,6 +1738,10 @@ class GameEngine:
             margin_trend=margin_trend,
             changed_this_week=any(t != "neutral" for t in (cash_trend, debt_trend, margin_trend)),
         )
+
+    def _shown_risk(self, risk: float) -> float:
+        """Risk as the player sees it: scaled so that 100% is the point where the company goes bankrupt."""
+        return round(min(1.0, risk / self.repo.scenario.bankruptcy_threshold), 4)
 
     def _risk_level(self, risk: float) -> RiskLevel:
         thresholds = self.repo.scenario.risk_thresholds
@@ -1647,7 +1872,7 @@ class GameEngine:
             pays_dividend_this_week=not state.is_bankrupt
             and not session.is_game_over
             and self.repo.pays_dividend(company.id, session.current_week),
-            bankruptcy_risk=state.bankruptcy_risk,
+            bankruptcy_risk=self._shown_risk(state.bankruptcy_risk),
             risk_level=self._risk_level(state.bankruptcy_risk),
             risk_trend=risk_trend,
             is_bankrupt=state.is_bankrupt,
@@ -1677,7 +1902,7 @@ class GameEngine:
                     name=product.name,
                     issuer=product.issuer,
                     issuer_company_id=product.issuer_company_id,
-                    issuer_risk=issuer_state.bankruptcy_risk if issuer_state else None,
+                    issuer_risk=self._shown_risk(issuer_state.bankruptcy_risk) if issuer_state else None,
                     issuer_risk_level=self._risk_level(issuer_state.bankruptcy_risk) if issuer_state else None,
                     issuer_bankrupt=bool(issuer_state and issuer_state.is_bankrupt),
                     description=product.description,
@@ -1749,9 +1974,21 @@ class GameEngine:
         if session.is_game_over or week_def is None:
             news: list[NewsItem] = []
         else:
-            # KEY RULE: only title + description leave the server during a turn - never which company a
-            # story is about, whether it is noise, or how much and when it will move prices.
             news = [NewsItem(id=e.id, title=e.title, description=e.description) for e in week_def.events]
+
+        last_archived = session.current_week if session.is_game_over else session.current_week - 1
+        news_archive = []
+        for past in range(last_archived, 0, -1):
+            past_def = self.repo.week(past)
+            if past_def is None:
+                continue
+            news_archive.append(
+                NewsArchiveWeek(
+                    week=past,
+                    theme=past_def.theme,
+                    items=[NewsItem(id=e.id, title=e.title, description=e.description) for e in past_def.events],
+                )
+            )
 
         next_due = None if session.is_game_over else self._next_rent_due_from(session, session.current_week)
         rent = RentView(
@@ -1796,6 +2033,7 @@ class GameEngine:
         ]
         return GameStateResponse(
             session_id=session.session_id,
+            seed=session.seed,
             game_mode=session.game_mode,
             modifiers=session.modifiers,
             scenario=ScenarioView(
@@ -1815,10 +2053,15 @@ class GameEngine:
             fixed_income_value=fixed_income_value,
             net_worth=net_worth,
             starting_cash=session.starting_cash,
-            # ROI = investment return before living costs (rent is shown separately).
-            roi_pct=round((net_worth + session.total_rent_paid - session.starting_cash) / session.starting_cash * 100, 2),
-            investment_gain=r2(net_worth + session.total_rent_paid - session.starting_cash),
+            roi_pct=round(
+                (net_worth + session.total_rent_paid + session.total_expenses - session.starting_cash)
+                / session.starting_cash
+                * 100,
+                2,
+            ),
+            investment_gain=r2(net_worth + session.total_rent_paid + session.total_expenses - session.starting_cash),
             total_rent_paid=session.total_rent_paid,
+            total_expenses=session.total_expenses,
             total_dividends=session.total_dividends,
             sell_spread_pct=round(s.sell_spread * 100, 2),
             rent=rent,
@@ -1826,9 +2069,9 @@ class GameEngine:
             fixed_income=self._fixed_income_view(session),
             advisor=advisor,
             risk_scale=RiskScale(
-                elevated_pct=round(s.risk_thresholds.elevated * 100, 1),
-                critical_pct=round(s.risk_thresholds.critical * 100, 1),
-                bankruptcy_pct=round(s.bankruptcy_threshold * 100, 1),
+                elevated_pct=round(self._shown_risk(s.risk_thresholds.elevated) * 100, 1),
+                critical_pct=round(self._shown_risk(s.risk_thresholds.critical) * 100, 1),
+                bankruptcy_pct=100.0,
             ),
             companies=[
                 self._company_view(session, c.id)
@@ -1836,6 +2079,7 @@ class GameEngine:
                 if self._is_listed(c.id, session.current_week)
             ],
             news=news,
+            news_archive=news_archive,
             price_history=session.price_history,
             net_worth_history=history,
         )

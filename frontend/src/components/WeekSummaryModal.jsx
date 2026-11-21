@@ -1,4 +1,6 @@
 import Modal from "./Modal.jsx";
+import SpeakButton from "./SpeakButton.jsx";
+import WeekQuiz from "./WeekQuiz.jsx";
 import { money, moneyCompact, pct, ratePct, RISK_LABELS, signedMoney, tone } from "../utils/format.js";
 
 // Headline and stamp judge the INVESTING result: rent is a bill, not an investment loss.
@@ -58,7 +60,7 @@ function ConsequenceItem({ item }) {
   );
 }
 
-export default function WeekSummaryModal({ summary, onContinue }) {
+export default function WeekSummaryModal({ summary, sessionId, onContinue }) {
   const resultTone = tone(summary.net_worth_change);
   const investTone = tone(summary.investment_change);
   const verdict = verdictFor(summary);
@@ -294,6 +296,20 @@ export default function WeekSummaryModal({ summary, onContinue }) {
                       </b>
                     </li>
                   )}
+                  {(summary.expenses ?? []).map((e) => (
+                    <li key={e.title} className="money-moves__expense">
+                      <span>
+                        Surprise bill: {e.title.replace(/^Personal note: /, "")}
+                        {e.from_shares > 0 && (
+                          <small className="money-moves__forced">
+                            {" "}
+                            &middot; cash and savings ran out, so {e.sold.join(", ")} had to be sold in a hurry
+                          </small>
+                        )}
+                      </span>
+                      <b className="is-down">&minus;{money(e.amount)}</b>
+                    </li>
+                  ))}
                   <li>
                     <span>Rent paid this week</span>
                     <b className={summary.rent.paid ? "is-down" : ""}>
@@ -374,8 +390,32 @@ export default function WeekSummaryModal({ summary, onContinue }) {
             <span>Remember</span>
             {lesson.key_takeaway}
           </p>
+          <SpeakButton text={`${lesson.title}. ${lesson.summary} ${lesson.market_lag_lesson} ${lesson.key_takeaway}`} />
         </article>
+
+        {(summary.decisions ?? []).length > 0 && (
+          <div className="decisions">
+            <h4>Your decisions this week</h4>
+            <ul>
+              {summary.decisions.map((d, i) => (
+                <li key={`${d.ticker}-${i}`} className={d.went_your_way ? "is-up" : "is-down"}>
+                  <span>
+                    {d.action === "buy" ? "Bought" : "Sold"} {d.shares} {d.ticker}
+                    <small> &middot; because of {d.reason_label}</small>
+                  </span>
+                  <b>
+                    {d.change_pct > 0 ? "+" : ""}
+                    {d.change_pct}% since
+                  </b>
+                </li>
+              ))}
+            </ul>
+            {lesson.decision_feedback && <p className="decisions__feedback">{lesson.decision_feedback}</p>}
+          </div>
+        )}
       </section>
+
+      {sessionId && <WeekQuiz week={summary.week} sessionId={sessionId} />}
 
       <div className="summary__cta">
         <button type="button" className="btn btn--red btn--xl" onClick={onContinue}>

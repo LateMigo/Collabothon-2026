@@ -3,10 +3,6 @@ import { useEffect, useRef } from "react";
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/**
- * Accessible dialog shell: focuses the first control (or [data-autofocus]),
- * traps Tab inside, closes on Escape / backdrop click and restores focus.
- */
 export default function Modal({
   labelledBy,
   onClose,

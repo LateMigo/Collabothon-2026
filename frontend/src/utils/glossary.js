@@ -1,0 +1,126 @@
+export const GLOSSARY = {
+  dividend: {
+    title: "Dividend",
+    what: "A share of the company's profit, paid in cash to everyone who owns its shares. Each company decides how much and how often - here every company has its own payout calendar.",
+    example:
+      "A company pays $0.50 per share every 4 weeks. You own 20 shares, so on payout day you get 20 × $0.50 = $10 in cash - without selling anything.",
+    why: "Dividends are income you get just for owning a share. Over a long time they can add up to a big part of what investors earn.",
+    tip: "A dividend is not guaranteed. A company in trouble can cut it or stop paying - and a very high dividend from a weak company is often a warning, not a gift.",
+  },
+  cash: {
+    title: "Company cash",
+    what: "Money the company has in the bank right now, ready to pay wages, suppliers and loans.",
+    example:
+      "A pizza chain with $2M in cash and $0.5M of monthly costs can survive about 4 bad months without new money.",
+    why: "Cash is the company's safety cushion. When sales drop, the cash is what keeps it alive.",
+    tip: "Little cash plus big bills is a dangerous mix. Watch for cash falling week after week.",
+  },
+  debt: {
+    title: "Debt",
+    what: "Money the company borrowed and must pay back, with interest on top.",
+    example:
+      "A loan of $8M at 5% a year costs $400,000 in interest every year - money that can't go to the business or to dividends.",
+    why: "Some debt helps a company grow (for example, to build a new factory). Too much debt eats the profit and can push the company into bankruptcy.",
+    tip: "Compare debt with cash: debt much bigger than cash, and still rising, is a red flag.",
+  },
+  profitMargin: {
+    title: "Profit margin",
+    what: "How many cents of every $1 of sales the company keeps as profit after paying all its costs.",
+    example:
+      "A company sells pizzas for $100 and its costs are $88. It keeps $12, so its margin is 12%. If costs rise to $105, the margin is -5%: it loses money on every sale.",
+    why: "A healthy margin means the company can survive a bad month, pay dividends and invest. A negative margin burns its cash.",
+    tip: "Look at the trend, not just the number: a shrinking margin often shows up before the share price falls.",
+  },
+  bankruptcyRisk: {
+    title: "Bankruptcy risk",
+    what: "How close the company is to running out of money. At 100% it goes bankrupt: it can't pay its bills and closes.",
+    example:
+      "You put $500 into a company that goes bankrupt. Its shares fall to $0 and you lose all $500 - there is no way to sell them.",
+    why: "Shares can lose everything. That's why the risk gauge matters more than a nice headline.",
+    tip: "Don't put all your money into one company. Spreading it out (diversification) means one bankruptcy can't wipe you out.",
+  },
+  sharePrice: {
+    title: "Share price",
+    what: "What one share of the company costs today. It moves every week as people react to news about the company.",
+    example: "You buy 10 shares at $20 = $200. The price rises to $23: they are now worth $230, a $30 gain - but only on paper until you sell.",
+    why: "Buying low and selling higher is one way to earn on shares. Prices can also fall below what you paid.",
+    tip: "Headlines can hype a price for a week. Check the hard data before you chase a jump.",
+  },
+  sellFee: {
+    title: "Selling fee (spread)",
+    what: "When you sell, you get a little less than the market price. The difference is the fee for the trade.",
+    example: "The price is $50 and the fee is 2%. Selling 10 shares gives you 10 × $49 = $490, not $500.",
+    why: "Buying and selling often costs money every time. A share has to rise by more than the fee before selling gives you a profit.",
+    tip: "Don't jump in and out of shares every week. Fewer, better-thought-out trades keep more money in your pocket.",
+  },
+  avgCost: {
+    title: "Average cost",
+    what: "The average price you paid for the shares you own, across all your purchases.",
+    example: "You bought 10 shares at $20 and later 10 more at $30. Your average cost is $25 per share.",
+    why: "It tells you whether you are in profit: if the price is above your average cost, you'd gain by selling (minus the fee).",
+    tip: "Buying more of a falling share lowers your average cost - but only makes sense if the company itself is still healthy.",
+  },
+  gainLoss: {
+    title: "Profit / loss on shares",
+    what: "How much your shares are worth now compared with what you paid for them.",
+    example: "You paid $300 for shares now worth $270: that's a $30 loss (-10%). It becomes a real loss only if you sell at that price.",
+    why: "It shows if your choices are working. A paper loss can recover; a bankruptcy loss can't.",
+    tip: "Ask why the price fell before you decide. Selling in panic after one bad headline is a classic mistake.",
+  },
+  interest: {
+    title: "Interest",
+    what: "What the bank pays you for keeping your money with it, as a percentage of your balance.",
+    example: "$1,000 at 0.3% a week earns $3 in the first week. Next week you earn interest on $1,003 too - that is compound interest.",
+    why: "Your money works a little even when you do nothing, and it can never fall in value in a savings account.",
+    tip: "Keep an emergency fund (for example, next month's rent) somewhere safe like this before you invest the rest.",
+  },
+  savings: {
+    title: "Savings account",
+    what: "A safe place for your money at the bank. You can put money in or take it out at any time, with no fee.",
+    example: "You park $600 here before rent day. If your cash runs short, the savings pay the rest of the rent automatically.",
+    why: "It protects you from having to sell shares at a bad moment just to pay a bill.",
+    tip: "Low risk means low return: savings grow slowly, but they don't crash.",
+  },
+  fixedIncome: {
+    title: "Bonds and term deposits",
+    what: "You lend your money for a fixed time and get a fixed interest rate. A term deposit is a loan to the bank; a bond is a loan to a government or a company.",
+    example: "You lock $1,000 in a 4-week deposit at 0.5% a week. After 4 weeks you get back about $1,020.",
+    why: "You know in advance what you will earn. The longer you lock the money, the better the rate usually is.",
+    tip: "A company bond pays more because it is riskier: if the company goes bankrupt, you get back only part of your money.",
+  },
+  termDeposit: {
+    title: "Term deposit",
+    what: "Money you lock in the bank for a set number of weeks in exchange for a better rate than a savings account.",
+    example: "A 2-week deposit pays 0.4% a week instead of 0.3% in savings - but leave early and you get no interest.",
+    why: "A good place for money you surely won't need for a while.",
+    tip: "Time it so the money comes back before rent day.",
+  },
+  bondDefault: {
+    title: "Default",
+    what: "When the borrower can't pay back. For a company bond this happens if the company goes bankrupt.",
+    example: "You lent $500 to a company that pays 1.5% a week. It goes bankrupt: the interest stops and you get back maybe 30% - $150.",
+    why: "A high interest rate is the market's way of saying the borrower might not pay you back.",
+    tip: "Check the company's bankruptcy risk before you buy its bond.",
+  },
+  earlyExit: {
+    title: "Leaving early",
+    what: "Taking your money out of a deposit or bond before its end date.",
+    example: "You leave a 4-week deposit after 2 weeks: you get your money back, but you lose the interest.",
+    why: "Locked money is not available for emergencies.",
+    tip: "Only lock money you are sure you won't need before it pays back.",
+  },
+  netWorth: {
+    title: "Net worth",
+    what: "Everything you own added up: cash, savings, bonds and deposits, and the current value of your shares.",
+    example: "$400 cash + $600 savings + $1,000 in a deposit + shares worth $1,500 = $3,500 net worth.",
+    why: "It's the one number that shows if you are getting richer or poorer over time.",
+    tip: "Net worth can go up and down with share prices. Judge your progress over many weeks, not one.",
+  },
+  rent: {
+    title: "Rent",
+    what: "A fixed bill you must pay every few weeks, no matter how your investments are doing.",
+    example: "Rent of $500 is due in Week 4. If you only have $300 in cash and nothing in savings, you can't pay.",
+    why: "Real life has bills. Investing money you need for them can force you to sell at a bad moment.",
+    tip: "Before you invest, set aside enough cash or savings for the next rent.",
+  },
+};

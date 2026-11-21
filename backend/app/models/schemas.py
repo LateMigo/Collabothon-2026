@@ -23,22 +23,17 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-# =============================================================================
-# 1. ENUMS
-# =============================================================================
-
-
 class GameMode(StrEnum):
     SINGLE_INVESTOR = "single_investor"
-    CEO = "ceo"  # DAY-2 HOOK: CEO mode (choose between advisor proposals)
+    CEO = "ceo"
 
 
 class InstrumentType(StrEnum):
-    STOCK = "stock"  # MVP uses only stocks
-    BOND = "bond"  # DAY-2 HOOK
-    LOAN = "loan"  # DAY-2 HOOK
-    TAX = "tax"  # DAY-2 HOOK
-    BUDGET_ALLOCATION = "budget_allocation"  # DAY-2 HOOK
+    STOCK = "stock"
+    BOND = "bond"
+    LOAN = "loan"
+    TAX = "tax"
+    BUDGET_ALLOCATION = "budget_allocation"
 
 
 class TargetType(StrEnum):
@@ -46,12 +41,13 @@ class TargetType(StrEnum):
     DIVIDEND = "dividend"
     RENT = "rent"
     BANKRUPTCY_RISK = "bankruptcy_risk"
-    SAVINGS_RATE = "savings_rate"  # weekly interest rate of the player's savings account
+    SAVINGS_RATE = "savings_rate"
+    EXPENSE = "expense"
 
 
 class ChangeType(StrEnum):
-    PERCENT = "percent"  # -0.30 means "minus 30%"
-    FLAT = "flat"  # +80 means "plus 80 units" (dollars, risk points, ...)
+    PERCENT = "percent"
+    FLAT = "flat"
 
 
 class TradeAction(StrEnum):
@@ -81,13 +77,13 @@ class SavingsAction(StrEnum):
 
 
 class FixedIncomeKind(StrEnum):
-    DEPOSIT = "deposit"  # bank term deposit: locked for N weeks from the day it is opened
-    BOND = "bond"  # government or company bond: everyone is paid back in the same (maturity) week
+    DEPOSIT = "deposit"
+    BOND = "bond"
 
 
 class FixedIncomeAction(StrEnum):
     BUY = "buy"
-    CLOSE = "close"  # cash out before maturity (fee + the interest is lost)
+    CLOSE = "close"
 
 
 class FixedIncomeStatus(StrEnum):
@@ -121,11 +117,15 @@ class SuggestedAction(StrEnum):
 
 
 Direction = Literal["up", "down", "neutral"]
+AILevel = Literal["simple", "normal", "detailed"]
+AILanguage = Literal["en", "de", "pl"]
 
 
-# =============================================================================
-# 2. SCENARIO DATA CONTRACT (game_data.json)
-# =============================================================================
+class AIPrefs(BaseModel):
+    """How the player wants the AI to talk: reading level and language (the game UI itself stays English)."""
+
+    level: AILevel = "normal"
+    language: AILanguage = "en"
 
 
 class _StrictModel(BaseModel):
@@ -405,11 +405,6 @@ class GameData(_StrictModel):
     fallback_texts: FallbackTexts
 
 
-# =============================================================================
-# 3. SESSION STATE (internal)
-# =============================================================================
-
-
 class GameModifiers(BaseModel):
     enable_dividends: bool = True
     enable_living_costs: bool = True
@@ -520,6 +515,19 @@ class ActionLogEntry(BaseModel):
     details: dict[str, Any] = Field(default_factory=dict)
 
 
+class ExpensePayment(BaseModel):
+    """A surprise bill: paid from cash, then savings, then - if needed - by selling shares in a hurry."""
+
+    week: int
+    title: str
+    amount: float
+    from_cash: float = 0.0
+    from_savings: float = 0.0
+    from_shares: float = 0.0
+    sold: list[str] = Field(default_factory=list, description="e.g. '3 x PIZA' - shares sold to pay the bill.")
+    unpaid: float = 0.0
+
+
 class RentPayment(BaseModel):
     week: int
     amount: float
@@ -562,6 +570,7 @@ class GameSession(BaseModel):
     game_mode: GameMode
     modifiers: GameModifiers
     seed: int
+    nickname: str = ""
     current_week: int = 1
     is_game_over: bool = False
     end_reason: EndReason | None = None
@@ -590,27 +599,51 @@ class GameSession(BaseModel):
     weekly_snapshots: list[WeeklySnapshot] = Field(default_factory=list)
     consequence_log: list[TriggeredConsequence] = Field(default_factory=list)
     rent_payments: list[RentPayment] = Field(default_factory=list)
+    expense_payments: list[ExpensePayment] = Field(default_factory=list)
+    total_expenses: float = 0.0
     bankruptcies: list[BankruptcyRecord] = Field(default_factory=list)
     advisor_uses_left: int
     advisor_used_weeks: list[int] = Field(default_factory=list)
     final_analysis: FinalAnalysisResponse | None = None
 
 
-# =============================================================================
-# 4. PUBLIC API
-# =============================================================================
-
-
 class CreateSessionRequest(BaseModel):
     game_mode: GameMode = GameMode.SINGLE_INVESTOR
     modifiers: GameModifiers = Field(default_factory=GameModifiers)
     seed: int | None = Field(default=None, ge=0, le=2_147_483_647)
+    nickname: str = Field(default="", max_length=20, description="Shown on the challenge board.")
+
+
+TradeReason = Literal["news", "trend", "advisor", "gut", "cash"]
+TRADE_REASON_LABELS = {
+    "news": "a news story",
+    "trend": "the price trend",
+    "advisor": "the advisor's tip",
+    "gut": "a gut feeling",
+    "cash": "needing cash",
+}
 
 
 class TradeRequest(BaseModel):
     company_id: str = Field(min_length=1, max_length=64)
     action: TradeAction
     shares: int = Field(ge=0, le=1_000_000)
+    reason: TradeReason | None = Field(default=None, description="Decision journal: why the player trades.")
+
+
+class DecisionReview(BaseModel):
+    """Decision journal: one trade of this week, its reason and what the price did by the end of the week."""
+
+    ticker: str
+    company_name: str
+    action: TradeAction
+    shares: int
+    reason: TradeReason | None
+    reason_label: str
+    trade_price: float
+    price_now: float
+    change_pct: float
+    went_your_way: bool = Field(description="Buy and the price rose, or sell and the price fell.")
 
 
 class SavingsRequest(BaseModel):
@@ -631,6 +664,14 @@ class NewsItem(BaseModel):
     id: str
     title: str
     description: str
+
+
+class NewsArchiveWeek(BaseModel):
+    """Headlines of one past week, kept so the player can re-read them (same public fields as NewsItem)."""
+
+    week: int
+    theme: str
+    items: list[NewsItem]
 
 
 class FundamentalsView(BaseModel):
@@ -792,6 +833,7 @@ class NetWorthPoint(BaseModel):
 
 class GameStateResponse(BaseModel):
     session_id: str
+    seed: int | None = None
     game_mode: GameMode
     modifiers: GameModifiers
     scenario: ScenarioView
@@ -807,6 +849,7 @@ class GameStateResponse(BaseModel):
     roi_pct: float = Field(description="Investment return in % - before living costs (rent is not an investment).")
     investment_gain: float = Field(description="Net worth + rent paid - starting cash, in $.")
     total_rent_paid: float
+    total_expenses: float = 0.0
     total_dividends: float
     sell_spread_pct: float
     rent: RentView
@@ -816,6 +859,7 @@ class GameStateResponse(BaseModel):
     risk_scale: RiskScale
     companies: list[CompanyView]
     news: list[NewsItem]
+    news_archive: list[NewsArchiveWeek] = Field(default_factory=list, description="Every earlier week's headlines.")
     price_history: list[PricePoint]
     net_worth_history: list[NetWorthPoint]
 
@@ -1000,6 +1044,8 @@ class WeekSummaryResponse(BaseModel):
     bankruptcies: list[BankruptcyNotice]
     unmasked_noise: list[UnmaskedNoise]
     lesson: WeekLesson
+    expenses: list[ExpensePayment] = Field(default_factory=list)
+    decisions: list[DecisionReview] = Field(default_factory=list)
     stocks_change: float = Field(description="What price moves (and bankruptcies) did to the shares you held.")
     investment_change: float = Field(description="Net worth change before rent - the result of your investing.")
     investment_change_pct: float
@@ -1017,13 +1063,6 @@ class NextWeekResponse(BaseModel):
     state: GameStateResponse
 
 
-# =============================================================================
-# 5. AI CONTRACTS
-# =============================================================================
-# "*Content" models are the exact JSON schemas Gemini must return.
-# The public models add `ai_source` so the UI can label Gemini vs. fallback.
-
-
 class JargonTerm(BaseModel):
     term: str = Field(description="A finance word used this week, e.g. 'Dividend'.")
     meaning: str = Field(description="One plain-English sentence anyone can understand.")
@@ -1037,6 +1076,11 @@ class WeekLessonContent(BaseModel):
     )
     jargon: list[JargonTerm] = Field(description="1-3 finance terms explained simply.")
     key_takeaway: str = Field(description="One memorable sentence to remember.")
+    decision_feedback: str = Field(
+        default="",
+        description="Only if 'decisions' is not empty: ONE sentence judging the player's REASONS (not only the result). "
+        "Empty string if there were no decisions.",
+    )
 
 
 class WeekLesson(WeekLessonContent):
@@ -1056,6 +1100,8 @@ class WeekSummaryContext(BaseModel):
     bankruptcies: list[BankruptcyNotice]
     net_worth_change: float
     investment_change: float
+    expenses: list[ExpensePayment] = Field(default_factory=list)
+    decisions: list[DecisionReview] = Field(default_factory=list)
 
 
 class AdvisorSignal(BaseModel):
@@ -1108,11 +1154,6 @@ class AdvisorHintContent(BaseModel):
 
 class AdvisorHint(AdvisorHintContent):
     ai_source: AISource
-
-
-# =============================================================================
-# 6. END-OF-GAME ANALYSIS
-# =============================================================================
 
 
 class DelayedSignalOutcome(BaseModel):
@@ -1208,6 +1249,8 @@ class PlayerMetrics(BaseModel):
     rent_checks: list[RentCheck]
     liquidity_loss: bool
     liquidity_week: int | None
+    total_expenses: float = 0.0
+    expenses_paid_by_selling: int = Field(default=0, description="Surprise bills that forced the player to sell shares.")
     weeks_played: int
     play_style_key: str
 
@@ -1309,6 +1352,17 @@ class FinalAnalysisContext(BaseModel):
     companies: list[ChartCompany]
 
 
+class BankOffer(BaseModel):
+    id: str
+    product: str
+    headline: str
+    why: str = Field(description="Personal reason, quoting the player's own season.")
+    what_it_is: str
+    cta_label: str
+    url: str
+    rank: int
+
+
 class FinalAnalysisResponse(BaseModel):
     session_id: str
     stats: FinalStats
@@ -1318,11 +1372,9 @@ class FinalAnalysisResponse(BaseModel):
     price_history: list[PricePoint]
     companies: list[ChartCompany]
     market_timeline: list[TimelineEntry]
-
-
-# =============================================================================
-# 7. DAY-2 HOOK TYPES (architecture only, no business logic in the MVP)
-# =============================================================================
+    next_steps: list[BankOffer] = Field(default_factory=list)
+    offer_disclaimer: str = ""
+    seed: int | None = None
 
 
 class AdvisorRole(StrEnum):
@@ -1370,6 +1422,202 @@ class InstrumentPosition(BaseModel):
     term_weeks: int | None = None
 
 
-# Resolve forward references (GameSession -> FinalAnalysisResponse, etc.).
 GameSession.model_rebuild()
 WeekSummaryResponse.model_rebuild()
+
+
+class CompanyResearchRequest(BaseModel):
+    company_id: str
+    level: AILevel = "normal"
+    language: AILanguage = "en"
+
+
+class ResearchHeadline(BaseModel):
+    week: int
+    title: str
+    description: str
+
+
+class ResearchCompanyBrief(BaseModel):
+    """Only what the player can already see on the card and in the papers - never hidden effects."""
+
+    name: str
+    ticker: str
+    industry: str
+    main_product: str
+    description: str
+    condition: str
+    fine_print: str
+    listed_week: int
+    price: float
+    price_history: list[float]
+    change_since_listing_pct: float
+    dividend_per_share: float
+    dividend_every_weeks: int
+    next_dividend_week: int | None
+    bankruptcy_risk_pct: float
+    risk_level: RiskLevel
+    risk_trend: Direction
+    is_bankrupt: bool
+    cash_millions: float
+    debt_millions: float
+    profit_margin_pct: float
+    cash_trend: Direction
+    debt_trend: Direction
+    margin_trend: Direction
+    shares_owned: int
+    avg_cost: float
+
+
+class CompanyResearchContext(BaseModel):
+    week: int
+    total_weeks: int
+    company: ResearchCompanyBrief
+    headlines: list[ResearchHeadline]
+
+
+class ResearchNewsLink(BaseModel):
+    week: int = Field(description="The week the headline was published.")
+    title: str = Field(description="The headline title, copied exactly from the input.")
+    why: str = Field(description="One short sentence: how this story could reach the company's money.")
+
+
+class CompanyResearchContent(BaseModel):
+    verdict: str = Field(description="A 3-6 word label for the company today, e.g. 'Steady earner, watch costs'.")
+    summary: str = Field(description="2-3 plain sentences about the company's health, max 60 words, no buy/sell order.")
+    strengths: list[str] = Field(description="1-3 short strengths backed by the data.")
+    risks: list[str] = Field(description="1-3 short risks backed by the data.")
+    news_to_watch: list[ResearchNewsLink] = Field(description="0-3 published headlines that could matter for it.")
+    question: str = Field(description="One question the player should ask themselves before trading.")
+
+
+class CompanyResearchReport(CompanyResearchContent):
+    ai_source: AISource
+
+
+class CompanyResearchResponse(CompanyResearchContent):
+    company_id: str
+    company_name: str
+    ticker: str
+    week: int
+    ai_source: AISource
+    disclaimer: str
+
+
+class GlossaryQuestion(BaseModel):
+    question: str = Field(min_length=1, max_length=300)
+    level: AILevel = "normal"
+    language: AILanguage = "en"
+
+
+class GlossaryAnswerContent(BaseModel):
+    term: str = Field(description="The money term the question is about, e.g. 'Dividend'. Empty if off-topic.")
+    answer: str = Field(description="A plain explanation, max 80 words.")
+    example: str = Field(description="One short example with simple numbers, max 35 words. Empty if off-topic.")
+    related_terms: list[str] = Field(description="0-3 related money terms worth asking about next.")
+    on_topic: bool = Field(description="False if the question is not about money, saving, banking or investing.")
+
+
+class GlossaryAnswer(GlossaryAnswerContent):
+    ai_source: AISource
+
+
+class KpiEvent(BaseModel):
+    event: str = Field(min_length=1, max_length=40)
+    session_id: str | None = Field(default=None, max_length=80)
+    detail: str | None = Field(default=None, max_length=80)
+
+
+class KpiStep(BaseModel):
+    label: str
+    value: int
+    pct_of_start: float
+
+
+class KpiFunnel(BaseModel):
+    steps: list[KpiStep]
+    weeks_played: int
+    avg_weeks_per_player: float
+    quiz_answers: int
+    quiz_correct_pct: float
+    lessons_completed: int
+    glossary_questions: int
+    research_reports: int
+    challenges_shared: int
+    challenges_joined: int
+    offer_clicks: dict[str, int]
+    offer_ctr_pct: float
+    since_minutes: int
+
+
+class ChallengeEntry(BaseModel):
+    session_id: str
+    nickname: str
+    final_net_worth: float
+    roi_pct: float
+    verdict: str
+    approved: bool
+    weeks_played: int
+
+
+class WhatIfLine(BaseModel):
+    key: str
+    label: str
+    description: str
+    final_net_worth: float
+    roi_pct: float
+    end_reason: str
+    weeks_played: int
+    history: list[NetWorthPoint]
+
+
+class WhatIfContent(BaseModel):
+    headline: str = Field(description="One short sentence, max 14 words, naming the clearest difference.")
+    explanation: str = Field(description="2-3 short sentences comparing the player with the two strategies, with $ amounts.")
+    takeaway: str = Field(description="One practical habit for real life, max 20 words.")
+
+
+class WhatIfStory(WhatIfContent):
+    ai_source: AISource
+
+
+class WhatIfResponse(WhatIfStory):
+    lines: list[WhatIfLine]
+
+
+class BudgetRequest(BaseModel):
+    """The player's own monthly numbers. Used for one answer only - never stored or logged."""
+
+    income: float = Field(ge=0, le=1_000_000)
+    housing: float = Field(ge=0, le=1_000_000)
+    food: float = Field(ge=0, le=1_000_000)
+    other: float = Field(ge=0, le=1_000_000)
+    savings_now: float = Field(default=0, ge=0, le=100_000_000)
+    currency: Literal["EUR", "PLN", "USD"] = "EUR"
+    level: AILevel = "normal"
+    language: AILanguage = "en"
+
+
+class BudgetNumbers(BaseModel):
+    currency: str = "EUR"
+    income: float
+    spending: float
+    left_over: float
+    needs: float
+    wants: float
+    savings_target: float
+    suggested_monthly_saving: float
+    emergency_fund_target: float
+    months_to_emergency_fund: int | None
+
+
+class BudgetAdvice(BaseModel):
+    summary: str = Field(description="2-3 plain sentences about this budget, using the given numbers.")
+    steps: list[str] = Field(description="Exactly 3 short, concrete steps for the next month.")
+    bank_step: str = Field(description="One sentence: a first step with a bank account or automatic transfer.")
+
+
+class BudgetPlan(BudgetAdvice):
+    numbers: BudgetNumbers
+    ai_source: AISource
+    disclaimer: str

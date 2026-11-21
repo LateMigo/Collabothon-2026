@@ -1,10 +1,6 @@
 import Modal from "./Modal.jsx";
 import { money, moneyCompact, rentCheck } from "../utils/format.js";
 
-/**
- * Shown when the player presses "End Week" on rent day without enough money for the rent.
- * Ending the week anyway ends the game, so the form lists every way to raise cash first.
- */
 export default function RentAlertModal({ game, onClose, onEndAnyway, onSell, onOpenBonds }) {
   const check = rentCheck(game);
   const rent = game.rent.monthly_rent;

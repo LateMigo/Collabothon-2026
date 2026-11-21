@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal.jsx";
 import { clamp, money, moneyCompact, plural, ratePct, RISK_LABELS } from "../utils/format.js";
+import InfoTip from "./InfoTip.jsx";
 
 const round2 = (value) => Math.round(value * 100) / 100;
 
@@ -10,7 +11,6 @@ const STATUS_LABELS = {
   defaulted: "Defaulted",
 };
 
-/** How safe the money is: bank and government can't default, a company can. */
 function safety(offer) {
   if (offer.kind === "deposit") return { label: "Bank deposit · no risk", tone: "safe" };
   if (!offer.issuer_company_id) return { label: "Government · no default risk", tone: "safe" };
@@ -123,14 +123,18 @@ function OrderForm({ offer, game, onSubmit }) {
           <dd>End of Week {offer.maturity_week}</dd>
         </div>
         <div>
-          <dt>Leave early</dt>
+          <dt>
+            Leave early <InfoTip entry="earlyExit" />
+          </dt>
           <dd>
             {offer.early_exit_fee_pct > 0 ? `${offer.early_exit_fee_pct}% fee + ` : ""}
             lose the interest
           </dd>
         </div>
         <div>
-          <dt>{offer.issuer_company_id ? "If it goes bankrupt" : "Default risk"}</dt>
+          <dt>
+            {offer.issuer_company_id ? "If it goes bankrupt" : "Default risk"} <InfoTip entry="bondDefault" />
+          </dt>
           <dd>{offer.issuer_company_id ? `you get ${offer.recovery_pct}% back` : "none"}</dd>
         </div>
       </dl>
@@ -298,7 +302,6 @@ function HoldingRow({ holding, currentWeek, onSubmit }) {
   );
 }
 
-/** Form B-3: the bond desk. Bank term deposits and bonds, each with its own rate, date and risk. */
 export default function FixedIncomeModal({ game, onClose, onSubmit }) {
   const fi = game.fixed_income;
   const activeCount = fi.holdings.filter((h) => h.status === "active").length;
@@ -358,7 +361,6 @@ export default function FixedIncomeModal({ game, onClose, onSubmit }) {
         ) : (
           <ul className="bond-holdings">
             {[...fi.holdings]
-              // active ones first (soonest pay-back on top), then the closed history
               .sort((a, b) => (a.status === "active" ? 0 : 1) - (b.status === "active" ? 0 : 1) || a.maturity_week - b.maturity_week)
               .map((h) => (
                 <HoldingRow key={h.holding_id} holding={h} currentWeek={game.current_week} onSubmit={onSubmit} />

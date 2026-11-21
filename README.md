@@ -1,5 +1,45 @@
 # CosmiCash (Finance Quest)
 
+## Project Card - Collabothon 2026
+
+**Project Name:** CosmiCash
+
+**One-Line Summary:** A 12-week investing game with an AI teacher that helps beginners of every generation learn money skills risk-free and take a first real step with Commerzbank.
+
+**Technology Stack:** JavaScript/React 19 + Vite (frontend), Python 3 + FastAPI + Pydantic (backend), Google Gemini API via the google-genai SDK (AI coach, advisor, teacher), browser Web Speech API (read aloud), HTML canvas and CSS (pixel art, animations). Runs locally on Windows/macOS/Linux, no cloud database.
+
+**Source Code Repository:** https://github.com/LateMigo/Collabothon-2026
+
+### Project Overview
+
+**THE PROBLEM**
+Many people know a little about money but still don't act: financial products feel complex, and classic courses are long and disconnected from real decisions. Beginners - teenagers, working adults and seniors - hesitate to take the first step, so they miss out on saving, emergency funds and smart investing.
+
+**YOUR SOLUTION**
+CosmiCash turns financial learning into a 12-week game in a fictional space economy. Players invest, save, pay rent and handle surprise bills while news moves prices - sometimes only weeks later, like a real market. Google Gemini explains every step at the player's level, reviews the reasons behind their decisions, and every season ends with a bridge to real life: a "What if?" replay, a personal budget plan and three Commerzbank next steps. A deliberately fallible AI advisor teaches critical thinking instead of blind trust.
+
+**THE WORKING PROTOTYPE**
+Everything below is implemented and working: a guided tour; companies with hard data, dividends and bankruptcy risk; a newspaper with real, delayed and "noise" headlines plus an old-news board; savings account, term deposits and bonds; rent and surprise bills; buy/sell with a decision journal; an AI advisor and company research; Berg, the AI teacher (3 reading levels, read aloud); weekly AI lesson and quiz; one-minute lessons with smart nudges; final AI review, "What if?" chart, real-life budget planner, Commerzbank next steps, friend challenges and a live KPI view for the bank (`/#bank`).
+
+**BEHIND THE BUILD**
+A FastAPI backend runs a deterministic, seeded game engine driven by a scenario file (companies, weekly events with delayed effects); the React frontend only sees public information. All AI features go through one service that sends structured JSON to Gemini and validates the answer against Pydantic schemas; if the key, network or quota fails, an offline generator answers instead, so the game always works. Built on React, Vite, FastAPI, Pydantic and the google-genai SDK; the game engine, scenario, AI prompts, pixel art and all features were created during the hackathon.
+
+**CHALLENGES AND DISCOVERIES**
+Keeping AI answers reliable: structured output with schema validation and fallbacks. Gemini's per-minute quota: automatic cooldown to offline mode. Game balance: full-season simulations revealed surprise bills that were too high and a replay strategy that ran out of rent money - both fixed. Hackathon feedback taught us to put the business case and beginners first.
+
+**RESULTS AND NEXT STEPS**
+A complete, playable learning mission. Validated with automated full-season simulations (9 play styles, all endpoints, all 82 scripted effects firing correctly) and manual tests of every AI feature on the live Gemini API. Most proud of: the "What if?" replay and the AI review of the player's reasoning. Limitations: in-memory sessions and KPIs, English only, example bank offers. Next: integration into the Commerzbank app with real product links, a school/class mode, more languages and scenarios.
+
+### Answers to the Challenge Card
+- **Engaging, relevant, actionable:** real consequences in a game, short AI explanations and quizzes, and a real budget plan plus Commerzbank next steps at the end.
+- **Confidence to take the first step:** risk-free practice, feedback on reasoning, a "What if?" replay and a concrete plan for next month.
+- **Target learner and objective:** beginners of every generation; understand market lag, risk, diversification, emergency funds, savings, bonds and budgeting.
+- **Fit with the theme:** three AI reading levels, read-aloud, a gentle start and life-stage scenarios.
+
+---
+
+## About the game
+
 **A turn-based investing game for every generation.**
 Built for **Collabothon 2026 - Commerzbank Challenge: Finance Quest**, theme **"Innovations for all generations"**.
 
@@ -37,6 +77,19 @@ The **bond desk** adds the next bank products: **term deposits** (2, 4 or 8 week
 
 ---
 
+## Business case for Commerzbank
+
+**How does Commerzbank benefit?** CosmiCash is a free, fun first contact with money for beginners - and every season ends with a bridge to real banking:
+
+1. **Acquisition.** A game reaches people before they choose a bank. *Challenge a friend* links (same seed = same season, one results board) bring new players at no cost.
+2. **Conversion.** The final screen shows **"Your next 3 money steps"**: Commerzbank products picked from how the player actually played (ran short on rent -> savings account as an emergency fund; everything in one company -> fund savings plan; plus current account + app, an automatic savings transfer or an advisor meeting). Every reason quotes the player's own numbers.
+3. **Relationship.** Throughout the game, *Commerzbank Savings* is the safe harbour that pays the rent when cash runs short - trust built before the first real euro.
+4. **Measurable.** `/#bank` opens a live KPI view: players -> finished seasons -> saw the offers -> clicked one, plus quiz accuracy, lessons completed, questions to Berg and challenge links (`GET /api/kpi`, in memory for the demo).
+
+**Why CosmiCash and not another finance app?** News moves prices *with a delay* (market lag), the AI advisor is deliberately wrong 3 times in 10 (critical thinking instead of blind trust), Berg explains any money word with Gemini but never picks shares, surprise bills (a cracked phone, a wedding gift, the dentist) show why an emergency fund matters, and the fictional universe means no real investment advice.
+
+**Learning for beginners:** a one-question quiz after every week (knowledge points), 8 one-minute *Learn* lessons (budget, emergency fund, compound interest, current vs savings account, shares and risk, diversification, bonds, borrowing), a guided tour in Week 1, and the bond desk that unlocks only in Week 3.
+
 ## Look & feel
 
 The game is styled as **Booth 7 of a shabby Galactic Exchange**: you sit at an olive-steel desk inside a space station, with space visible through the booth window. Each week's news arrives as a newspaper, *The Galactic Ledger*. Companies are paper dossiers with paperclips, and prices glow on amber CRT screens. Every outcome is rubber-stamped: trade orders get **APPROVED**, delayed effects **EFFECT FROM WEEK 1**, rumors **JUST NOISE**, and the weekly report and final performance review end with a verdict stamp. The illustrations are original and deliberately crude, as if drawn with a mouse. The fonts are Pixelify Sans, Courier Prime, VT323 and Black Ops One.
@@ -49,7 +102,7 @@ The game is styled as **Booth 7 of a shabby Galactic Exchange**: you sit at an o
 - **5 effect types.** `stock_price`, `dividend`, `rent`, `bankruptcy_risk` and `savings_rate`. Each one is either a percentage or a flat change, and it can target a single company, a whole industry or everything (`global`).
 - **Server-side secrecy.** During a turn the API sends only each headline's `title` and `description`. Fields such as `is_noise`, `effects` and `delay_weeks` are never sent, so players have to work out cause and effect themselves.
 - **SVG stock chart** built in plain React with no chart library. It has a legend you can click to highlight one company, a $ price / % change toggle, week markers, a "coming weeks" zone, tooltips on hover and a data table that screen readers can read.
-- **3D flip company cards** made with CSS only. The front shows the price, % change, the dividend with its payout calendar ("every 4 weeks · next in Week 8"), a bankruptcy-risk gauge from *safe* to the red *bankrupt at 85%* line (Low, Elevated or Critical), the shares you hold and a line of **fine print** (for example "all spears are built in one single factory" or "price changes reach the menu weeks later") that rewards reading before you press *Buy / Sell*. The back shows the **hard data**: cash, debt and profit margin with trend arrows, published every week (`reports` in `game_data.json`); it scrolls inside the card, so the front alone decides the card's height. When the headlines shout "success" but debt keeps rising, the careful reader spots it first - Papers, Please style. A red dot on *Details (Flip)* marks new numbers.
+- **3D flip company cards** made with CSS only. The front shows the price, % change, the dividend with its payout calendar ("every 4 weeks · next in Week 8"), a bankruptcy-risk gauge from *safe* to the red *bankrupt at 100%* line (Low, Elevated or Critical), the shares you hold and a line of **fine print** (for example "all spears are built in one single factory" or "price changes reach the menu weeks later") that rewards reading before you press *Buy / Sell*. The back shows the **hard data**: cash, debt and profit margin with trend arrows, published every week (`reports` in `game_data.json`); it scrolls inside the card, so the front alone decides the card's height. When the headlines shout "success" but debt keeps rising, the careful reader spots it first - Papers, Please style. A red dot on *Details (Flip)* marks new numbers.
 - **[?] tooltips.** One plain sentence next to every finance term on the cards and in the savings panel. They open on hover, keyboard focus or tap and close with Escape.
 - **Savings account (Commerzbank Savings).** Deposit and withdraw at any time, with no fee and no risk. Savings earn `savings_weekly_rate` (0.3%) interest at the end of every week. On rent day cash pays first and the savings cover the rest automatically. The Week 9 central-bank rate rise lifts the savings rate to 0.5% a week later (a `savings_rate` effect).
 - **Bonds & term deposits (`fixed_income` in `game_data.json`).** Each product has a `weekly_rate`, either a `term_weeks` (deposits: locked from the week you open it) or a fixed `maturity_week` (bonds), a sale window, a minimum, an `early_exit_fee` and - for company bonds - an `issuer_company_id` and a `recovery_rate`. Interest is simple (`principal × weekly_rate` at every close) and is paid out with the principal at maturity, before the rent is collected. Cashing out early returns `principal × (1 - early_exit_fee)` and forfeits the interest; if the issuer goes bankrupt the holding defaults and only `principal × recovery_rate` comes back.
@@ -62,7 +115,7 @@ The game is styled as **Booth 7 of a shabby Galactic Exchange**: you sit at an o
 - **Dividends on a calendar.** Each company pays `dividend_per_share` every `dividend_every_weeks` weeks (Cosmic Pizza every 4, Fabric of Keramzyt every 3, Galac-Kebab and Łęcicki every 2...), like real companies. Only owners at the end of a payout week get paid. News can raise or cut a company's dividend.
 - **The End Week button always sticks out** above the bottom edge; hovering it (or opening the handle) slides up a drawer that says exactly what closing the week will do.
 - **Menu.** The *Menu* button in the top bar goes back to the start screen without losing the game; *Continue* picks it up again.
-- **Bankruptcy.** When a company's `bankruptcy_risk` reaches 0.85 or more, its share price drops to $0 and trading in it is stopped.
+- **Bankruptcy.** When a company's `bankruptcy_risk` reaches 0.85 or more, its share price drops to $0 and trading in it is stopped. The game shows risk scaled to that threshold, so the player sees 100% = bankrupt.
 - **Investment Advisor lifeline (Agent Vorr).** You can ask for 3 hints per game, at most 1 per week. Each hint is drawn with a seeded random number: 70% of the time it uses the real queued effects, and 30% of the time it is built on noise or a misreading. Every hint shows Vorr's reasoning as a **cause-and-effect chain** (*Cooks and couriers earn more → Restaurant wage bills go up → Cosmic Pizza keeps less profit → Share price tends to fall*), built from `cause_chain` in the scenario file. A wrong hint comes with a convincing but wrong chain, so players learn to check every step. Every hint carries the warning *"even experts make mistakes"*.
 - **Week summary.** A ledger that separates the **investing result** (share prices, dividends, interest, bond defaults) from the rent, then two sections: **"What Just Hit the Market"**, which separates immediate from delayed effects, and **"Financial Recap & Market Lag Lesson"**, which shows the company table (how many shares you own, price, % change and the bankruptcy risk now), dividends, bond payouts, rent, the headlines revealed as noise and the AI micro-lesson.
 - **End-of-game Move Analysis & Financial Coaching (Inspector mode).** A stamp instead of a long essay: **APPROVED** or **REJECTED** with a label such as *Prudent Strategist*, *Careful Saver* or *FOMO Victim*; the **two weeks that decided your season** (for example "In Week 3 you bought PIZA even though the higher cook wages had already been announced - in Week 4 it hit the price"); and **one habit for real life**, usually a banking habit. The full file (play style, strengths, improvements, 3–4 tips) opens on demand. The screen also shows your final net worth, ROI, dividends, savings interest, rent paid, the final chart, your trade history and a timeline of "what really happened".

@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import CompanyCard from "./CompanyCard.jsx";
 
-/**
- * Company dossiers in a horizontal tray: flip through them with the side arrows
- * instead of scrolling the whole page down.
- */
-/** Width of one "page" of slides (whole cards + the gaps between them). */
 function pageStep(track) {
   const slide = track.firstElementChild;
   if (!slide) return track.clientWidth;

@@ -1,4 +1,3 @@
-// Thin REST client for the FastAPI backend.
 const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 export class ApiError extends Error {
@@ -55,6 +54,15 @@ export const api = {
   fixedIncome: (sessionId, payload) =>
     request(`/sessions/${sessionId}/fixed-income`, { method: "POST", body: payload }),
   askAdvisor: (sessionId) => request(`/sessions/${sessionId}/advisor`, { method: "POST" }),
-  nextWeek: (sessionId) => request(`/sessions/${sessionId}/next-week`, { method: "POST" }),
-  finalAnalysis: (sessionId) => request(`/sessions/${sessionId}/final-analysis`),
+  askLexo: (question, prefs = {}) => request("/glossary/ask", { method: "POST", body: { question, ...prefs } }),
+  kpiEvent: (payload) => request("/kpi/event", { method: "POST", body: payload }).catch(() => {}),
+  kpi: () => request("/kpi"),
+  challengeBoard: (seed) => request(`/challenge/${seed}`),
+  research: (sessionId, companyId, prefs = {}) =>
+    request(`/sessions/${sessionId}/research`, { method: "POST", body: { company_id: companyId, ...prefs } }),
+  nextWeek: (sessionId, prefs) => request(`/sessions/${sessionId}/next-week`, { method: "POST", body: prefs }),
+  finalAnalysis: (sessionId, prefs = {}) =>
+    request(`/sessions/${sessionId}/final-analysis?${new URLSearchParams(prefs)}`),
+  whatIf: (sessionId, prefs = {}) => request(`/sessions/${sessionId}/what-if?${new URLSearchParams(prefs)}`),
+  budgetPlan: (payload) => request("/budget-plan", { method: "POST", body: payload }),
 };

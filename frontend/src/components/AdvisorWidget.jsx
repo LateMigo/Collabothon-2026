@@ -1,8 +1,9 @@
+import CompanyResearch from "./CompanyResearch.jsx";
 import InvestorAvatar from "./InvestorAvatar.jsx";
 
 const ACTION_LABELS = { buy: "Buy", sell: "Sell", hold: "Hold", watch: "Watch" };
 
-export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAsk }) {
+export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAsk, companies, onResearch }) {
   const hint = advice && advice.week === currentWeek ? advice : null;
   let buttonText = "Ask the advisor";
   if (busy) buttonText = "The advisor is thinking…";
@@ -57,6 +58,10 @@ export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAs
         {buttonText}
       </button>
       <p className="advisor__odds">Roughly {Math.round(advisor.accuracy_percent / 10)} in 10 hints turn out right.</p>
+
+      {companies?.length > 0 && onResearch && (
+        <CompanyResearch companies={companies} currentWeek={currentWeek} onResearch={onResearch} />
+      )}
     </section>
   );
 }

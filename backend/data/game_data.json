@@ -5,8 +5,8 @@
     "tagline": "Pizza / Keramzyt / Kebab / Laser spears / Starships / Renovation",
     "description": "A pizza chain and a keramzyt factory open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, check each company's hard data, watch for delayed effects and keep enough money for rent - in cash, in the safe savings vault, or in bonds and term deposits that pay back on time.",
     "total_weeks": 12,
-    "starting_cash": 3000.0,
-    "initial_monthly_rent": 400.0,
+    "starting_cash": 3000,
+    "initial_monthly_rent": 400,
     "rent_period_weeks": 4,
     "sell_spread": 0.05,
     "bankruptcy_threshold": 0.85,
@@ -54,7 +54,7 @@
       "ticker": "PIZA",
       "industry": "food",
       "main_product": "Pizza delivered anywhere in the system, still hot",
-      "initial_price": 40.0,
+      "initial_price": 40,
       "dividend_per_share": 1.6,
       "dividend_every_weeks": 4,
       "bankruptcy_risk": 0.22,
@@ -64,8 +64,8 @@
       "condition": "Steady and profitable. Flour, cheese and meat make up almost half of its costs, so food prices matter a lot.",
       "listed_week": 1,
       "fundamentals": {
-        "cash": 18.0,
-        "debt": 12.0,
+        "cash": 18,
+        "debt": 12,
         "profit_margin": 0.11
       },
       "fine_print": "Flour, cheese and meat are bought on monthly contracts, so price changes reach the menu weeks later."
@@ -76,7 +76,7 @@
       "ticker": "KRMZ",
       "industry": "materials",
       "main_product": "Keramzyt - light clay pebbles baked in giant kilns, used in walls, floors and space bases",
-      "initial_price": 60.0,
+      "initial_price": 60,
       "dividend_per_share": 2.7,
       "dividend_every_weeks": 3,
       "bankruptcy_risk": 0.12,
@@ -86,8 +86,8 @@
       "condition": "Reliable and a bit boring - in a good way. Pays regular dividends, but depends on the building season and on energy prices for its kilns.",
       "listed_week": 1,
       "fundamentals": {
-        "cash": 24.0,
-        "debt": 6.0,
+        "cash": 24,
+        "debt": 6,
         "profit_margin": 0.15
       },
       "fine_print": "The kilns run on gas: energy taxes and gas prices hit profits right away."
@@ -98,8 +98,8 @@
       "ticker": "KBAB",
       "industry": "streetfood",
       "main_product": "Kebabs for every species, including a zero-gravity döner",
-      "initial_price": 50.0,
-      "dividend_per_share": 1.0,
+      "initial_price": 50,
+      "dividend_per_share": 1,
       "dividend_every_weeks": 2,
       "bankruptcy_risk": 0.35,
       "description": "A fast-growing kebab chain with stands at spaceports, mines and night markets. Its new Zero-G Döner is wrapped so tightly that nothing floats away on orbital stations.",
@@ -108,8 +108,8 @@
       "condition": "Promising new products waiting for food-safety approval. Loyal fans, but modest profits so far - a bit risky.",
       "listed_week": 3,
       "fundamentals": {
-        "cash": 6.0,
-        "debt": 9.0,
+        "cash": 6,
+        "debt": 9,
         "profit_margin": 0.04
       },
       "fine_print": "The Zero-G Döner still needs a food-safety approval. Such decisions usually take about two weeks."
@@ -120,7 +120,7 @@
       "ticker": "DZDA",
       "industry": "defense",
       "main_product": "Laser spears (dzidas) for space rangers and moon-base guards",
-      "initial_price": 80.0,
+      "initial_price": 80,
       "dividend_per_share": 0.8,
       "dividend_every_weeks": 4,
       "bankruptcy_risk": 0.3,
@@ -130,8 +130,8 @@
       "condition": "Growing fast, but it borrowed a lot of money and relies on a single factory for everything it sells.",
       "listed_week": 5,
       "fundamentals": {
-        "cash": 9.0,
-        "debt": 46.0,
+        "cash": 9,
+        "debt": 46,
         "profit_margin": 0.14
       },
       "fine_print": "Every spear is built in one single factory. $46M of loans must be refinanced with the bank this season."
@@ -142,7 +142,7 @@
       "ticker": "HOWL",
       "industry": "starships",
       "main_product": "Cargo starships with famously loud engines",
-      "initial_price": 30.0,
+      "initial_price": 30,
       "dividend_per_share": 0.9,
       "dividend_every_weeks": 3,
       "bankruptcy_risk": 0.45,
@@ -152,8 +152,8 @@
       "condition": "A young company with big loans for its shipyard. Very sensitive to trade, strikes and orders - clearly risky.",
       "listed_week": 7,
       "fundamentals": {
-        "cash": 5.0,
-        "debt": 30.0,
+        "cash": 5,
+        "debt": 30,
         "profit_margin": 0.03
       },
       "fine_print": "Young shipyard: its share price usually swings about twice as much as the market (high volatility)."
@@ -164,7 +164,7 @@
       "ticker": "LECK",
       "industry": "renovation",
       "main_product": "Flat finishing and renovations: tiles, plaster, paint and 'it'll be done by Monday'",
-      "initial_price": 70.0,
+      "initial_price": 70,
       "dividend_per_share": 2.4,
       "dividend_every_weeks": 2,
       "bankruptcy_risk": 0.05,
@@ -174,8 +174,8 @@
       "condition": "Very safe: a big order book and loyal customers. Gets more work when people fix up old homes instead of buying new ones.",
       "listed_week": 9,
       "fundamentals": {
-        "cash": 20.0,
-        "debt": 1.0,
+        "cash": 20,
+        "debt": 1,
         "profit_margin": 0.22
       },
       "fine_print": "Customers pay before the work starts - online reviews have never changed the order book."
@@ -250,7 +250,7 @@
       },
       "reports": {
         "keramzyt": {
-          "cash": 27.0,
+          "cash": 27,
           "profit_margin": 0.18
         }
       },
@@ -327,6 +327,26 @@
           "description": "A post claiming that keramzyt pebbles 'hatch at night' was shared 500,000 times. Geologists call it complete nonsense - it's baked clay.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w2-guard-pizza",
+          "title": "Star Guard recruits order 3,000 pizzas to their 'secret' base",
+          "description": "The newest Valdorian Star Guard recruits ordered dinner to their top-secret moon base - reading the exact coordinates out on an open radio channel. Cosmic Pizza delivered every box in 29 minutes.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "cosmic-pizza",
+              "change_type": "percent",
+              "value": 0.04,
+              "delay_weeks": 0,
+              "consequence_text": "A record one-night order from the Star Guard lifted Cosmic Pizza's sales - the price ticked up.",
+              "cause_chain": [
+                "A huge one-off pizza order",
+                "Extra sales this week"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -340,7 +360,7 @@
       },
       "reports": {
         "cosmic-pizza": {
-          "cash": 19.0,
+          "cash": 19,
           "profit_margin": 0.13
         },
         "keramzyt": {
@@ -453,6 +473,33 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w3-noise-guard-sneeze",
+          "title": "Star Guard admiral: 'I scared off an alien fleet with one sneeze'",
+          "description": "Admiral Brontus Vex told reporters that a single sneeze on the bridge made an enemy fleet turn around. Radar logs show the 'fleet' was a flock of space geese.",
+          "is_noise": true,
+          "effects": []
+        },
+        {
+          "id": "w3-life-phone",
+          "title": "Personal note: your phone screen cracks",
+          "description": "You dropped your phone on the space-station stairs. The repair shop says it will cost $80, paid when you pick it up at the end of this week. Money in your savings would cover it without touching your shares.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "expense",
+              "target_id": "global",
+              "change_type": "flat",
+              "value": 80,
+              "delay_weeks": 0,
+              "consequence_text": "You paid $80 to fix your cracked phone - a surprise bill, the reason to keep an emergency fund.",
+              "cause_chain": [
+                "A surprise repair bill",
+                "Paid from cash or savings first"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -470,7 +517,7 @@
           "fine_print": "New wage rules apply from this week. The dividend is reviewed every week."
         },
         "galac-kebab": {
-          "cash": 5.0,
+          "cash": 5,
           "profit_margin": 0.02
         }
       },
@@ -554,6 +601,39 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w4-guard-crash",
+          "title": "Star Guard cruiser lands nose-first in Keramzyt's clay pit",
+          "description": "The Star Guard's oldest cruiser missed its landing pad by 40 km and buried its nose in Fabric of Keramzyt's main clay pit. Nobody was hurt, but the pit is closed until the wreck is towed away. The Guard says it will 'pay for everything, eventually'.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "keramzyt",
+              "change_type": "percent",
+              "value": -0.06,
+              "delay_weeks": 0,
+              "consequence_text": "With its main clay pit blocked by a cruiser, Keramzyt can't dig - its shares slipped.",
+              "cause_chain": [
+                "The main clay pit is blocked",
+                "Less clay, fewer bricks to sell"
+              ]
+            },
+            {
+              "target_type": "stock_price",
+              "target_id": "keramzyt",
+              "change_type": "percent",
+              "value": 0.05,
+              "delay_weeks": 2,
+              "consequence_text": "The Star Guard finally paid for the cruiser that landed in Keramzyt's pit in Week 4 - and the cleared pit is digging again.",
+              "cause_chain": [
+                "The wreck is towed away",
+                "The Guard pays compensation",
+                "Production restarts"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -568,7 +648,7 @@
       },
       "reports": {
         "cosmic-pizza": {
-          "cash": 17.0
+          "cash": 17
         },
         "galac-kebab": {
           "profit_margin": 0.05
@@ -675,6 +755,59 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w5-guard-kebab-ban",
+          "title": "Star Guard bans kebabs from barracks after 'the garlic sauce incident'",
+          "description": "After a garlic sauce spill set off every gas alarm on the training cruiser, the Star Guard banned kebabs from all its barracks. Galac-Kebab ran stands at four of them.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "galac-kebab",
+              "change_type": "percent",
+              "value": -0.05,
+              "delay_weeks": 0,
+              "consequence_text": "Losing four barracks stands cut Galac-Kebab's sales - its price dipped.",
+              "cause_chain": [
+                "Kebab stands closed in four barracks",
+                "Fewer customers every day"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w5-guard-spears",
+          "title": "Star Guard places a rush order for 500 laser spears - 'by Friday, please'",
+          "description": "In its very first week on the exchange, Laser Dzida Works won a giant Star Guard order for next week's parade. The catch: the spears must be ready in five days, so the factory is running night shifts at double pay.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "laser-dzida",
+              "change_type": "percent",
+              "value": 0.08,
+              "delay_weeks": 0,
+              "consequence_text": "A huge Star Guard order in its first week on the exchange sent Laser Dzida Works' shares up right away.",
+              "cause_chain": [
+                "A giant government order",
+                "Much more sales"
+              ]
+            },
+            {
+              "target_type": "stock_price",
+              "target_id": "laser-dzida",
+              "change_type": "percent",
+              "value": -0.05,
+              "delay_weeks": 2,
+              "consequence_text": "The overtime bills for the Star Guard rush order from Week 5 arrived - the night shifts ate most of the profit and the price slipped back.",
+              "cause_chain": [
+                "Night shifts at double pay",
+                "Wage bills arrive later",
+                "Less profit from the big order"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -689,17 +822,17 @@
       },
       "reports": {
         "keramzyt": {
-          "cash": 20.0,
-          "debt": 28.0,
+          "cash": 20,
+          "debt": 28,
           "fine_print": "The moon kiln is paid for with a $22M loan. First pebbles are expected in about three weeks."
         },
         "galac-kebab": {
-          "cash": 6.0,
+          "cash": 6,
           "profit_margin": 0.07,
           "fine_print": "Approved for every orbital station. Most sales still come from spaceports and night markets."
         },
         "laser-dzida": {
-          "cash": 4.0,
+          "cash": 4,
           "profit_margin": -0.25
         }
       },
@@ -828,6 +961,26 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w6-life-wedding",
+          "title": "Personal note: your cousin's wedding is in two weeks",
+          "description": "The invitation arrived: your cousin gets married on the moon at the end of Week 8. A gift and the shuttle ticket will cost about $140. You have two weeks to set the money aside.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "expense",
+              "target_id": "global",
+              "change_type": "flat",
+              "value": 140,
+              "delay_weeks": 2,
+              "consequence_text": "The wedding from the Week 6 invitation came: the gift and the shuttle ticket cost $140. A bill you can see coming is easy to plan for.",
+              "cause_chain": [
+                "A known bill two weeks ahead",
+                "Set money aside in time"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -843,12 +996,12 @@
       },
       "reports": {
         "cosmic-pizza": {
-          "cash": 16.0,
+          "cash": 16,
           "profit_margin": 0.07
         },
         "laser-dzida": {
-          "cash": 3.0,
-          "debt": 48.0,
+          "cash": 3,
+          "debt": 48,
           "fine_print": "The insurance payout for the fire is not guaranteed. Loan payments are still due every week."
         }
       },
@@ -973,6 +1126,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w7-noise-guard-invasion",
+          "title": "Star Guard sergeant: alien invasion is 'definitely next Tuesday, probably'",
+          "description": "Sergeant Kolbus Drane announced the date of the next alien invasion on a cooking show. The Glutonian Empire replied that it 'has no plans, and also no Tuesdays'.",
+          "is_noise": true,
+          "effects": []
         }
       ]
     },
@@ -988,13 +1148,13 @@
       },
       "reports": {
         "laser-dzida": {
-          "cash": 1.0,
-          "debt": 49.0,
+          "cash": 1,
+          "debt": 49,
           "fine_print": "The bank has halved the credit line. Without new money, bills can't be paid for long."
         },
         "howl": {
-          "cash": 6.0,
-          "debt": 38.0,
+          "cash": 6,
+          "debt": 38,
           "fine_print": "An $8M loan pays for the new Star Inquisition shipyard, due to open in about two weeks."
         }
       },
@@ -1144,6 +1304,38 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w8-guard-lost-squadron",
+          "title": "Lost alien squadron parks in Howl Starships' hangar",
+          "description": "A Glutonian scout squadron got lost on its way to a 'very important invasion' and asked to park at Howl Starships until its map is fixed. Howl charges by the night, and the aliens asked about a full year.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "howl",
+              "change_type": "percent",
+              "value": 0.04,
+              "delay_weeks": 0,
+              "consequence_text": "Unexpected parking fees from a lost alien squadron lifted Howl Starships a little.",
+              "cause_chain": [
+                "Empty hangars rented out",
+                "New income without new costs"
+              ]
+            },
+            {
+              "target_type": "stock_price",
+              "target_id": "howl",
+              "change_type": "percent",
+              "value": 0.05,
+              "delay_weeks": 1,
+              "consequence_text": "The lost squadron from Week 8 paid a full year of parking upfront - a big chunk of cash landed at Howl Starships.",
+              "cause_chain": [
+                "A year of parking paid in advance",
+                "A big cash payment arrives"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1160,7 +1352,7 @@
       },
       "reports": {
         "keramzyt": {
-          "cash": 22.0,
+          "cash": 22,
           "profit_margin": 0.21
         },
         "laser-dzida": {
@@ -1329,11 +1521,11 @@
       },
       "reports": {
         "keramzyt": {
-          "debt": 29.0,
+          "debt": 29,
           "profit_margin": 0.2
         },
         "howl": {
-          "cash": 7.0,
+          "cash": 7,
           "profit_margin": 0.09
         },
         "lecicki": {
@@ -1450,6 +1642,47 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w10-guard-rations",
+          "title": "Star Guard swaps its rations for Cosmic Pizza 'to boost morale'",
+          "description": "After a survey found that 97% of cadets 'would rather fight space geese than eat ration bar No. 4', the Star Guard signed a pizza contract with Cosmic Pizza. Deliveries start next week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "cosmic-pizza",
+              "change_type": "percent",
+              "value": 0.06,
+              "delay_weeks": 1,
+              "consequence_text": "The Star Guard pizza contract signed in Week 10 started - thousands of extra pizzas every day lifted Cosmic Pizza's sales.",
+              "cause_chain": [
+                "A long-term government contract",
+                "Deliveries start a week later",
+                "Steady extra sales"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w10-life-dentist",
+          "title": "Personal note: the dentist finds a cavity",
+          "description": "A check-up shows a tooth needs a filling next week. The clinic asks for $90 at the appointment.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "expense",
+              "target_id": "global",
+              "change_type": "flat",
+              "value": 90,
+              "delay_weeks": 1,
+              "consequence_text": "The dental filling found in Week 10 cost $90. Health bills don't wait for a good moment on the market.",
+              "cause_chain": [
+                "A health bill a week later",
+                "Cash or savings pay it"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1466,21 +1699,21 @@
       },
       "reports": {
         "cosmic-pizza": {
-          "cash": 17.0
+          "cash": 17
         },
         "keramzyt": {
-          "cash": 25.0
+          "cash": 25
         },
         "galac-kebab": {
-          "cash": 9.0,
+          "cash": 9,
           "profit_margin": 0.08
         },
         "howl": {
-          "cash": 5.0,
+          "cash": 5,
           "profit_margin": 0.06
         },
         "lecicki": {
-          "cash": 22.0
+          "cash": 22
         }
       },
       "events": [
@@ -1617,6 +1850,38 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w11-guard-roof",
+          "title": "Star Guard officers call Łęcicki's barracks roof 'aerodynamically suspicious'",
+          "description": "Łęcicki Renovations built the Star Guard a new barracks roof. Guard officers say it 'tries to take off in strong wind' and want it rebuilt at the builder's own cost.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "lecicki",
+              "change_type": "percent",
+              "value": -0.05,
+              "delay_weeks": 0,
+              "consequence_text": "Having to rebuild the barracks roof for free hit Łęcicki Renovations' shares.",
+              "cause_chain": [
+                "A roof must be rebuilt for free",
+                "Costs with no new sales"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "lecicki",
+              "change_type": "flat",
+              "value": 0.03,
+              "delay_weeks": 0,
+              "consequence_text": "Paying for the rebuilt roof drained some of Łęcicki's cash - its bankruptcy risk rose.",
+              "cause_chain": [
+                "Unplanned repair costs",
+                "Less cash left"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1633,11 +1898,11 @@
       },
       "reports": {
         "galac-kebab": {
-          "cash": 11.0,
+          "cash": 11,
           "profit_margin": 0.09
         },
         "lecicki": {
-          "cash": 24.0
+          "cash": 24
         }
       },
       "events": [
@@ -1690,7 +1955,7 @@
               "target_type": "dividend",
               "target_id": "lecicki",
               "change_type": "flat",
-              "value": 1.0,
+              "value": 1,
               "delay_weeks": 0,
               "consequence_text": "Łęcicki's year-end bonus was added to this week's payout.",
               "cause_chain": [
@@ -1773,7 +2038,7 @@
       "weekly_rate": 0.004,
       "term_weeks": 2,
       "min_amount": 100,
-      "early_exit_fee": 0.0
+      "early_exit_fee": 0
     },
     {
       "id": "vault-deposit-4",
@@ -1784,7 +2049,7 @@
       "weekly_rate": 0.005,
       "term_weeks": 4,
       "min_amount": 100,
-      "early_exit_fee": 0.0
+      "early_exit_fee": 0
     },
     {
       "id": "vault-deposit-8",
@@ -1795,7 +2060,7 @@
       "weekly_rate": 0.0065,
       "term_weeks": 8,
       "min_amount": 100,
-      "early_exit_fee": 0.0
+      "early_exit_fee": 0
     },
     {
       "id": "treasury-6",
@@ -2146,7 +2411,9 @@
         "rent:up": "Living costs go up",
         "rent:down": "Living costs go down",
         "savings_rate:up": "Banks pay more for deposits",
-        "savings_rate:down": "Banks pay less for deposits"
+        "savings_rate:down": "Banks pay less for deposits",
+        "expense:up": "A bill has to be paid from your money",
+        "expense:down": "A bill gets smaller"
       },
       "chain_outcome": {
         "stock_price:up": "Share price tends to rise",
@@ -2158,7 +2425,9 @@
         "rent:up": "Your rent goes up",
         "rent:down": "Your rent goes down",
         "savings_rate:up": "Your savings earn more interest",
-        "savings_rate:down": "Your savings earn less interest"
+        "savings_rate:down": "Your savings earn less interest",
+        "expense:up": "Cash or savings pay it - or shares get sold",
+        "expense:down": "More money stays in your pocket"
       }
     },
     "final_analysis": {
@@ -2376,6 +2645,11 @@
           "approved": true,
           "title": "Steady Hand",
           "reason": "No disasters and every bill paid ({roi}) - a solid base to build on."
+        },
+        "survivor": {
+          "approved": true,
+          "title": "Diversified Survivor",
+          "reason": "{ticker} went bankrupt, but your money was spread out, so the season still ended at {roi}. That is diversification at work."
         }
       },
       "habits": {

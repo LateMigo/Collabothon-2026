@@ -2,7 +2,7 @@ import { useState } from "react";
 import InfoTip from "./InfoTip.jsx";
 import { everyWeeks, millions, money, pct, RISK_LABELS, tone, whenWeek } from "../utils/format.js";
 
-const DEFAULT_SCALE = { elevated_pct: 40, critical_pct: 70, bankruptcy_pct: 85 };
+const DEFAULT_SCALE = { elevated_pct: 47.1, critical_pct: 82.3, bankruptcy_pct: 100 };
 
 /** Trend arrow for the hard data: green when the move is good news, red when it is a warning. */
 function Trend({ direction, goodWhen }) {
@@ -33,8 +33,9 @@ function HardData({ fundamentals: f }) {
         <div>
           <dt>
             Cash
-            <InfoTip term="Cash">
-              Money the company has in the bank right now. Little cash and big bills is a dangerous mix.
+            <InfoTip entry="cash">
+              This company has {millions(f.cash)} right now, and its cash is{" "}
+              {f.cash_trend === "up" ? "growing" : f.cash_trend === "down" ? "shrinking" : "about the same"}.
             </InfoTip>
           </dt>
           <dd>
@@ -44,8 +45,9 @@ function HardData({ fundamentals: f }) {
         <div>
           <dt>
             Debt
-            <InfoTip term="Debt">
-              Money the company borrowed and must pay back with interest. Rising debt is a warning light.
+            <InfoTip entry="debt">
+              This company owes {millions(f.debt)}
+              {f.debt > f.cash ? ` - more than the ${millions(f.cash)} it has in cash` : ` - less than its cash`}.
             </InfoTip>
           </dt>
           <dd>
@@ -55,8 +57,10 @@ function HardData({ fundamentals: f }) {
         <div>
           <dt>
             Profit margin
-            <InfoTip term="Profit margin">
-              How many cents of every $1 of sales the company keeps as profit. Below zero means it loses money.
+            <InfoTip entry="profitMargin">
+              {marginPct >= 0
+                ? `This company keeps about ${marginPct} cents of every $1 it sells.`
+                : `This company loses about ${Math.abs(marginPct)} cents on every $1 it sells.`}
             </InfoTip>
           </dt>
           <dd className={marginPct < 0 ? "is-down" : undefined}>
@@ -118,7 +122,7 @@ function DividendRow({ c, currentWeek }) {
     <div className="company-card__dividend">
       <dt>
         Dividend
-        <InfoTip term="Dividend">
+        <InfoTip entry="dividend">
           {pays
             ? `Cash the company pays for each share you own - ${everyWeeks(
                 c.dividend_every_weeks,
@@ -182,7 +186,9 @@ export default function CompanyCard({ company, onTrade, disabled, currentWeek, r
           <p className="company-card__product">{c.main_product}</p>
 
           <div className="company-card__price">
-            <span>Share price</span>
+            <span>
+              Share price <InfoTip entry="sharePrice" />
+            </span>
             <strong>{c.is_bankrupt ? "$0.00" : money(c.price)}</strong>
           </div>
 
@@ -191,9 +197,12 @@ export default function CompanyCard({ company, onTrade, disabled, currentWeek, r
             <div className="company-card__risk">
               <dt>
                 Bankruptcy risk
-                <InfoTip term="Bankruptcy risk">
-                  The chance that this company runs out of money. If the gauge reaches the red line, the company goes
-                  bankrupt: its shares drop to $0 and you lose 100% of what you put in.
+                <InfoTip entry="bankruptcyRisk">
+                  {c.is_bankrupt
+                    ? "This company is already bankrupt: its shares are worth $0."
+                    : `This company is at ${Math.round(c.bankruptcy_risk * 100)}%${
+                        c.risk_trend === "up" ? " and rising" : c.risk_trend === "down" ? " and falling" : ""
+                      }.`}
                 </InfoTip>
               </dt>
               <dd>

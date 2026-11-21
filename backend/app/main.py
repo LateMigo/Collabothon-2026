@@ -25,7 +25,7 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    repo = load_game_data(settings.game_data_path)  # fails fast on an invalid scenario
+    repo = load_game_data(settings.game_data_path)
     store = InMemorySessionStore(ttl_minutes=settings.session_ttl_minutes, max_sessions=settings.max_sessions)
     ai = AIService(settings, repo)
     app.state.engine = GameEngine(repo, store, ai)

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
+import BankNextSteps from "./BankNextSteps.jsx";
+import BudgetPlanner from "./BudgetPlanner.jsx";
+import WhatIfPanel from "./WhatIfPanel.jsx";
+import { readAiPrefs } from "../utils/aiPrefs.js";
+import ChallengeBox from "./ChallengeBox.jsx";
 import StockChart from "./StockChart.jsx";
+import { readQuizScore } from "../utils/quiz.js";
 import { money, pct, signedMoney, tone } from "../utils/format.js";
 
 function headlineFor(stats) {
@@ -10,7 +16,6 @@ function headlineFor(stats) {
   return "Lesson learned.";
 }
 
-// The stamp the inspector slams on your file (decided by the AI coach / offline analysis).
 function verdictFor(analysis) {
   return analysis.verdict.approved ? { text: "Approved", tone: "green" } : { text: "Rejected", tone: "red" };
 }
@@ -178,7 +183,7 @@ export default function GameOverScreen({ game, onPlayAgain }) {
   useEffect(() => {
     let cancelled = false;
     api
-      .finalAnalysis(game.session_id)
+      .finalAnalysis(game.session_id, readAiPrefs())
       .then((result) => {
         if (!cancelled) setData(result);
       })
@@ -221,6 +226,9 @@ export default function GameOverScreen({ game, onPlayAgain }) {
   }
 
   const { stats, analysis } = data;
+  const quiz = readQuizScore(game.session_id);
+  const quizPoints = Object.values(quiz).filter(Boolean).length;
+  const nickname = window.localStorage.getItem("fq.nickname") || "";
   const roiTone = tone(stats.roi_pct);
   const verdict = verdictFor(analysis);
 
@@ -275,6 +283,13 @@ export default function GameOverScreen({ game, onPlayAgain }) {
             <dt>Trades</dt>
             <dd>{stats.trades_count}</dd>
           </div>
+          <div>
+            <dt>Knowledge points</dt>
+            <dd className={quizPoints > 0 ? "is-up" : ""}>
+              {quizPoints} / {Object.keys(quiz).length || stats.weeks_played}
+            </dd>
+            <small>weekly quiz</small>
+          </div>
         </dl>
 
         <ol className="week-strip" aria-label="Net worth change per week">
@@ -297,6 +312,8 @@ export default function GameOverScreen({ game, onPlayAgain }) {
         </button>
       </section>
 
+      <BankNextSteps offers={data.next_steps} disclaimer={data.offer_disclaimer} sessionId={game.session_id} />
+
       <div className="gameover__grid">
         <Coach analysis={analysis} />
 
@@ -317,6 +334,13 @@ export default function GameOverScreen({ game, onPlayAgain }) {
           </section>
         </div>
       </div>
+
+      <div className="gameover__learn">
+        <WhatIfPanel sessionId={game.session_id} />
+        <BudgetPlanner sessionId={game.session_id} />
+      </div>
+
+      <ChallengeBox seed={data.seed} sessionId={game.session_id} nickname={nickname} />
 
       <section className="paper-card gameover__timeline" aria-labelledby="timeline-title">
         <p className="eyebrow">Behind the headlines</p>

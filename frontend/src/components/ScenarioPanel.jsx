@@ -1,3 +1,4 @@
+import SpaceBackdrop from "./SpaceBackdrop.jsx";
 import { money, pct, tone } from "../utils/format.js";
 
 function WeekStepper({ current, total, gameOver }) {
@@ -75,14 +76,9 @@ export default function ScenarioPanel({ game, children }) {
   const { scenario } = game;
   return (
     <aside className="scenario-panel" aria-label="Scenario">
-      <div className="clipboard">
-        <span className="clipboard__clip" aria-hidden="true" />
-        <span className="tag-box">Assignment 01</span>
-        <p className="eyebrow">{scenario.tagline}</p>
-        <h1 className="scenario-panel__title">{scenario.title}</h1>
-        <p className="scenario-panel__desc">{scenario.description}</p>
-      </div>
-
+      <SpaceBackdrop />
+      {/* the page still needs one main heading for screen readers */}
+      <h1 className="sr-only">{scenario.title}</h1>
       <section className="calendar" aria-label="Season calendar">
         <h2 className="panel-label">Season calendar</h2>
         <WeekStepper current={game.current_week} total={game.total_weeks} gameOver={game.is_game_over} />

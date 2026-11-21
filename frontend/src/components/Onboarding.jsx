@@ -24,10 +24,15 @@ function YesNo({ label, description, value, onChange }) {
   );
 }
 
-/** Universal start screen: no age groups, one clear path into the game. */
 export default function Onboarding({ scenario, aiMode, onStart, busy, savedGame, onResume }) {
   const [enableDividends, setEnableDividends] = useState(true);
   const [enableLivingCosts, setEnableLivingCosts] = useState(true);
+  const [nickname, setNickname] = useState(() => window.localStorage.getItem("fq.nickname") || "");
+  const [challenge] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const seed = Number.parseInt(params.get("challenge") ?? "", 10);
+    return Number.isFinite(seed) ? { seed, from: (params.get("from") || "A friend").slice(0, 20) } : null;
+  });
 
   const weeks = scenario?.total_weeks ?? 6;
   const companies = scenario?.companies_count ?? 10;
@@ -39,10 +44,17 @@ export default function Onboarding({ scenario, aiMode, onStart, busy, savedGame,
 
   const submit = (event) => {
     event.preventDefault();
+    const name = nickname.trim().slice(0, 20);
+    try {
+      window.localStorage.setItem("fq.nickname", name);
+    } catch {
+    }
     onStart({
       game_mode: "single_investor",
+      nickname: name,
+      ...(challenge ? { seed: challenge.seed } : {}),
       modifiers: { enable_dividends: enableDividends, enable_living_costs: enableLivingCosts },
-    });
+    }, challenge);
   };
 
   return (
@@ -91,6 +103,21 @@ export default function Onboarding({ scenario, aiMode, onStart, busy, savedGame,
 
           <form className="setup-card" onSubmit={submit}>
             <p className="setup-card__head">Form R-1 &middot; Investor registration</p>
+            {challenge && (
+              <p className="challenge-invite" role="status">
+                <b>{challenge.from} challenged you!</b> Same season, same news - can you end with a higher net worth?
+              </p>
+            )}
+            <label className="setup-name">
+              <span>Your nickname (optional, shown on the challenge board)</span>
+              <input
+                type="text"
+                value={nickname}
+                maxLength={20}
+                placeholder="e.g. Space Saver"
+                onChange={(event) => setNickname(event.target.value)}
+              />
+            </label>
             <fieldset className="setup-group">
               <legend>A &middot; Game mode</legend>
               <div className="mode-options">
@@ -99,11 +126,7 @@ export default function Onboarding({ scenario, aiMode, onStart, busy, savedGame,
                   <span className="mode-option__title">Single Investor</span>
                   <span className="mode-option__desc">Build your own portfolio, week by week.</span>
                 </label>
-                <div className="mode-option is-disabled" aria-disabled="true">
-                  <span className="soon-badge">Coming Soon (Phase 2)</span>
-                  <span className="mode-option__title">CEO</span>
-                  <span className="mode-option__desc">Run a company and choose between your advisors&apos; plans.</span>
-                </div>
+
               </div>
             </fieldset>
 
@@ -131,6 +154,9 @@ export default function Onboarding({ scenario, aiMode, onStart, busy, savedGame,
 
           <p className="onboarding__foot">
             Fictional companies, real lessons. Results come from a scripted scenario, not a forecast.
+          </p>
+          <p className="onboarding__bank-link">
+            <a href="#bank">Commerzbank view: live KPI funnel (demo) &rarr;</a>
           </p>
           <p className={`ai-chip ai-chip--${aiMode ?? "unknown"}`}>
             <span aria-hidden="true" />

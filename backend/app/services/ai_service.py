@@ -4,6 +4,8 @@ Three roles:
   1. generate_week_summary   - jargon translator + 2-minute "market lag" micro-lesson
   2. generate_advisor_hint   - the risky Investment Advisor lifeline (70% right / 30% wrong)
   3. generate_final_analysis - end-of-game post-mortem and financial coaching
+  4. research_company        - the advisor studies one company from public information
+  5. explain_term            - the glossary alien explains a money term in plain words
 
 Every public method ALWAYS returns a valid object. If the API key is missing,
 the network fails, the call times out, the quota is exhausted or Gemini returns
@@ -26,12 +28,24 @@ from app.models.schemas import (
     AdvisorContext,
     AdvisorHint,
     AdvisorHintContent,
+    AIPrefs,
+    BudgetAdvice,
+    BudgetNumbers,
+    WhatIfContent,
+    WhatIfStory,
     AISource,
     AnalysisPoint,
+    CompanyResearchContent,
+    CompanyResearchContext,
+    CompanyResearchReport,
     FinalAnalysisContext,
+    GlossaryAnswer,
+    GlossaryAnswerContent,
     JargonTerm,
     MoveAnalysis,
     MoveAnalysisContent,
+    ResearchNewsLink,
+    RiskLevel,
     SuggestedAction,
     TargetType,
     WeekLesson,
@@ -40,12 +54,13 @@ from app.models.schemas import (
 )
 from app.services.analytics import build_fallback_analysis, fill, money
 from app.services.data_loader import GameDataRepository
+from app.services.glossary import TOPICS, find_entry
 
-try:  # The SDK is optional at runtime: without it the game runs on the fallback.
+try:
     from google import genai
     from google.genai import errors as genai_errors
     from google.genai import types as genai_types
-except ImportError:  # pragma: no cover - exercised only when the SDK is missing
+except ImportError:
     genai = None
     genai_errors = None
     genai_types = None
@@ -56,9 +71,6 @@ T = TypeVar("T", bound=BaseModel)
 
 TRANSIENT_STATUS_CODES = {500, 502, 503, 504}
 
-# =============================================================================
-# Prompts
-# =============================================================================
 
 UNIVERSE_RULES = (
     "The game 'CosmiCash' takes place in a 100% fictional universe: fictional companies, "
@@ -79,6 +91,9 @@ Rules:
 - If the rent changed, explain how a news story from an earlier week ended up in the player's living costs.
 - If the savings interest rate changed, explain how the news about interest rates reached the player's savings account.
 - If the savings account paid interest or covered part of the rent, mention it in one short sentence (safe money, small but steady return).
+- If "expenses" lists a surprise bill, say in one short sentence how it was paid. If shares had to be sold ("from_shares" > 0), explain that an emergency fund in savings avoids selling in a hurry; if savings or cash covered it, praise that cushion.
+- "investment_change" also excludes surprise bills - they are living costs, not investment losses.
+- decision_feedback: if "decisions" lists the player's own trades, write ONE short sentence judging the REASONS, not just the result: a trade based on a news story or the company's numbers is good thinking even if the price fell; a trade on a gut feeling or the price trend alone that worked was partly luck. Name the ticker. Empty string if there are no decisions. Never invent trades.
 - If bonds or term deposits ("fixed_income") earned interest, paid back at maturity or defaulted, mention it in one short sentence: a fixed rate for locking money away, and a company bond can default when its issuer goes bankrupt.
 - "investment_change" is the player's investing result BEFORE rent; rent is a living cost, not an investment loss - never call a week with positive investment_change a losing investment week just because rent was paid.
 - If there were no delayed effects, explain that some news needs time to show up and that older headlines are worth re-reading.
@@ -109,6 +124,51 @@ Rules:
 - focus_company_id: that company's id. suggested_action: "buy" if the direction is "up", "sell" if it is "down".
 Return JSON that matches the schema."""
 
+RESEARCH_SYSTEM = f"""You are "the Advisor", a friendly analyst in an educational investing game. The player asked you to research ONE company.
+{UNIVERSE_RULES}
+
+You receive the company's public profile, its hard data (cash, debt and profit margin in millions of $, with trends), its share price history, dividend, bankruptcy risk (100% = bankrupt) and every headline published so far.
+Rules:
+- Use ONLY the facts in the JSON input. Never invent numbers, events or future news.
+- Teach the player how to read a company: connect the hard data to the business (for example "debt is bigger than cash, so a bad month hurts more").
+- Do NOT give an order to buy or sell and never promise what the price will do. You may say what looks strong or weak.
+- news_to_watch: pick at most 3 published headlines that could plausibly affect THIS company's sales, costs, cash or risk, copy each title exactly and explain the possible link in one short sentence using "could" or "might". Headlines can be noise - if nothing clearly relates, return an empty list.
+- summary: 2-3 short sentences, max 60 words. strengths and risks: 1-3 items each, max 14 words each.
+- question: one question the player should ask themselves before trading this company.
+Return JSON that matches the schema."""
+
+GLOSSARY_SYSTEM = """You are "Berg", a calm and wise alien teacher in an educational investing game, sitting in a spaceship cockpit and wearing a bank T-shirt. Players of every generation - teenagers, working adults and seniors - ask you what money words and ideas mean.
+Rules:
+- Explain the term or idea asked about in clear, warm, plain English: short sentences, no slang, no jargon you don't explain, no markdown, no emojis. Max 80 words in "answer".
+- "example": one short everyday example with simple round numbers in dollars.
+- You explain how things work in general (dividends, bonds, interest, inflation, diversification, risk, budgeting, banking, funds...). You may explain investing ideas and how to think about them.
+- You never give personal investment advice: never say which company, share or product to buy or sell, and never predict prices. If asked, kindly say you explain ideas, not picks, and explain the idea behind the question instead.
+- Never mention real companies, brands, people or real-world markets.
+- If the question is not about money, saving, banking or investing, set on_topic to false and answer with one friendly sentence steering back to money words.
+- related_terms: up to 3 money terms worth asking about next.
+Return JSON that matches the schema."""
+
+WHAT_IF_SYSTEM = f"""You are the AI Coach of an educational investing game. The season is over, and the game replayed the player's exact season (same news, same bills) with two simple strategies.
+{UNIVERSE_RULES}
+
+You receive "lines": the player's real result ("you") and the replays ("saver" = everything in a savings account; "spread" = an emergency fund in savings plus money spread over all companies and held). Each line has final_net_worth, roi_pct (investing result before rent and bills) and end_reason ("liquidity" = ran out of money for rent).
+Rules:
+- Use ONLY these numbers. Compare honestly: say which line ended highest and why in one plain cause, e.g. a safety cushion avoided selling in a hurry, spreading money softened one company's crash, or savings were safe but grew slowly.
+- A line that ended with "liquidity" ran out of rent money: it LOST the game, whatever its net worth - never call it the best. If the player did best, praise it and still name the risk they took.
+- Do not tell the player what to buy in real life. No exact predictions.
+- headline: max 14 words. explanation: 2-3 short sentences with $ amounts. takeaway: one practical real-life habit, max 20 words.
+Return JSON that matches the schema."""
+
+BUDGET_SYSTEM = f"""You are "Berg", a calm, wise alien money teacher in an educational game, now helping the player with their REAL monthly budget.
+All amounts are in numbers.currency (EUR, PLN or USD): write money with that currency (e.g. 450 EUR / 450 zł / $450), never with another one.
+You receive the player's monthly income, housing, food and other costs, current savings and pre-computed numbers (50/30/20 split, suggested monthly saving, emergency-fund target of 3 months of essential costs and the months needed to reach it).
+Rules:
+- Use ONLY these numbers; do not recalculate differently. Plain, warm, encouraging language, no jargon, no markdown, no emojis.
+- If spending is higher than income, say so kindly and focus the steps on closing the gap first (no investing advice).
+- Never recommend specific shares, funds or products, and never promise returns. Budgeting and saving habits only.
+- summary: 2-3 sentences. steps: exactly 3 concrete steps for the next month (each max 18 words). bank_step: one sentence about a first step with a bank account, e.g. a separate savings account or an automatic transfer on payday.
+Return JSON that matches the schema."""
+
 FINAL_ANALYSIS_SYSTEM = f"""You are the AI Coach of an educational investing game. The game has just ended. You act like a strict but fair border inspector who stamps the player's file.
 {UNIVERSE_RULES}
 
@@ -128,6 +188,31 @@ Rules:
 Return JSON that matches the schema."""
 
 
+LANGUAGE_NAMES = {"en": "English", "de": "German", "pl": "Polish"}
+LEVEL_RULES = {
+    "simple": "Reading level SIMPLE: very short sentences (max 12 words), everyday words only, explain every money word "
+    "as if to a 12-year-old or a grandparent who never invested. Use about 30% fewer words than the limits allow.",
+    "normal": "",
+    "detailed": "Reading level DETAILED: the player wants more depth - you may add one extra sentence of 'why' and use "
+    "correct finance terms, each explained in a few words. Stay within the word limits.",
+}
+
+
+def style_rules(prefs: AIPrefs | None) -> str:
+    """Extra instructions for the player's reading level and language (appended to any system prompt)."""
+    if prefs is None:
+        return ""
+    rules = []
+    if prefs.language != "en":
+        rules.append(
+            f"LANGUAGE: write every text value in {LANGUAGE_NAMES[prefs.language]} (natural, simple, correct). "
+            "Keep JSON keys, ids, tickers, company names and enum values exactly as in the schema."
+        )
+    if LEVEL_RULES.get(prefs.level):
+        rules.append(LEVEL_RULES[prefs.level])
+    return ("\n" + "\n".join(rules)) if rules else ""
+
+
 class AIService:
     def __init__(self, settings: Settings, repo: GameDataRepository) -> None:
         self._settings = settings
@@ -137,12 +222,11 @@ class AIService:
         if settings.gemini_api_key and genai is not None:
             try:
                 self._client = genai.Client(api_key=settings.gemini_api_key)
-            except Exception as exc:  # noqa: BLE001 - never crash the game because of AI setup
+            except Exception as exc:
                 logger.warning("Gemini client could not be created, using fallback: %s", exc)
         elif settings.gemini_api_key and genai is None:
             logger.warning("google-genai is not installed - running on the fallback AI.")
 
-    # ------------------------------------------------------------------ status
     @property
     def mode(self) -> AISource:
         return AISource.GEMINI if self._client is not None else AISource.FALLBACK
@@ -151,18 +235,42 @@ class AIService:
     def model_name(self) -> str | None:
         return self._settings.gemini_model if self._client is not None else None
 
-    # ======================================================================
-    # 1. Week summary / market-lag micro-lesson
-    # ======================================================================
-    async def generate_week_summary(self, ctx: WeekSummaryContext) -> WeekLesson:
+    async def generate_week_summary(self, ctx: WeekSummaryContext, prefs: AIPrefs | None = None) -> WeekLesson:
         payload = ctx.model_dump(mode="json")
-        content = await self._generate(WEEK_SUMMARY_SYSTEM, payload, WeekLessonContent, temperature=0.6)
+        content = await self._generate(
+            WEEK_SUMMARY_SYSTEM + style_rules(prefs), payload, WeekLessonContent, temperature=0.6
+        )
         if content is not None:
             if not content.jargon:
                 content.jargon = self._fallback_week_lesson(ctx).jargon
             content.jargon = content.jargon[:3]
+            if not ctx.decisions:
+                content.decision_feedback = ""
+            elif not content.decision_feedback.strip():
+                content.decision_feedback = self._fallback_decision_feedback(ctx)
             return WeekLesson(**content.model_dump(), ai_source=AISource.GEMINI)
-        return WeekLesson(**self._fallback_week_lesson(ctx).model_dump(), ai_source=AISource.FALLBACK)
+        fallback = self._fallback_week_lesson(ctx)
+        fallback.decision_feedback = self._fallback_decision_feedback(ctx)
+        return WeekLesson(**fallback.model_dump(), ai_source=AISource.FALLBACK)
+
+    @staticmethod
+    def _fallback_decision_feedback(ctx: WeekSummaryContext) -> str:
+        """Judges the reasons behind this week's trades: good thinking vs. luck."""
+        if not ctx.decisions:
+            return ""
+        d = ctx.decisions[0]
+        verb = "bought" if d.action == "buy" else "sold"
+        thought_through = d.reason in ("news", "advisor")
+        if thought_through and d.went_your_way:
+            return f"You {verb} {d.ticker} because of {d.reason_label} and it went your way - that is reasoning paying off."
+        if thought_through:
+            return (
+                f"You {verb} {d.ticker} because of {d.reason_label}. It hasn't paid off yet, but a reason you can "
+                "check is good thinking - some news needs weeks to land."
+            )
+        if d.went_your_way:
+            return f"{d.ticker} went your way, but {d.reason_label} is partly luck - next time check the news or the numbers first."
+        return f"{d.ticker} moved against you after a trade based on {d.reason_label} - a reason you can check works better."
 
     def _fallback_week_lesson(self, ctx: WeekSummaryContext) -> WeekLessonContent:
         t = self._repo.fallback.week_lesson
@@ -271,9 +379,6 @@ class AIService:
             key_takeaway=takeaway,
         )
 
-    # ======================================================================
-    # 2. Investment Advisor lifeline
-    # ======================================================================
     async def generate_advisor_hint(self, ctx: AdvisorContext) -> AdvisorHint:
         valid_ids = {c.id for c in ctx.companies}
         if ctx.signals:
@@ -350,14 +455,216 @@ class AIService:
         template = t.accurate_delayed if signal.weeks_until_effect > 0 else t.accurate_immediate
         return hint(template, signal.company_id, move)
 
-    # ======================================================================
-    # 3. End-of-game move analysis & coaching
-    # ======================================================================
-    async def generate_final_analysis(self, ctx: FinalAnalysisContext) -> MoveAnalysis:
+    async def research_company(self, ctx: CompanyResearchContext, prefs: AIPrefs | None = None) -> CompanyResearchReport:
+        payload = ctx.model_dump(mode="json")
+        content = await self._generate(
+            RESEARCH_SYSTEM + style_rules(prefs), payload, CompanyResearchContent, temperature=0.5
+        )
+        if content is not None and content.summary.strip():
+            titles = {h.title: h.week for h in ctx.headlines}
+            content.news_to_watch = [
+                link for link in content.news_to_watch if link.title in titles and link.why.strip()
+            ][:3]
+            for link in content.news_to_watch:
+                link.week = titles[link.title]
+            content.strengths = [x.strip() for x in content.strengths if x.strip()][:3]
+            content.risks = [x.strip() for x in content.risks if x.strip()][:3]
+            fallback = self._fallback_research(ctx)
+            content.strengths = content.strengths or fallback.strengths
+            content.risks = content.risks or fallback.risks
+            content.question = content.question.strip() or fallback.question
+            return CompanyResearchReport(**content.model_dump(), ai_source=AISource.GEMINI)
+        return CompanyResearchReport(**self._fallback_research(ctx).model_dump(), ai_source=AISource.FALLBACK)
+
+    def _fallback_research(self, ctx: CompanyResearchContext) -> CompanyResearchContent:
+        """Offline research report built from the same public numbers."""
+        c = ctx.company
+        strengths: list[str] = []
+        risks: list[str] = []
+        if c.is_bankrupt:
+            return CompanyResearchContent(
+                verdict="Bankrupt - shares worth $0",
+                summary=f"{c.name} went bankrupt. Its shares are worth nothing and can't be traded any more.",
+                strengths=["None left - the company has closed."],
+                risks=["Shareholders lost everything they put in."],
+                news_to_watch=[],
+                question="What warning signs did this company show before it went bankrupt?",
+            )
+        if c.cash_millions >= c.debt_millions:
+            strengths.append(f"More cash (${c.cash_millions:g}M) than debt (${c.debt_millions:g}M).")
+        else:
+            risks.append(f"Debt (${c.debt_millions:g}M) is bigger than its cash (${c.cash_millions:g}M).")
+        if c.profit_margin_pct > 0:
+            strengths.append(f"Profitable: keeps about {c.profit_margin_pct:.0f} cents of every $1 it sells.")
+        else:
+            risks.append(f"Loses about {abs(c.profit_margin_pct):.0f} cents on every $1 it sells.")
+        if c.margin_trend == "down":
+            risks.append("Its profit margin is shrinking.")
+        elif c.margin_trend == "up":
+            strengths.append("Its profit margin is growing.")
+        if c.debt_trend == "up":
+            risks.append("It has been borrowing more.")
+        if c.dividend_per_share > 0:
+            strengths.append(f"Pays a dividend of {money(c.dividend_per_share)} per share.")
+        if c.risk_level != RiskLevel.LOW:
+            risks.append(f"Bankruptcy risk is {c.risk_level.value} ({c.bankruptcy_risk_pct:.0f}%).")
+        if not risks:
+            risks.append("Even healthy companies can be hit by bad news - don't put everything here.")
+        if not strengths:
+            strengths.append("Hard to find one right now - be careful.")
+
+        healthy = c.profit_margin_pct > 0 and c.cash_millions >= c.debt_millions and c.risk_level == RiskLevel.LOW
+        weak = c.profit_margin_pct <= 0 or c.risk_level == RiskLevel.CRITICAL
+        verdict = "Solid numbers, watch the news" if healthy else "Fragile - handle with care" if weak else "Mixed picture"
+        move = "up" if c.change_since_listing_pct >= 0 else "down"
+        summary = (
+            f"{c.name} ({c.industry}) sells {c.main_product[0].lower() + c.main_product[1:]}. "
+            f"Its share price is {money(c.price)}, {move} {abs(c.change_since_listing_pct):.0f}% since it listed. "
+            f"{c.condition}"
+        )
+
+        words = {c.name.lower(), c.ticker.lower(), c.name.split()[0].lower(), c.industry.split()[0].lower()}
+        words = {w for w in words if len(w) > 3}
+        links = []
+        for h in reversed(ctx.headlines):
+            text = f"{h.title} {h.description}".lower()
+            if any(w in text for w in words):
+                links.append(
+                    ResearchNewsLink(
+                        week=h.week, title=h.title, why=f"It mentions {c.name} or its business, so it could affect its money."
+                    )
+                )
+            if len(links) >= 3:
+                break
+        return CompanyResearchContent(
+            verdict=verdict,
+            summary=summary,
+            strengths=strengths[:3],
+            risks=risks[:3],
+            news_to_watch=links,
+            question="Would I still be fine if this share fell 30% tomorrow - and do I have rent money set aside?",
+        )
+
+    async def explain_term(self, question: str, prefs: AIPrefs | None = None) -> GlossaryAnswer:
+        content = await self._generate(
+            GLOSSARY_SYSTEM + style_rules(prefs),
+            {"question": question.strip()[:300]},
+            GlossaryAnswerContent,
+            temperature=0.4,
+        )
+        if content is not None and content.answer.strip():
+            content.related_terms = [t.strip() for t in content.related_terms if t.strip()][:3]
+            return GlossaryAnswer(**content.model_dump(), ai_source=AISource.GEMINI)
+        return GlossaryAnswer(**self._fallback_term(question).model_dump(), ai_source=AISource.FALLBACK)
+
+    @staticmethod
+    def _fallback_term(question: str) -> GlossaryAnswerContent:
+        entry = find_entry(question)
+        if entry is None:
+            return GlossaryAnswerContent(
+                term="",
+                answer=f"I don't have that one in my offline notebook. Try a money word such as {TOPICS}.",
+                example="",
+                related_terms=["Dividend", "Interest", "Diversification"],
+                on_topic=True,
+            )
+        return GlossaryAnswerContent(
+            term=entry["term"],
+            answer=entry["answer"],
+            example=entry["example"],
+            related_terms=entry["related"][:3],
+            on_topic=True,
+        )
+
+    async def explain_what_if(self, lines, prefs: AIPrefs | None = None) -> WhatIfStory:
+        payload = {
+            "lines": [
+                {
+                    "key": line.key,
+                    "label": line.label,
+                    "final_net_worth": line.final_net_worth,
+                    "roi_pct": line.roi_pct,
+                    "end_reason": line.end_reason,
+                    "weeks_played": line.weeks_played,
+                }
+                for line in lines
+            ]
+        }
+        content = await self._generate(WHAT_IF_SYSTEM + style_rules(prefs), payload, WhatIfContent, temperature=0.4)
+        if content is not None and content.explanation.strip() and content.headline.strip():
+            return WhatIfStory(**content.model_dump(), ai_source=AISource.GEMINI)
+        return WhatIfStory(**self._fallback_what_if(lines).model_dump(), ai_source=AISource.FALLBACK)
+
+    @staticmethod
+    def _fallback_what_if(lines) -> WhatIfContent:
+        survived = [line for line in lines if line.end_reason != "liquidity"] or lines
+        best = max(survived, key=lambda line: line.final_net_worth)
+        you = next(line for line in lines if line.key == "you")
+        others = ", ".join(f"{line.label.lower()} {money(line.final_net_worth)}" for line in lines if line.key != "you")
+        if you.end_reason == "liquidity":
+            headline = f"You ran out of rent money in Week {you.weeks_played}; '{best.label}' lasted the whole season."
+        elif best.key == "you":
+            headline = "Your own plan beat both textbook strategies this season."
+        else:
+            headline = f"'{best.label}' would have ended {money(best.final_net_worth - you.final_net_worth)} higher."
+        explanation = f"You finished with {money(you.final_net_worth)}; the replays ended with {others}."
+        if you.end_reason == "liquidity":
+            explanation += " You ran out of rent money - a cushion in savings would have kept you in the game."
+        return WhatIfContent(
+            headline=headline,
+            explanation=explanation,
+            takeaway="Keep a few months of bills in savings first, then spread what's left instead of betting on one idea.",
+        )
+
+    async def budget_advice(self, numbers: BudgetNumbers, request: dict, prefs: AIPrefs | None = None):
+        def tidy(values: dict) -> dict:
+            return {k: (int(v) if isinstance(v, float) and v.is_integer() else v) for k, v in values.items()}
+
+        payload = {"player": tidy(request), "numbers": tidy(numbers.model_dump())}
+        content = await self._generate(BUDGET_SYSTEM + style_rules(prefs), payload, BudgetAdvice, temperature=0.4)
+        if content is not None and content.summary.strip() and len([s for s in content.steps if s.strip()]) >= 2:
+            content.steps = [s.strip() for s in content.steps if s.strip()][:3]
+            return content, AISource.GEMINI
+        return self._fallback_budget(numbers), AISource.FALLBACK
+
+    @staticmethod
+    def _fallback_budget(n: BudgetNumbers) -> BudgetAdvice:
+        def fmt(value: float) -> str:
+            amount = f"{abs(value):,.0f}"
+            return {"EUR": f"€{amount}", "PLN": f"{amount} zł", "USD": f"${amount}"}.get(n.currency, amount)
+
+        if n.left_over < 0:
+            return BudgetAdvice(
+                summary=f"You spend {fmt(-n.left_over)} more than you earn each month. Closing that gap comes first.",
+                steps=[
+                    "Write down every expense for two weeks to see where the money goes.",
+                    "Pick the two biggest 'wants' and cut them in half for one month.",
+                    "Set a weekly spending limit and check it every Sunday.",
+                ],
+                bank_step="Use your banking app's spending overview to spot leaks before they grow.",
+            )
+        if n.months_to_emergency_fund == 0:
+            cushion = f"Your savings already cover a {fmt(n.emergency_fund_target)} safety cushion - keep it there."
+        else:
+            cushion = (
+                f"Saving {fmt(n.suggested_monthly_saving)} a month builds a {fmt(n.emergency_fund_target)} safety "
+                f"cushion in about {n.months_to_emergency_fund} months."
+            )
+        return BudgetAdvice(
+            summary=f"After your costs about {fmt(n.left_over)} is left each month. {cushion}",
+            steps=[
+                f"Move {fmt(n.suggested_monthly_saving)} to savings on payday, before spending anything.",
+                "Keep the emergency fund separate from everyday money so you don't spend it by accident.",
+                "Once the cushion is full, learn about long-term investing with small monthly amounts.",
+            ],
+            bank_step="Open a separate savings account and set up an automatic transfer on payday.",
+        )
+
+    async def generate_final_analysis(self, ctx: FinalAnalysisContext, prefs: AIPrefs | None = None) -> MoveAnalysis:
         fallback = build_fallback_analysis(ctx.metrics, self._repo)
         payload = ctx.model_dump(mode="json")
         content = await self._generate(
-            FINAL_ANALYSIS_SYSTEM,
+            FINAL_ANALYSIS_SYSTEM + style_rules(prefs),
             payload,
             MoveAnalysisContent,
             temperature=0.5,
@@ -366,12 +673,11 @@ class AIService:
         if content is None:
             return MoveAnalysis(**fallback.model_dump(), ai_source=AISource.FALLBACK)
 
-        # Light post-validation so the UI contract always holds.
         weeks_played = ctx.metrics.weeks_played
         if not content.verdict.title.strip() or not content.verdict.reason.strip():
             content.verdict = fallback.verdict
         if ctx.metrics.liquidity_loss:
-            content.verdict.approved = False  # running out of cash for rent is never approved
+            content.verdict.approved = False
         moments = [
             moment
             for moment in content.key_moments
@@ -401,9 +707,6 @@ class AIService:
         cleaned = [p for p in points if p.title.strip() and p.detail.strip()]
         return cleaned or fallback
 
-    # ======================================================================
-    # Gemini plumbing
-    # ======================================================================
     async def _generate(
         self,
         system: str,
@@ -442,7 +745,6 @@ class AIService:
                 logger.warning("Gemini time budget (%.0fs) used up - using fallback.", budget)
                 return None
             model = models[attempt % len(models)]
-            # Never let one hanging call eat the whole budget when another model can still try.
             call_timeout = remaining if len(models) == 1 else min(remaining, max(budget * 0.45, 8.0))
             outcome, value = await self._call_model(
                 model, system, contents, schema, temperature, call_timeout, model not in no_thinking
@@ -458,7 +760,6 @@ class AIService:
                 continue
             attempt += 1
             if outcome == "retry":
-                # Overload (503): brief pause before asking again.
                 await asyncio.sleep(min(0.8, max(0.0, deadline - time.monotonic() - 1.5)))
 
     def _thinking_config(self, model: str):
@@ -513,7 +814,7 @@ class AIService:
         except ValidationError as exc:
             logger.warning("Gemini (%s) JSON did not match %s: %s", model, schema.__name__, exc)
             return "next", None
-        except Exception as exc:  # noqa: BLE001 - network, auth, quota, safety blocks...
+        except Exception as exc:
             code = getattr(exc, "code", None) if genai_errors and isinstance(exc, genai_errors.APIError) else None
             if code == 429:
                 self._cooldown_until = time.monotonic() + self._settings.ai_cooldown_seconds

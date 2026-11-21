@@ -1,9 +1,3 @@
-/**
- * Original 24x24 pixel-art investor, side profile: an eyeless, glossy black
- * biomechanical alien with a long ribbed skull, a mouthful of teeth and a drop of
- * acid-green drool, on a ribbed carapace torso.
- * One character per pixel; "." is transparent.
- */
 const ROWS = [
   "KKKK....................",
   "KgbbKK..................",
@@ -32,14 +26,14 @@ const ROWS = [
 ];
 
 const COLORS = {
-  K: "#07090a", // outline
-  B: "#262c31", // carapace
-  b: "#46525a", // carapace sheen
-  g: "#8fa0a8", // gloss highlight
-  d: "#121619", // ribs
-  T: "#e6e0c6", // teeth
-  M: "#4a1010", // mouth
-  S: "#9bd14a", // acid drool
+  K: "#07090a",
+  B: "#262c31",
+  b: "#46525a",
+  g: "#8fa0a8",
+  d: "#121619",
+  T: "#e6e0c6",
+  M: "#4a1010",
+  S: "#9bd14a",
 };
 
 const PIXELS = ROWS.flatMap((row, y) =>

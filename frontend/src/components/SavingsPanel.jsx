@@ -1,7 +1,6 @@
 import InfoTip from "./InfoTip.jsx";
 import { money, ratePct } from "../utils/format.js";
 
-/** The safe option: a savings account with a small weekly interest that also backs up the rent. */
 export default function SavingsPanel({ game, onOpen, disabled }) {
   const s = game.savings;
   const rateChanged = s.rate_changed_week !== null && Math.abs(s.weekly_rate_pct - s.previous_rate_pct) > 0.0001;
@@ -28,9 +27,8 @@ export default function SavingsPanel({ game, onOpen, disabled }) {
         <div>
           <dt>
             Interest
-            <InfoTip term="Interest">
-              The bank pays you this share of your balance at the end of every week. Small, but your money can never
-              fall in value here.
+            <InfoTip entry="interest">
+              Here you get {s.weekly_rate_pct}% of your balance at the end of every week.
             </InfoTip>
           </dt>
           <dd>

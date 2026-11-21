@@ -31,7 +31,7 @@ const STEPS = [
   },
   {
     title: "End the week",
-    text: "Slide up the drawer at the bottom of the screen (look for the red End Week tab) and press the big red button. The market reacts: prices move, dividends are paid, and older news may finally land. A summary explains what happened and why.",
+    text: "Press the red End Week button in the bar at the bottom of the screen (Details shows what will happen). The market reacts: prices move, dividends are paid, and older news may finally land. A summary explains what happened and why.",
   },
   {
     title: "Pay your bills",

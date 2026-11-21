@@ -83,13 +83,3 @@ class InMemorySessionStore(SessionStore):
             self._data.pop(sid, None)
             self._locks.pop(sid, None)
 
-
-# DAY-2 HOOK: production stores implement the same interface, e.g.
-#
-# class RedisSessionStore(SessionStore):
-#     """GET/SET session JSON under `fq:session:{id}` with EXPIRE = TTL,
-#     and use a Redis lock (SET NX PX) inside `lock()` for multi-worker safety."""
-#
-# class PostgresSessionStore(SessionStore):
-#     """JSONB column per session + `SELECT ... FOR UPDATE` row locks;
-#     action_log / weekly_snapshots can move to their own tables for analytics."""

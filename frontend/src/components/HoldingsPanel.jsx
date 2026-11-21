@@ -1,6 +1,6 @@
 import { money, pct, signedMoney, tone, whenWeek } from "../utils/format.js";
+import InfoTip from "./InfoTip.jsx";
 
-/** Under the newspaper: everything you own, with today's value and profit or loss. */
 export default function HoldingsPanel({ game, onTrade, onOpenBonds, disabled }) {
   const owned = game.companies.filter((c) => c.shares_owned > 0);
   const bonds = game.fixed_income.holdings.filter((h) => h.status === "active");
@@ -57,7 +57,7 @@ export default function HoldingsPanel({ game, onTrade, onOpenBonds, disabled }) 
 
       {owned.length > 0 && (
         <p className={`holdings__sum is-${tone(stocksGain, 0.004)}`}>
-          Profit / loss on your shares: <b>{signedMoney(stocksGain)}</b>
+          Profit / loss on your shares: <b>{signedMoney(stocksGain)}</b> <InfoTip entry="gainLoss" />
         </p>
       )}
 

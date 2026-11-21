@@ -7,7 +7,10 @@ export default function SpeakButton({ text, className = "" }) {
   const { language } = useAiPrefs();
   const [speaking, setSpeaking] = useState(false);
 
-  useEffect(() => () => supported && window.speechSynthesis.cancel(), []);
+  useEffect(() => {
+    if (supported) window.speechSynthesis.getVoices(); // warm up the voice list
+    return () => supported && window.speechSynthesis.cancel();
+  }, []);
 
   if (!supported || !text) return null;
 
@@ -20,7 +23,16 @@ export default function SpeakButton({ text, className = "" }) {
     }
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = speechLang(language);
+    const lang = speechLang(language);
+    utterance.lang = lang;
+    // Windows/Chrome often ignores `lang` and keeps the system (e.g. Polish) voice,
+    // so pick a matching voice explicitly.
+    const voices = synth.getVoices();
+    const prefix = lang.slice(0, 2).toLowerCase();
+    const voice =
+      voices.find((v) => v.lang.toLowerCase() === lang.toLowerCase()) ||
+      voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+    if (voice) utterance.voice = voice;
     utterance.rate = 0.95;
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);

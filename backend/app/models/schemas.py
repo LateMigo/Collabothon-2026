@@ -534,23 +534,12 @@ class SavingsRequest(BaseModel):
     amount: float = Field(gt=0, le=1_000_000_000)
 
 
-class NewsTag(BaseModel):
-    """'Who could this story be about?' Rumors get tags too, so a tag never reveals noise."""
-
-    kind: Literal["sector", "bills", "savings"]
-    label: str
-    color: str | None = None
-    tickers: list[str] = Field(default_factory=list)
-    company_ids: list[str] = Field(default_factory=list)
-
-
 class NewsItem(BaseModel):
     """What the player sees during a turn. Deliberately has NO is_noise / effects / delay."""
 
     id: str
     title: str
     description: str
-    tags: list[NewsTag] = Field(default_factory=list)
 
 
 class FundamentalsView(BaseModel):

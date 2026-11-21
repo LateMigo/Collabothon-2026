@@ -49,7 +49,6 @@ from app.models.schemas import (
     InstrumentType,
     NetWorthPoint,
     NewsItem,
-    NewsTag,
     NextWeekResponse,
     PendingEffect,
     PortfolioPosition,
@@ -1247,51 +1246,6 @@ class GameEngine:
             changed_this_week=any(t != "neutral" for t in (cash_trend, debt_trend, margin_trend)),
         )
 
-    # ------------------------------------------------------------ news tags
-    def _news_tags(self, event, week: int) -> list[NewsTag]:
-        """Which sector / companies / bills a headline is about. Built from the effects for real news
-        and from the rumor's target for noise, so a tag says WHO - never whether the story matters."""
-        company_ids: list[str] = []
-        bills = savings = False
-        if event.is_noise:
-            insight = self.repo.noise_insight(event.id)
-            if insight and insight.related_company_id:
-                company_ids.append(insight.related_company_id)
-        for effect in event.effects:
-            if effect.target_type == TargetType.RENT:
-                bills = True
-            elif effect.target_type == TargetType.SAVINGS_RATE:
-                savings = True
-            else:
-                company_ids.extend(self.repo.resolve_company_ids(effect.target_id))
-
-        by_industry: dict[str, list[str]] = {}
-        for company_id in company_ids:
-            company = self.repo.company(company_id)
-            if company is None or not self._is_listed(company_id, week):
-                continue
-            members = by_industry.setdefault(company.industry, [])
-            if company_id not in members:
-                members.append(company_id)
-
-        tags = []
-        for industry_id, members in by_industry.items():
-            industry = self.repo.industry(industry_id)
-            tags.append(
-                NewsTag(
-                    kind="sector",
-                    label=self.repo.industry_label(industry_id),
-                    color=industry.color if industry else None,
-                    tickers=[self.repo.company(cid).ticker for cid in members],
-                    company_ids=members,
-                )
-            )
-        if bills:
-            tags.append(NewsTag(kind="bills", label="Your rent"))
-        if savings:
-            tags.append(NewsTag(kind="savings", label="Your savings"))
-        return tags
-
     def _risk_level(self, risk: float) -> RiskLevel:
         thresholds = self.repo.scenario.risk_thresholds
         if risk >= thresholds.critical:
@@ -1438,17 +1392,9 @@ class GameEngine:
         if session.is_game_over or week_def is None:
             news: list[NewsItem] = []
         else:
-            # KEY RULE: only title, description and "who is it about" leave the server during a turn -
-            # never is_noise, effects, sizes or delays.
-            news = [
-                NewsItem(
-                    id=e.id,
-                    title=e.title,
-                    description=e.description,
-                    tags=self._news_tags(e, session.current_week),
-                )
-                for e in week_def.events
-            ]
+            # KEY RULE: only title + description leave the server during a turn - never which company a
+            # story is about, whether it is noise, or how much and when it will move prices.
+            news = [NewsItem(id=e.id, title=e.title, description=e.description) for e in week_def.events]
 
         next_due = None if session.is_game_over else self._next_rent_due_from(session, session.current_week)
         rent = RentView(

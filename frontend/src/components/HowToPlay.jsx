@@ -3,7 +3,7 @@ import Modal from "./Modal.jsx";
 const STEPS = [
   {
     title: "Read the news",
-    text: "Every week brings new headlines. Some move prices right away, some only weeks later — and some are just noise. The tag under each story shows which sector and company it is about.",
+    text: "Every week brings new headlines. Some move prices right away, some only weeks later — and some are just noise.",
   },
   {
     title: "Buy or sell",

@@ -17,7 +17,7 @@
     "advisor_uses_per_game": 3,
     "advisor_cooldown_weeks": 1,
     "advisor_accuracy": 0.7,
-    "risk_sensitivity": 0.3,
+    "risk_sensitivity": 0.12,
     "savings_account_name": "Galactic Savings Vault",
     "savings_weekly_rate": 0.003
   },
@@ -181,7 +181,7 @@
       "theme": "A record harvest",
       "market_drift": {
         "cosmic-pizza": 0.0,
-        "keramzyt": -0.005
+        "keramzyt": -0.015
       },
       "events": [
         {
@@ -194,7 +194,7 @@
               "target_type": "stock_price",
               "target_id": "food",
               "change_type": "percent",
-              "value": 0.2,
+              "value": 0.5,
               "delay_weeks": 2,
               "consequence_text": "The student wave from Week 1 moved into the dorms - late-night pizza orders exploded and Cosmic Pizza's shares followed.",
               "cause_chain": [
@@ -215,7 +215,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": 0.06,
+              "value": 0.15,
               "delay_weeks": 1,
               "consequence_text": "The dry spell forecast in Week 1 arrived - building sites ordered keramzyt by the truckload and Fabric of Keramzyt's shares rose.",
               "cause_chain": [
@@ -239,8 +239,8 @@
       "week": 2,
       "theme": "Taxes and profits",
       "market_drift": {
-        "cosmic-pizza": 0.01,
-        "keramzyt": 0.005
+        "cosmic-pizza": 0.03,
+        "keramzyt": 0.015
       },
       "reports": {
         "keramzyt": {
@@ -272,7 +272,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": -0.05,
+              "value": -0.125,
               "delay_weeks": 0,
               "consequence_text": "Keramzyt is baked in gas-fired kilns - investors expected pricier energy to eat its profits, and the shares slipped right away.",
               "cause_chain": [
@@ -293,7 +293,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": 0.05,
+              "value": 0.125,
               "delay_weeks": 0,
               "consequence_text": "Record profits lifted Fabric of Keramzyt's share price as soon as the results were published.",
               "cause_chain": [
@@ -328,9 +328,9 @@
       "week": 3,
       "theme": "A new listing",
       "market_drift": {
-        "cosmic-pizza": 0.01,
-        "keramzyt": -0.005,
-        "galac-kebab": -0.01
+        "cosmic-pizza": 0.03,
+        "keramzyt": -0.015,
+        "galac-kebab": -0.03
       },
       "reports": {
         "cosmic-pizza": {
@@ -352,7 +352,7 @@
               "target_type": "stock_price",
               "target_id": "galac-kebab",
               "change_type": "percent",
-              "value": 0.04,
+              "value": 0.1,
               "delay_weeks": 0,
               "consequence_text": "Hungry investors bought Galac-Kebab in its first week - the price edged up.",
               "cause_chain": [
@@ -364,7 +364,7 @@
               "target_type": "stock_price",
               "target_id": "galac-kebab",
               "change_type": "percent",
-              "value": 0.15,
+              "value": 0.375,
               "delay_weeks": 2,
               "consequence_text": "The Zero-G Döner approval expected since Week 3 came through. Galac-Kebab can now sell it on every orbital station - and its share price jumped.",
               "cause_chain": [
@@ -385,7 +385,7 @@
               "target_type": "stock_price",
               "target_id": "food",
               "change_type": "percent",
-              "value": -0.08,
+              "value": -0.2,
               "delay_weeks": 1,
               "consequence_text": "The higher wages agreed in Week 3 showed up in restaurant costs - Cosmic Pizza's profits shrank and its share price dipped.",
               "cause_chain": [
@@ -434,8 +434,8 @@
       "theme": "Rent week",
       "market_drift": {
         "cosmic-pizza": 0.0,
-        "keramzyt": -0.015,
-        "galac-kebab": -0.005
+        "keramzyt": -0.045,
+        "galac-kebab": -0.015
       },
       "reports": {
         "cosmic-pizza": {
@@ -458,7 +458,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": -0.06,
+              "value": -0.15,
               "delay_weeks": 0,
               "consequence_text": "The hostile takeover attempt scared investors - Fabric of Keramzyt shares dipped right away.",
               "cause_chain": [
@@ -478,7 +478,7 @@
               "target_type": "stock_price",
               "target_id": "galac-kebab",
               "change_type": "percent",
-              "value": -0.06,
+              "value": -0.15,
               "delay_weeks": 0,
               "consequence_text": "Customers switched to falafel - Galac-Kebab's sales and shares dipped the same week.",
               "cause_chain": [
@@ -514,9 +514,9 @@
       "theme": "Smart homes",
       "market_drift": {
         "cosmic-pizza": 0.0,
-        "keramzyt": -0.005,
-        "galac-kebab": 0.01,
-        "laser-dzida": 0.015
+        "keramzyt": -0.015,
+        "galac-kebab": 0.03,
+        "laser-dzida": 0.045
       },
       "reports": {
         "cosmic-pizza": {
@@ -537,7 +537,7 @@
               "target_type": "stock_price",
               "target_id": "laser-dzida",
               "change_type": "percent",
-              "value": 0.08,
+              "value": 0.2,
               "delay_weeks": 0,
               "consequence_text": "Investors loved the new laser-tip technology - Laser Dzida Works rose in its very first week.",
               "cause_chain": [
@@ -558,7 +558,7 @@
               "target_type": "stock_price",
               "target_id": "food",
               "change_type": "percent",
-              "value": -0.07,
+              "value": -0.175,
               "delay_weeks": 2,
               "consequence_text": "The drought from Week 5 finally pushed up flour and tomato costs - pizza profits shrank.",
               "cause_chain": [
@@ -595,9 +595,9 @@
       "theme": "Smoke on the horizon",
       "market_drift": {
         "cosmic-pizza": 0.0,
-        "keramzyt": 0.01,
-        "galac-kebab": 0.015,
-        "laser-dzida": 0.005
+        "keramzyt": 0.03,
+        "galac-kebab": 0.045,
+        "laser-dzida": 0.015
       },
       "reports": {
         "keramzyt": {
@@ -626,7 +626,7 @@
               "target_type": "stock_price",
               "target_id": "laser-dzida",
               "change_type": "percent",
-              "value": -0.35,
+              "value": -0.6,
               "delay_weeks": 0,
               "consequence_text": "The factory fire hit Laser Dzida Works immediately - investors sold the same week, expecting months without sales.",
               "cause_chain": [
@@ -659,7 +659,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": -0.03,
+              "value": -0.075,
               "delay_weeks": 0,
               "consequence_text": "At first, investors worried about the building costs.",
               "cause_chain": [
@@ -671,7 +671,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": 0.12,
+              "value": 0.3,
               "delay_weeks": 3,
               "consequence_text": "The moon kiln announced in Week 6 started production - Fabric of Keramzyt's shares jumped.",
               "cause_chain": [
@@ -719,11 +719,11 @@
       "week": 7,
       "theme": "Cargo rush",
       "market_drift": {
-        "cosmic-pizza": -0.01,
-        "keramzyt": 0.005,
-        "galac-kebab": -0.015,
-        "laser-dzida": 0.01,
-        "howl": 0.005
+        "cosmic-pizza": -0.03,
+        "keramzyt": 0.015,
+        "galac-kebab": -0.045,
+        "laser-dzida": 0.03,
+        "howl": 0.015
       },
       "reports": {
         "cosmic-pizza": {
@@ -747,7 +747,7 @@
               "target_type": "stock_price",
               "target_id": "howl",
               "change_type": "percent",
-              "value": 0.05,
+              "value": 0.125,
               "delay_weeks": 0,
               "consequence_text": "Howl's first week of trading ended a little above its listing price.",
               "cause_chain": [
@@ -767,7 +767,7 @@
               "target_type": "stock_price",
               "target_id": "laser-dzida",
               "change_type": "percent",
-              "value": -0.1,
+              "value": -0.25,
               "delay_weeks": 0,
               "consequence_text": "News of the insurance dispute pushed Laser Dzida Works shares lower right away.",
               "cause_chain": [
@@ -803,11 +803,11 @@
       "week": 8,
       "theme": "Rent week again",
       "market_drift": {
-        "cosmic-pizza": -0.01,
+        "cosmic-pizza": -0.03,
         "keramzyt": 0.0,
-        "galac-kebab": -0.005,
-        "laser-dzida": -0.01,
-        "howl": -0.005
+        "galac-kebab": -0.015,
+        "laser-dzida": -0.03,
+        "howl": -0.015
       },
       "reports": {
         "laser-dzida": {
@@ -832,7 +832,7 @@
               "target_type": "stock_price",
               "target_id": "laser-dzida",
               "change_type": "percent",
-              "value": -0.15,
+              "value": -0.375,
               "delay_weeks": 0,
               "consequence_text": "Losing its bank credit sent Laser Dzida Works shares down immediately.",
               "cause_chain": [
@@ -864,7 +864,7 @@
               "target_type": "stock_price",
               "target_id": "howl",
               "change_type": "percent",
-              "value": 0.18,
+              "value": 0.45,
               "delay_weeks": 2,
               "consequence_text": "The Star Inquisition shipyard announced in Week 8 opened - patrol-ship orders flowed in and Howl's shares took off.",
               "cause_chain": [
@@ -900,12 +900,12 @@
       "week": 9,
       "theme": "New money",
       "market_drift": {
-        "cosmic-pizza": -0.01,
-        "keramzyt": -0.015,
-        "galac-kebab": 0.005,
-        "laser-dzida": 0.015,
-        "howl": -0.01,
-        "lecicki": -0.015
+        "cosmic-pizza": -0.03,
+        "keramzyt": -0.045,
+        "galac-kebab": 0.015,
+        "laser-dzida": 0.045,
+        "howl": -0.03,
+        "lecicki": -0.045
       },
       "reports": {
         "keramzyt": {
@@ -927,7 +927,7 @@
               "target_type": "stock_price",
               "target_id": "lecicki",
               "change_type": "percent",
-              "value": 0.03,
+              "value": 0.075,
               "delay_weeks": 0,
               "consequence_text": "Łęcicki's debut was calm - the money keeps coming in, whatever the walls look like.",
               "cause_chain": [
@@ -947,7 +947,7 @@
               "target_type": "stock_price",
               "target_id": "keramzyt",
               "change_type": "percent",
-              "value": -0.04,
+              "value": -0.1,
               "delay_weeks": 0,
               "consequence_text": "Higher rates mean fewer new buildings - Fabric of Keramzyt slipped right away.",
               "cause_chain": [
@@ -960,7 +960,7 @@
               "target_type": "stock_price",
               "target_id": "lecicki",
               "change_type": "percent",
-              "value": 0.12,
+              "value": 0.3,
               "delay_weeks": 1,
               "consequence_text": "With new flats too expensive after the Week 9 rate rise, Valdorians fixed up their old ones instead - Łęcicki's order book filled up.",
               "cause_chain": [
@@ -1008,11 +1008,11 @@
       "week": 10,
       "theme": "Fees and strikes",
       "market_drift": {
-        "cosmic-pizza": 0.005,
-        "keramzyt": 0.01,
-        "galac-kebab": 0.015,
-        "laser-dzida": -0.005,
-        "howl": 0.01,
+        "cosmic-pizza": 0.015,
+        "keramzyt": 0.03,
+        "galac-kebab": 0.045,
+        "laser-dzida": -0.015,
+        "howl": 0.03,
         "lecicki": 0.0
       },
       "reports": {
@@ -1060,9 +1060,9 @@
               "target_type": "stock_price",
               "target_id": "howl",
               "change_type": "percent",
-              "value": -0.12,
-              "delay_weeks": 0,
-              "consequence_text": "The strike froze Howl's deliveries the same week - its shares fell.",
+              "value": -0.3,
+              "delay_weeks": 1,
+              "consequence_text": "The strike from Week 10 dragged on - no finished ships means no income, and Howl's shares fell hard.",
               "cause_chain": [
                 "Welders stop working",
                 "Half-built ships stand still",
@@ -1096,12 +1096,12 @@
       "week": 11,
       "theme": "Last orders",
       "market_drift": {
-        "cosmic-pizza": 0.015,
-        "keramzyt": 0.015,
-        "galac-kebab": -0.015,
-        "laser-dzida": -0.015,
-        "howl": -0.015,
-        "lecicki": 0.015
+        "cosmic-pizza": 0.045,
+        "keramzyt": 0.045,
+        "galac-kebab": -0.045,
+        "laser-dzida": -0.045,
+        "howl": -0.045,
+        "lecicki": 0.045
       },
       "reports": {
         "cosmic-pizza": {
@@ -1154,7 +1154,7 @@
               "target_type": "stock_price",
               "target_id": "galac-kebab",
               "change_type": "percent",
-              "value": 0.05,
+              "value": 0.125,
               "delay_weeks": 0,
               "consequence_text": "Hungry football fans emptied every kebab grill - Galac-Kebab shares rose the same week.",
               "cause_chain": [
@@ -1202,10 +1202,10 @@
       "week": 12,
       "theme": "The final bell",
       "market_drift": {
-        "cosmic-pizza": 0.01,
-        "keramzyt": 0.005,
-        "galac-kebab": -0.01,
-        "laser-dzida": -0.015,
+        "cosmic-pizza": 0.03,
+        "keramzyt": 0.015,
+        "galac-kebab": -0.03,
+        "laser-dzida": -0.045,
         "howl": 0.0,
         "lecicki": 0.0
       },
@@ -1229,7 +1229,7 @@
               "target_type": "stock_price",
               "target_id": "galac-kebab",
               "change_type": "percent",
-              "value": 0.1,
+              "value": 0.25,
               "delay_weeks": 0,
               "consequence_text": "The league deal lifted Galac-Kebab shares the same week it was announced.",
               "cause_chain": [

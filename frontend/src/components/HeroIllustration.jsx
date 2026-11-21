@@ -2,9 +2,10 @@ import { useEffect, useRef } from "react";
 
 /*
  * Original low-resolution pixel-art scene (160 x 190 real pixels, scaled up without smoothing):
- * a grim night shift at Booth 7 of the Galactic Exchange. A stern alien official sits behind
- * the glass with a rubber stamp; paperwork waits on the counter; snow falls, a guard with a
- * laser dzida stands by and a searchlight sweeps the sky. Muted, bureaucratic-dystopia mood - drawn from scratch for CosmiCash.
+ * late at night in a small room, a green alien with a huge afro sits at his desk over stock
+ * sheets and charts, rubbing a pen against his forehead while he thinks. Behind him, through
+ * the window, snow falls on a dark city under a ringed planet. Muted palette, warm desk lamp,
+ * cold night outside - drawn from scratch for CosmiCash.
  */
 
 const W = 160;
@@ -29,7 +30,7 @@ function seeded(seed) {
   };
 }
 
-// 4x4 ordered dithering, for the chunky sky and ground gradients
+// 4x4 ordered dithering for chunky gradients
 const BAYER = [
   [0, 8, 2, 10],
   [12, 4, 14, 6],
@@ -37,42 +38,41 @@ const BAYER = [
   [15, 7, 13, 5],
 ];
 
-// Tiny pixel font (3x5, a few wider glyphs). "$" is 7 rows tall and starts one row higher.
+// Tiny pixel font (3x5, a few wider glyphs).
 const FONT = {
   A: [".#.", "#.#", "###", "#.#", "#.#"],
   B: ["##.", "#.#", "##.", "#.#", "##."],
-  C: [".##", "#..", "#..", "#..", ".##"],
-  D: ["##.", "#.#", "#.#", "#.#", "##."],
   E: ["###", "#..", "##.", "#..", "###"],
-  F: ["###", "#..", "##.", "#..", "#.."],
-  G: [".##", "#..", "#.#", "#.#", ".##"],
-  H: ["#.#", "#.#", "###", "#.#", "#.#"],
+  I: ["###", ".#.", ".#.", ".#.", "###"],
+  K: ["#.#", "#.#", "##.", "#.#", "#.#"],
+  M: ["#...#", "##.##", "#.#.#", "#...#", "#...#"],
   N: ["#..#", "##.#", "#.##", "#..#", "#..#"],
   O: [".#.", "#.#", "#.#", "#.#", ".#."],
   P: ["##.", "#.#", "##.", "#..", "#.."],
   R: ["##.", "#.#", "##.", "#.#", "#.#"],
   S: [".##", "#..", ".#.", "..#", "##."],
   T: ["###", ".#.", ".#.", ".#.", ".#."],
-  U: ["#.#", "#.#", "#.#", "#.#", "###"],
   V: ["#.#", "#.#", "#.#", "#.#", ".#."],
-  X: ["#.#", "#.#", ".#.", "#.#", "#.#"],
-  0: ["###", "#.#", "#.#", "#.#", "###"],
-  1: [".#.", "##.", ".#.", ".#.", "###"],
+  W: ["#...#", "#...#", "#.#.#", "##.##", "#...#"],
+  Z: ["###", "..#", ".#.", "#..", "###"],
   7: ["###", "..#", ".#.", ".#.", ".#."],
-  $: { dy: -1, rows: [".#.", ".##", "#..", ".#.", "..#", "##.", ".#."] },
+  "?": ["##.", "..#", ".#.", "...", ".#."],
   " ": ["..", "..", "..", "..", ".."],
 };
 
 function glyph(ch) {
-  const g = FONT[ch] ?? FONT[" "];
-  return Array.isArray(g) ? { dy: 0, rows: g } : g;
+  return FONT[ch] ?? FONT[" "];
 }
+
+// mask values: 0 = room, 1 = night sky seen through the window, 2 = city / planet behind the glass
+const SKY = 1;
+const VIEW = 2;
 
 function createLayer() {
   const data = new Uint8ClampedArray(W * H * 4);
-  const sky = new Uint8Array(W * H);
+  const mask = new Uint8Array(W * H);
 
-  const set = (x, y, color, isSky = 0) => {
+  const set = (x, y, color, m = 0) => {
     const px = Math.round(x);
     const py = Math.round(y);
     if (px < 0 || py < 0 || px >= W || py >= H) return;
@@ -82,7 +82,7 @@ function createLayer() {
     data[i + 1] = g;
     data[i + 2] = b;
     data[i + 3] = 255;
-    sky[py * W + px] = isSky;
+    mask[py * W + px] = m;
   };
   const blend = (x, y, color, alpha) => {
     if (x < 0 || y < 0 || x >= W || y >= H) return;
@@ -92,15 +92,8 @@ function createLayer() {
     data[i + 1] += (g - data[i + 1]) * alpha;
     data[i + 2] += (b - data[i + 2]) * alpha;
   };
-  const copy = (fromX, fromY, toX, toY) => {
-    const a = (fromY * W + fromX) * 4;
-    const b = (toY * W + toX) * 4;
-    data[b] = data[a];
-    data[b + 1] = data[a + 1];
-    data[b + 2] = data[a + 2];
-  };
-  const rect = (x, y, w, h, color) => {
-    for (let j = 0; j < h; j += 1) for (let i = 0; i < w; i += 1) set(x + i, y + j, color);
+  const rect = (x, y, w, h, color, m = 0) => {
+    for (let j = 0; j < h; j += 1) for (let i = 0; i < w; i += 1) set(x + i, y + j, color, m);
   };
   const frame = (x, y, w, h, color) => {
     rect(x, y, w, 1, color);
@@ -108,9 +101,9 @@ function createLayer() {
     rect(x, y, 1, h, color);
     rect(x + w - 1, y, 1, h, color);
   };
-  const disc = (cx, cy, r, color) => {
+  const disc = (cx, cy, r, color, m = 0) => {
     for (let dy = -r; dy <= r; dy += 1)
-      for (let dx = -r; dx <= r; dx += 1) if (dx * dx + dy * dy <= r * r + r * 0.6) set(cx + dx, cy + dy, color);
+      for (let dx = -r; dx <= r; dx += 1) if (dx * dx + dy * dy <= r * r + r * 0.6) set(cx + dx, cy + dy, color, m);
   };
   const ellipse = (cx, cy, rx, ry, color) => {
     for (let dy = -ry; dy <= ry; dy += 1)
@@ -126,410 +119,517 @@ function createLayer() {
       else rect(x - Math.floor(thickness / 2), y - Math.floor(thickness / 2), thickness, thickness, color);
     }
   };
-  const textWidth = (str) =>
-    [...str].reduce((sum, ch, i) => sum + glyph(ch).rows[0].length + (i > 0 ? 1 : 0), 0);
-  const text = (x, y, str, color) => {
+  const text = (x, y, str, color, scale = 1) => {
     let cx = x;
     for (const ch of str) {
-      const g = glyph(ch);
-      g.rows.forEach((row, j) => {
+      const rows = glyph(ch);
+      rows.forEach((row, j) => {
         [...row].forEach((cell, i) => {
-          if (cell === "#") set(cx + i, y + g.dy + j, color);
+          if (cell === "#") rect(cx + i * scale, y + j * scale, scale, scale, color);
         });
       });
-      cx += g.rows[0].length + 1;
+      cx += (rows[0].length + 1) * scale;
     }
   };
 
-  return { data, sky, set, blend, copy, rect, frame, disc, ellipse, line, text, textWidth };
+  return { data, mask, set, blend, rect, frame, disc, ellipse, line, text };
 }
 
-/* ------------------------------------------------------------------ the static scene */
+/* ------------------------------------------------------------------ palette */
 
 const SKIN = "#7d8f5a";
 const SKIN_DARK = "#6a7a4b";
 const SKIN_LINE = "#3a4428";
-const UNIFORM = "#4a4a3c";
-const UNIFORM_DARK = "#2e2e25";
-const GOLD = "#b89a4a";
+const KNIT = "#b5832e";
+const KNIT_DARK = "#a2742a";
+const KNIT_SHADE = "#8f6522";
+const KNIT_LINE = "#5e4316";
+const KNIT_RIB = "#7e5a1e";
+const BRASS = "#b89a4a";
+const BRASS_DARK = "#7a6230";
 const RED = "#8c2a24";
 const INK = "#0d0d0f";
+const PAPER = "#d8ccaa";
+const PAPER_EDGE = "#a89c7c";
+const UP = "#3f7a3a";
+const DOWN = "#9c2b23";
 
-function paintSky(p, rand) {
-  const tones = ["#111219", "#171923", "#1e202c", "#262938"];
-  for (let y = 0; y < 72; y += 1)
-    for (let x = 0; x < W; x += 1) {
-      const level = Math.min(3, Math.floor((y / 72) * 3.2 + BAYER[y % 4][x % 4] / 16));
-      p.set(x, y, tones[level], 1);
+/* ------------------------------------------------------------------ the room and the view */
+
+// window opening (the glass area) and the head's position
+const WIN = { x0: 39, y0: 13, x1: 121, y1: 79 };
+
+function paintRoom(p, rand) {
+  // wallpaper with faint stripes, and a wooden wainscot
+  for (let y = 0; y < 128; y += 1)
+    for (let x = 0; x < W; x += 1) p.set(x, y, x % 8 === 0 ? "#35302a" : "#3b3630");
+  for (let i = 0; i < 160; i += 1) p.set(Math.floor(rand() * W), Math.floor(rand() * 100), "#403a33");
+  p.rect(0, 100, W, 28, "#4a3f33");
+  for (let x = 0; x < W; x += 10) p.rect(x, 102, 1, 26, "#41372c");
+  p.rect(0, 100, W, 1, "#5e5040");
+  p.rect(0, 101, W, 1, "#2e2820");
+
+  // the night outside: dithered sky, stars, a ringed planet and dark city blocks
+  const tones = ["#0f1018", "#141622", "#1b1e2c", "#232737"];
+  for (let y = WIN.y0; y <= WIN.y1; y += 1)
+    for (let x = WIN.x0; x <= WIN.x1; x += 1) {
+      const t = (y - WIN.y0) / (WIN.y1 - WIN.y0);
+      p.set(x, y, tones[Math.min(3, Math.floor(t * 3.2 + BAYER[y % 4][x % 4] / 16))], SKY);
     }
-  for (let i = 0; i < 28; i += 1) {
-    p.set(Math.floor(rand() * W), Math.floor(rand() * 44), rand() > 0.7 ? "#c9c3a8" : "#6f6c60", 1);
+  for (let i = 0; i < 18; i += 1) {
+    const x = WIN.x0 + Math.floor(rand() * (WIN.x1 - WIN.x0));
+    const y = WIN.y0 + Math.floor(rand() * 30);
+    p.set(x, y, rand() > 0.6 ? "#c9c3a8" : "#6f6c60", SKY);
   }
-
-  // a dull ringed planet
+  const [px, py] = [104, 28];
   const ring = (front, color) => {
     for (let a = 0; a < Math.PI * 2; a += 0.015) {
       if (Math.sin(a) >= 0 !== front) continue;
-      p.set(138 + Math.cos(a) * 17, 16 + Math.sin(a) * 3 - Math.cos(a) * 3, color);
+      p.set(px + Math.cos(a) * 13, py + Math.sin(a) * 3 - Math.cos(a) * 3, color, VIEW);
     }
   };
   ring(false, "#6e6349");
-  for (let dy = -9; dy <= 9; dy += 1)
-    for (let dx = -9; dx <= 9; dx += 1) {
-      if (dx * dx + dy * dy > 86) continue;
-      const shade = dx + dy < -6 ? "#a08c62" : dx + dy > 5 ? "#584a30" : "#7f6d47";
-      p.set(138 + dx, 16 + dy, shade);
+  for (let dy = -7; dy <= 7; dy += 1)
+    for (let dx = -7; dx <= 7; dx += 1) {
+      if (dx * dx + dy * dy > 52) continue;
+      p.set(px + dx, py + dy, dx + dy < -4 ? "#a08c62" : dx + dy > 4 ? "#584a30" : "#7f6d47", VIEW);
     }
-  p.set(134, 12, "#665839");
-  p.set(135, 12, "#665839");
-  p.set(141, 19, "#665839");
+  p.set(px - 3, py - 3, "#665839", VIEW);
+  p.set(px + 2, py + 2, "#665839", VIEW);
   ring(true, "#b3a37a");
 
-  // grim city blocks on the horizon
-  let x = 0;
-  while (x < W) {
-    const w = 6 + Math.floor(rand() * 9);
+  let x = WIN.x0;
+  while (x <= WIN.x1) {
+    const w = 5 + Math.floor(rand() * 8);
     const h = 8 + Math.floor(rand() * 20);
-    p.rect(x, 72 - h, w, h, "#14151b");
-    for (let wy = 72 - h + 2; wy < 70; wy += 3)
-      for (let wx = x + 1; wx < x + w - 1; wx += 2) if (rand() > 0.86) p.set(wx, wy, rand() > 0.5 ? "#7a6a3a" : "#4f4830");
+    for (let bx = x; bx < Math.min(x + w, WIN.x1 + 1); bx += 1)
+      for (let by = WIN.y1 - h; by <= WIN.y1; by += 1) p.set(bx, by, "#14151b", VIEW);
+    for (let wy = WIN.y1 - h + 2; wy < WIN.y1 - 1; wy += 3)
+      for (let wx = x + 1; wx < Math.min(x + w - 1, WIN.x1); wx += 2)
+        if (rand() > 0.84) p.set(wx, wy, rand() > 0.5 ? "#7a6a3a" : "#4f4830", VIEW);
     x += w + Math.floor(rand() * 3);
   }
+  // a taller tower with an antenna (its light blinks)
+  for (let by = 44; by <= WIN.y1; by += 1) for (let bx = 52; bx <= 58; bx += 1) p.set(bx, by, "#121318", VIEW);
+  for (let by = 36; by <= 44; by += 1) p.set(55, by, "#24252a", VIEW);
+  // snow piled on the outside of the window
+  for (let sx = WIN.x0; sx <= WIN.x1; sx += 1) {
+    p.set(sx, WIN.y1, "#bdb9ae", VIEW);
+    if (rand() > 0.5) p.set(sx, WIN.y1 - 1, "#bdb9ae", VIEW);
+  }
+
+  // window frame, mullions and sill
+  const wood = "#6b5a44";
+  p.rect(36, 10, 89, 3, wood);
+  p.rect(36, 80, 89, 3, wood);
+  p.rect(36, 10, 3, 73, wood);
+  p.rect(122, 10, 3, 73, wood);
+  p.rect(79, WIN.y0, 2, WIN.y1 - WIN.y0 + 1, wood);
+  p.rect(WIN.x0, 45, WIN.x1 - WIN.x0 + 1, 2, wood);
+  p.rect(39, 13, 83, 1, "#3a3026");
+  p.rect(36, 10, 89, 1, "#7a6750");
+  p.rect(32, 83, 97, 2, "#7a6750");
+  p.rect(32, 85, 97, 2, "#5a4a38");
+
+  // poster with a rising PIZA chart
+  p.rect(7, 18, 25, 31, "#2e2820");
+  p.rect(8, 19, 23, 29, "#c9bd98");
+  p.text(12, 21, "PIZA", DOWN);
+  p.line(10, 44, 14, 40, UP);
+  p.line(14, 40, 17, 42, UP);
+  p.line(17, 42, 22, 34, UP);
+  p.line(22, 34, 25, 36, UP);
+  p.line(25, 36, 28, 29, UP);
+  p.rect(9, 46, 21, 1, PAPER_EDGE);
+
+  // calendar
+  p.rect(129, 16, 25, 31, "#2e2820");
+  p.rect(130, 17, 23, 29, PAPER);
+  p.rect(130, 17, 23, 7, RED);
+  p.text(133, 18, "WEEK", PAPER);
+  p.text(138, 27, "7", INK, 2);
+  for (let gx = 132; gx < 152; gx += 3) p.set(gx, 42, PAPER_EDGE);
+  p.set(151, 17, "#cfccc2");
 }
 
-function paintYard(p, rand) {
-  const yard = ["#211f1b", "#272520", "#2e2c26"];
-  for (let y = 72; y < 160; y += 1)
-    for (let x = 0; x < W; x += 1) {
-      const level = Math.min(2, Math.floor(((y - 72) / 88) * 2.4 + BAYER[y % 4][x % 4] / 16));
-      p.set(x, y, yard[level]);
-    }
-  // pavement slabs
-  for (let y = 160; y < H; y += 1) {
-    const row = Math.floor((y - 160) / 11);
-    for (let x = 0; x < W; x += 1) {
-      const joint = y === 160 || (y - 160) % 11 === 0 || (x + (row % 2) * 8) % 16 === 0;
-      p.set(x, y, joint ? "#33312b" : "#44423a");
-    }
-  }
-  for (let i = 0; i < 110; i += 1) {
-    p.set(Math.floor(rand() * W), 148 + Math.floor(rand() * 42), rand() > 0.5 ? "#bdb9ae" : "#8f8c83");
-  }
-
-  // barbed-wire fence
-  for (let fx = 2; fx < W; fx += 9) p.rect(fx, 63, 1, 16, "#2a2a28");
-  for (const wy of [66, 70, 74]) {
-    for (let fx = 0; fx < W; fx += 1) {
-      p.set(fx, wy, "#46463f");
-      if (fx % 4 === 0) {
-        p.set(fx, wy - 1, "#5a5a52");
-        p.set(fx, wy + 1, "#5a5a52");
-      }
-    }
-  }
-
-  // watchtower (the searchlight is animated)
-  const steel = "#24252a";
-  p.line(6, 28, 4, 104, steel, 2);
-  p.line(20, 28, 22, 104, steel, 2);
-  for (let ty = 36; ty < 100; ty += 16) {
-    p.line(6, ty, 21, ty + 14, steel);
-    p.line(21, ty, 6, ty + 14, steel);
-  }
-  p.rect(2, 16, 22, 12, "#30313a");
-  p.rect(4, 19, 18, 3, "#121318");
-  p.rect(1, 13, 24, 3, steel);
-  p.rect(10, 10, 6, 3, steel);
-  p.rect(1, 27, 24, 1, steel);
-  p.rect(22, 18, 3, 4, "#1a1b20");
-}
-
-function paintBooth(p, rand) {
-  // shadow, side face and concrete wall
-  p.rect(30, 158, 108, 3, "#1a1915");
-  p.rect(130, 34, 5, 125, "#3c3d37");
-  for (let y = 34; y < 160; y += 1)
-    for (let x = 30; x < 130; x += 1) p.set(x, y, (y - 34) % 14 === 0 ? "#4a4b44" : "#5b5c54");
-  for (let i = 0; i < 280; i += 1) {
-    p.set(30 + Math.floor(rand() * 100), 34 + Math.floor(rand() * 126), rand() > 0.5 ? "#666760" : "#4f504a");
-  }
-  p.rect(30, 34, 2, 126, "#4a4b44");
-  p.rect(128, 34, 2, 126, "#4a4b44");
-
-  // roof slab with snow
-  p.rect(26, 28, 111, 6, "#3f403a");
-  p.rect(26, 28, 111, 1, "#6e6f66");
-  p.rect(26, 33, 111, 1, "#2b2c27");
-  for (let x = 26; x < 137; x += 1) {
-    p.set(x, 27, "#cfccc2");
-    if (rand() > 0.6) p.set(x, 26, "#cfccc2");
-  }
-
-  // grime streaks under the sign
-  for (let i = 0; i < 14; i += 1) {
-    const gx = 34 + Math.floor(rand() * 92);
-    const len = 2 + Math.floor(rand() * 7);
-    for (let j = 0; j < len; j += 1) p.set(gx, 47 + j, "#4b4c45");
-  }
-
-  // sign
-  p.rect(36, 36, 89, 11, "#1c1d18");
-  p.rect(37, 37, 87, 9, "#26271f");
-  const sign = "EXCHANGE BOOTH 7";
-  p.text(80 - Math.floor(p.textWidth(sign) / 2), 39, sign, GOLD);
-  for (const [bx, by] of [[38, 38], [122, 38], [38, 44], [122, 44]]) p.set(bx, by, "#4a4b44");
-
-  // "NEXT" lamp housing (the light itself is animated)
-  p.rect(69, 48, 23, 8, "#1c1d18");
-
-  // speaker grille
-  for (let gy = 84; gy <= 98; gy += 2) for (let gx = 123; gx <= 127; gx += 2) p.set(gx, gy, "#2b2c27");
-
-  // window frame and the room behind the glass
-  p.rect(40, 57, 81, 69, "#34352f");
-  for (let y = 59; y < 124; y += 1)
-    for (let x = 42; x < 119; x += 1) p.set(x, y, x % 6 === 0 ? "#33342d" : y > 112 ? "#303129" : "#383931");
-  // propaganda poster
-  p.rect(46, 64, 13, 19, "#6b6450");
-  p.rect(47, 65, 11, 17, "#a89c7c");
-  p.rect(49, 67, 7, 6, RED);
-  p.rect(51, 69, 3, 2, GOLD);
-  for (const py of [75, 77, 79]) p.rect(48, py, 9, 1, "#5c5546");
-  // clock
-  p.disc(108, 70, 5, "#26271f");
-  p.disc(108, 70, 4, "#c9c3a8");
-  p.line(108, 70, 108, 67, INK);
-  p.line(108, 70, 110, 71, INK);
-}
-
-function paintOfficial(p) {
-  // torso in a grey-green uniform
-  for (let y = 103; y <= 123; y += 1) {
-    const hw = y === 103 ? 15 : y === 104 ? 17 : Math.round(18 + (y - 105) * 0.75);
+function paintAlien(p) {
+  // a chunky mustard sweater with a stock chart knitted across the chest
+  for (let y = 103; y <= 127; y += 1) {
+    const hw = y === 103 ? 11 : y === 104 ? 15 : y === 105 ? 17 : Math.round(18 + (y - 106) * 0.78);
     for (let x = 80 - hw; x <= 80 + hw; x += 1) {
-      if (x < 42 || x > 118) continue;
-      const edge = x - (80 - hw) < 2 || 80 + hw - x < 2;
-      p.set(x, y, edge ? UNIFORM_DARK : x > 80 + hw - 6 ? "#3e3e32" : UNIFORM);
+      const edge = x - (80 - hw) < 1 || 80 + hw - x < 1;
+      let color = x % 2 === 0 ? KNIT : KNIT_DARK; // knitted columns
+      if (x > 80 + hw - 7) color = KNIT_SHADE;
+      if (edge) color = KNIT_LINE;
+      p.set(x, y, color);
     }
   }
-  // shirt, tie and lapels
-  for (let y = 103; y <= 109; y += 1) {
-    const half = Math.floor((109 - y) / 1.5);
-    for (let x = 80 - half; x <= 80 + half; x += 1) p.set(x, y, "#8a8670");
-    p.set(80 - half - 1, y, UNIFORM_DARK);
-    p.set(80 + half + 1, y, UNIFORM_DARK);
-  }
-  p.rect(79, 104, 2, 13, RED);
-  p.rect(79, 104, 2, 2, "#6b1f1a");
-  p.rect(62, 104, 8, 2, GOLD);
-  p.rect(91, 104, 8, 2, GOLD);
-  p.rect(68, 110, 3, 3, GOLD);
-  p.set(69, 111, RED);
-  for (const by of [111, 115, 119]) p.set(85, by, GOLD);
+  // knitted chart band
+  for (let y = 110; y <= 116; y += 1)
+    for (let x = 62; x <= 98; x += 1) {
+      const bandHw = Math.round(18 + (y - 106) * 0.78);
+      const edge = 80 + bandHw - x < 1 || x - (80 - bandHw) < 1;
+      if (!edge) p.set(x, y, y === 110 || y === 116 ? KNIT_RIB : "#e6dcbf");
+    }
+  const knitChart = [
+    [63, 115],
+    [67, 113],
+    [70, 114],
+    [74, 112],
+    [78, 113],
+    [82, 111],
+    [86, 112],
+    [90, 111],
+    [94, 114],
+    [97, 115],
+  ];
+  knitChart.forEach(([kx, ky], i) => {
+    if (i > 0) p.line(knitChart[i - 1][0], knitChart[i - 1][1], kx, ky, i >= knitChart.length - 2 ? DOWN : UP);
+  });
+
+  // upper sleeves: the left one goes down to the elbow on the desk, the right one to the desk
+  p.line(62, 107, 52, 126, KNIT_LINE, 7);
+  p.line(62, 107, 52, 126, KNIT, 5);
+  p.line(98, 107, 118, 127, KNIT_LINE, 7);
+  p.line(98, 107, 118, 127, KNIT_SHADE, 5);
 
   // neck and head
   p.rect(76, 97, 9, 7, "#56643c");
+  // ribbed crew neck of the sweater
+  for (let x = 73; x <= 87; x += 1) p.set(x, 103, x % 2 ? KNIT_RIB : KNIT_LINE);
+  for (let x = 73; x <= 87; x += 1) if (Math.abs(x - 80) >= 4) p.set(x, 102, x % 2 ? KNIT_RIB : KNIT_LINE);
+  for (let x = 74; x <= 86; x += 1) if (Math.abs(x - 80) >= 5) p.set(x, 101, x % 2 ? KNIT_RIB : KNIT_LINE);
+  p.ellipse(80, 82, 11, 9, SKIN_LINE);
   p.ellipse(80, 89, 12, 11, SKIN_LINE);
+  p.ellipse(80, 82, 10, 8, SKIN);
   p.ellipse(80, 89, 11, 10, SKIN);
-  for (let y = 80; y <= 99; y += 1) for (let x = 87; x <= 91; x += 1) if (x + (99 - y) * 0.1 > 88.5) {
-    const i = (y * W + x) * 4;
-    if (p.data[i] === 125 && p.data[i + 1] === 143) p.set(x, y, SKIN_DARK); // shade the right cheek
-  }
-  // pointed ears
+  for (let y = 80; y <= 99; y += 1)
+    for (let x = 87; x <= 91; x += 1) {
+      const i = (y * W + x) * 4;
+      if (x + (99 - y) * 0.1 > 88.5 && p.data[i] === 125 && p.data[i + 1] === 143) p.set(x, y, SKIN_DARK);
+    }
   for (const [ex, ey] of [[68, 88], [67, 87], [66, 86], [68, 87], [67, 86]]) p.set(ex, ey, SKIN);
   for (const [ex, ey] of [[92, 88], [93, 87], [94, 86], [92, 87], [93, 86]]) p.set(ex, ey, SKIN_DARK);
   p.set(65, 85, SKIN_LINE);
   p.set(95, 85, SKIN_LINE);
-
-  // peaked cap with the exchange emblem
-  p.rect(66, 72, 29, 3, "#454839");
-  p.rect(66, 72, 29, 1, "#55594a");
-  p.rect(68, 75, 25, 5, "#3d4034");
-  p.rect(68, 80, 25, 2, "#2a2c24");
-  p.rect(69, 82, 23, 2, "#17181a");
-  p.rect(78, 75, 5, 4, GOLD);
-  p.rect(79, 76, 3, 2, RED);
-
-  // stern face: heavy brows, narrow eyes, small tusks, a scar
-  for (const [bx, by] of [[72, 85], [73, 85], [74, 85], [75, 86], [76, 86], [77, 87]]) p.set(bx, by, "#2a2c24");
-  for (const [bx, by] of [[83, 87], [84, 86], [85, 86], [86, 85], [87, 85], [88, 85]]) p.set(bx, by, "#2a2c24");
-  p.rect(73, 88, 4, 1, "#d8d4c0");
-  p.rect(84, 88, 4, 1, "#d8d4c0");
-  p.set(75, 88, INK);
-  p.set(85, 88, INK);
-  p.rect(73, 89, 4, 1, SKIN_DARK);
-  p.rect(84, 89, 4, 1, SKIN_DARK);
+  // nose, tusks, scar and tired eye bags (eyes, brows and mouth are animated)
   p.set(80, 90, SKIN_DARK);
   p.set(80, 91, SKIN_DARK);
   p.set(79, 92, SKIN_LINE);
   p.set(81, 92, SKIN_LINE);
-  p.rect(76, 95, 9, 1, "#2a1a14");
-  p.set(75, 96, "#2a1a14");
-  p.set(85, 96, "#2a1a14");
   for (const [tx, ty] of [[76, 94], [76, 93], [84, 94], [84, 93]]) p.set(tx, ty, "#d8d4c0");
   for (const [sx, sy] of [[71, 90], [72, 91], [73, 92], [74, 93]]) p.set(sx, sy, "#4a3a2a");
+  p.rect(73, 89, 4, 1, SKIN_DARK);
+  p.rect(84, 89, 4, 1, SKIN_DARK);
 
-  // raised arm holding the rubber stamp (green ink: APPROVED)
-  p.line(64, 108, 54, 95, "#45453a", 3);
-  p.rect(47, 88, 5, 2, "#4a3020");
-  p.rect(48, 90, 3, 9, "#6b4a2a");
-  p.rect(45, 99, 9, 3, "#2a2a26");
-  p.rect(46, 102, 7, 1, "#3f7a3a");
-  p.rect(47, 93, 6, 4, SKIN);
-  p.set(52, 94, SKIN_DARK);
-  p.set(52, 95, SKIN_DARK);
-}
-
-function paintGlassAndCounter(p) {
-  // greenish glass tint with diagonal reflections
-  for (let y = 59; y < 124; y += 1)
-    for (let x = 42; x < 119; x += 1) {
-      p.blend(x, y, "#2f4a52", 0.16);
-      const s = x - 42 + (123 - y) * 0.55;
-      if (s % 46 < 3) p.blend(x, y, "#d8e4e6", 0.12);
-      else if ((s + 9) % 46 < 1) p.blend(x, y, "#d8e4e6", 0.08);
+  // the huge near-black afro (stops at a wavy hairline above the brows)
+  const hairRand = seeded(31);
+  const [afroX, afroY, afroRx, afroRy] = [80, 74, 20, 13];
+  const bump = (a) => 0.97 + 0.11 * Math.abs(Math.sin(5 * a)) + 0.03 * Math.sin(13 * a + 1);
+  const onFace = (x, y) => ((x - 80) / 12) ** 2 + ((y - 89) / 11) ** 2 <= 1;
+  for (let y = afroY - afroRy - 2; y <= afroY + afroRy + 1; y += 1)
+    for (let x = afroX - afroRx - 3; x <= afroX + afroRx + 3; x += 1) {
+      const dx = (x - afroX) / afroRx;
+      const dy = (y - afroY) / afroRy;
+      const r = Math.hypot(dx, dy);
+      const edge = bump(Math.atan2(dy, dx));
+      if (r > edge) continue;
+      if (y > 81 + (x % 4 === 0 ? 1 : 0) && onFace(x, y)) continue;
+      let color = "#120d0a";
+      const roll = hairRand();
+      if (r > edge - 0.08) color = "#050302";
+      else if (x - afroX + (y - afroY) * 1.6 < -14 && roll > 0.6) color = "#3a2b1f";
+      else if (roll > 0.91) color = "#2a1f17";
+      else if (roll < 0.08) color = "#080605";
+      p.set(x, y, color);
     }
-
-  // metal counter shelf
-  p.rect(36, 124, 89, 4, "#7c8288");
-  p.rect(36, 124, 89, 1, "#9aa0a6");
-  p.rect(36, 128, 89, 4, "#50555b");
-  p.rect(38, 132, 85, 1, "#2c2d29");
-  for (let x = 36; x < 125; x += 1) if (x % 3 !== 0) p.set(x, 123, "#cfccc2");
-
-  // investor permit
-  p.rect(44, 116, 15, 10, "#3e1814");
-  p.rect(45, 117, 13, 8, "#6b2a24");
-  p.rect(50, 118, 3, 3, GOLD);
-  p.set(51, 119, RED);
-  for (let x = 47; x < 56; x += 2) p.set(x, 123, GOLD);
-  // $100 bill
-  p.rect(62, 119, 20, 8, "#5d7a46");
-  p.rect(63, 120, 18, 6, "#8fae6a");
-  p.text(65, 121, "$100", "#3d5230");
-  // stamped form
-  p.rect(84, 109, 38, 18, "#a89c7c");
-  p.rect(85, 110, 36, 16, "#d8ccaa");
-  p.rect(87, 112, 22, 1, "#a89c7c");
-  p.rect(87, 114, 16, 1, "#a89c7c");
-  p.frame(85, 117, 35, 9, "#3f7a3a");
-  p.text(87, 119, "APPROVED", "#3f7a3a");
-
-  // notice on the lower wall
-  p.rect(58, 139, 44, 13, "#8a8068");
-  p.rect(59, 140, 42, 11, "#c9bd98");
-  for (const [tx, ty] of [[58, 139], [59, 139], [100, 139], [101, 139]]) p.set(tx, ty, "#a8a08a");
-  const notice = "NO REFUNDS";
-  p.text(80 - Math.floor(p.textWidth(notice) / 2), 143, notice, "#9c2b23");
+  // afro pick, a spare pencil and a lost coin
+  p.line(69, 66, 65, 60, "#c0392b", 2);
+  p.rect(63, 59, 4, 2, "#e0503a");
+  for (const [tx, ty] of [[70, 68], [71, 67], [71, 69]]) p.set(tx, ty, "#d8d4c0");
+  p.line(91, 70, 97, 64, "#e0b23a", 2);
+  p.rect(98, 62, 2, 2, "#9aa0a6");
+  p.rect(99, 60, 2, 2, "#d9808a");
+  p.disc(85, 64, 2, "#8a6a2a");
+  p.rect(84, 63, 2, 2, "#e0c060");
+  p.set(86, 65, "#c9a54a");
 }
 
-// The guard stands left of the booth; GUARD_X shifts the whole figure (and its animated dzida tip).
-const GUARD_X = -6;
+function paintDesk(p, rand) {
+  // a banker's desk: walnut frame, green leather writing surface with gold tooling, brass trim
+  const walnut = "#4a2c1a";
+  p.rect(0, 128, W, 24, walnut);
+  p.rect(0, 128, W, 1, "#6b4a2e");
+  p.rect(5, 131, 150, 18, "#2f5a3e");
+  for (let i = 0; i < 140; i += 1) {
+    p.set(5 + Math.floor(rand() * 150), 131 + Math.floor(rand() * 18), rand() > 0.5 ? "#2a5238" : "#356446");
+  }
+  for (let x = 7; x <= 152; x += 1) {
+    if (x % 2 === 0) {
+      p.set(x, 133, BRASS);
+      p.set(x, 147, BRASS);
+    }
+  }
+  for (let y = 133; y <= 147; y += 1) {
+    if (y % 2 === 1) {
+      p.set(7, y, BRASS);
+      p.set(152, y, BRASS);
+    }
+  }
+  p.rect(0, 150, W, 2, BRASS);
+  p.rect(0, 151, W, 1, BRASS_DARK);
+  p.rect(0, 152, W, 1, "#1e120a");
 
-function paintGuard(p) {
-  const o = GUARD_X;
-  p.rect(13 + o, 131, 15, 23, "#1c1d18");
-  p.rect(14 + o, 132, 13, 21, "#4a4d3c");
-  p.rect(14 + o, 142, 13, 1, "#2a2b22");
-  p.rect(19 + o, 142, 2, 1, GOLD);
-  p.rect(20 + o, 143, 1, 10, "#3a3c2f");
-  p.set(19 + o, 135, GOLD);
-  p.set(19 + o, 138, GOLD);
-  p.rect(15 + o, 154, 4, 3, "#2e2f27");
-  p.rect(22 + o, 154, 4, 3, "#2e2f27");
-  p.rect(14 + o, 157, 5, 3, "#141414");
-  p.rect(22 + o, 157, 5, 3, "#141414");
-  p.rect(19 + o, 129, 3, 3, "#56643c");
-  p.disc(20 + o, 125, 5, "#1c1d18");
-  p.disc(20 + o, 125, 4, SKIN);
-  for (let y = 119; y <= 124; y += 1)
-    for (let x = 15; x <= 25; x += 1) if ((x - 20) ** 2 + (y - 125) ** 2 <= 28) p.set(x + o, y, "#3d4034");
-  p.rect(14 + o, 124, 13, 1, "#2a2c24");
-  p.set(18 + o, 126, INK);
-  p.set(22 + o, 126, INK);
-  p.rect(19 + o, 128, 3, 1, "#2a1a14");
-  p.rect(26 + o, 134, 3, 3, "#4a4d3c");
-  p.rect(29 + o, 102, 1, 57, "#7c8288");
-  p.rect(30 + o, 102, 1, 57, "#50555b");
-  p.rect(28 + o, 134, 2, 3, SKIN);
+  // carved front panels and a brass nameplate
+  p.rect(0, 153, W, 37, "#3e2416");
+  for (let i = 0; i < 90; i += 1) p.set(Math.floor(rand() * W), 154 + Math.floor(rand() * 35), "#35200f");
+  for (const px of [6, 100]) {
+    p.frame(px, 158, 54, 26, "#24150b");
+    p.frame(px + 1, 159, 52, 24, "#56351f");
+    p.frame(px + 4, 162, 46, 18, "#24150b");
+  }
+  p.rect(62, 160, 36, 12, BRASS_DARK);
+  p.rect(63, 161, 34, 10, BRASS);
+  p.rect(63, 161, 34, 1, "#e0c878");
+  p.text(64, 164, "INVESTOR", "#3e2a10");
+
+  // green banker's lamp
+  p.rect(12, 141, 18, 5, BRASS_DARK);
+  p.rect(13, 141, 16, 1, "#e0c878");
+  p.rect(20, 110, 2, 31, BRASS);
+  p.rect(22, 110, 1, 31, BRASS_DARK);
+  p.rect(6, 100, 30, 9, "#1f5a36");
+  p.rect(7, 99, 28, 1, "#2f7a4a");
+  p.rect(7, 101, 28, 1, "#5fae6a");
+  p.rect(6, 108, 30, 1, BRASS);
+  p.rect(8, 109, 26, 1, "#ffe9a0");
+  p.rect(28, 106, 1, 6, BRASS_DARK);
+  p.set(28, 112, BRASS);
+
+  // calculator
+  p.rect(30, 135, 15, 15, "#2e2e2c");
+  p.rect(32, 137, 11, 4, "#9cb070");
+  p.rect(38, 138, 1, 2, "#3d4a2a");
+  p.rect(40, 138, 1, 2, "#3d4a2a");
+  for (let by = 143; by <= 147; by += 2) for (let bx = 33; bx <= 41; bx += 3) p.rect(bx, by, 2, 1, "#8a8a84");
+
+  // piggy bank: the savings account, of course
+  p.ellipse(51, 145, 5, 4, "#7a3f4a");
+  p.ellipse(51, 145, 4, 3, "#d98a9a");
+  p.rect(45, 144, 2, 3, "#c9707f");
+  p.set(45, 145, "#7a3f4a");
+  p.rect(47, 141, 2, 1, "#c9707f");
+  p.rect(51, 141, 3, 1, "#3a1f24");
+  p.set(48, 144, INK);
+  p.rect(48, 149, 1, 1, "#7a3f4a");
+  p.rect(54, 149, 1, 1, "#7a3f4a");
+
+  // stock sheet: three tickers with arrows
+  p.rect(57, 130, 25, 22, PAPER_EDGE);
+  p.rect(58, 131, 23, 20, PAPER);
+  const rows = [
+    ["PIZA", UP, true],
+    ["KRMZ", DOWN, false],
+    ["KBAB", UP, true],
+  ];
+  rows.forEach(([ticker, color, up], i) => {
+    const y = 133 + i * 6;
+    p.text(60, y, ticker, "#3a352c");
+    if (up) {
+      p.set(77, y + 1, color);
+      p.rect(76, y + 2, 3, 1, color);
+    } else {
+      p.rect(76, y + 1, 3, 1, color);
+      p.set(77, y + 2, color);
+    }
+    p.rect(60, y + 5, 19, 1, "#c9bd98");
+  });
+
+  // chart sheet: up, up... and down
+  p.rect(84, 129, 25, 21, PAPER_EDGE);
+  p.rect(85, 130, 23, 19, PAPER);
+  p.rect(87, 132, 1, 15, "#6b6450");
+  p.rect(87, 146, 19, 1, "#6b6450");
+  const chart = [
+    [88, 144],
+    [91, 141],
+    [94, 142],
+    [97, 137],
+    [100, 138],
+    [103, 133],
+    [106, 141],
+  ];
+  chart.forEach(([cx, cy], i) => {
+    if (i > 0) p.line(chart[i - 1][0], chart[i - 1][1], cx, cy, i === chart.length - 1 ? DOWN : UP);
+  });
+
+  // sticky note with a question mark
+  p.rect(110, 140, 11, 10, "#d9c95a");
+  p.rect(110, 140, 11, 1, "#e8dc78");
+  p.text(114, 142, "?", DOWN);
+
+  // coffee mug (the steam is animated)
+  p.rect(129, 136, 9, 10, "#2e2820");
+  p.rect(130, 137, 7, 8, "#d8d4c0");
+  p.rect(130, 137, 7, 1, "#5a3a22");
+  p.frame(138, 139, 3, 4, "#d8d4c0");
+  p.rect(131, 141, 5, 2, RED);
+
+  // right forearm resting on the chart sheet, sweater sleeve pushed up
+  p.rect(115, 126, 8, 6, KNIT_SHADE);
+  for (let x = 115; x < 123; x += 2) p.rect(x, 126, 1, 6, KNIT_RIB);
+  p.rect(115, 131, 8, 1, KNIT_LINE);
+  p.line(118, 132, 106, 145, SKIN_LINE, 6);
+  p.line(118, 132, 106, 145, SKIN, 4);
+  p.rect(102, 143, 6, 5, SKIN);
+  p.rect(102, 147, 6, 1, SKIN_LINE);
+  p.set(103, 145, SKIN_DARK);
+  p.set(105, 145, SKIN_DARK);
 }
 
 const STATIC = (() => {
   const p = createLayer();
   const rand = seeded(7);
-  paintSky(p, rand);
-  paintYard(p, rand);
-  paintBooth(p, rand);
-  paintOfficial(p);
-  paintGlassAndCounter(p);
-  paintGuard(p);
+  paintRoom(p, rand);
+  paintAlien(p);
+  paintDesk(p, rand);
   return p;
 })();
 
 /* ------------------------------------------------------------------ animation */
 
+const LOOP = 64; // frames: 48 of rubbing the pen on the forehead, then 16 of staring at the sheets
+const RUB = [0, 1, 2, 3, 4, 3, 2, 1];
+
 function makeFlakes() {
   const rand = seeded(23);
-  return Array.from({ length: 70 }, () => ({
-    x: rand() * W,
+  return Array.from({ length: 45 }, () => ({
+    x: WIN.x0 + rand() * (WIN.x1 - WIN.x0),
     y: rand() * H,
-    speed: 0.5 + rand() * 0.9,
+    speed: 0.4 + rand() * 0.8,
     phase: rand() * 10,
-    near: rand() > 0.55,
+    near: rand() > 0.5,
   }));
+}
+
+function paintFace(target, thinking, blink) {
+  const brow = "#1e1a14";
+  if (blink) {
+    target.rect(73, 88, 4, 1, SKIN_LINE);
+    target.rect(84, 88, 4, 1, SKIN_LINE);
+  } else {
+    target.rect(73, 87, 4, 2, "#d8d4c0");
+    target.rect(84, 87, 4, 2, "#d8d4c0");
+    if (thinking) {
+      // eyes rolled up and to the side, one brow raised
+      target.set(73, 87, INK);
+      target.set(84, 87, INK);
+    } else {
+      // reading the sheets
+      target.set(75, 88, INK);
+      target.set(86, 88, INK);
+    }
+  }
+  if (thinking) {
+    target.rect(72, 84, 5, 1, brow);
+    target.set(71, 85, brow);
+    for (const [bx, by] of [[83, 86], [84, 85], [85, 85], [86, 85], [87, 84]]) target.set(bx, by, brow);
+    for (const [mx, my] of [[76, 95], [77, 96], [78, 96], [79, 95], [80, 95], [81, 96], [82, 96], [83, 95]])
+      target.set(mx, my, "#2a1a14");
+  } else {
+    target.rect(72, 85, 5, 1, brow);
+    target.rect(83, 85, 5, 1, brow);
+    target.rect(77, 95, 7, 1, "#2a1a14");
+  }
+}
+
+function paintThinkingArm(target, offset) {
+  // elbow on the desk, the hand at the temple, the pen's end rubbing the forehead
+  const hx = 60 + offset;
+  const hy = 88;
+  target.rect(48, 121, 9, 6, KNIT_SHADE);
+  for (let x = 48; x < 57; x += 2) target.rect(x, 121, 1, 6, KNIT_RIB);
+  target.rect(48, 126, 9, 1, KNIT_LINE);
+  target.line(52, 125, hx - 1, hy + 3, SKIN_LINE, 6);
+  target.line(52, 125, hx - 1, hy + 3, SKIN, 4);
+  // a cream pen with a blue cap: the cap end rubs the forehead
+  target.line(hx + 1, hy - 1, hx + 12, hy - 5, "#2a2620", 3);
+  target.line(hx + 1, hy - 1, hx + 12, hy - 5, "#ece6d2", 2);
+  target.rect(hx + 10, hy - 6, 3, 2, "#3a5aa8");
+  target.set(hx + 2, hy - 1, "#2a2620");
+  target.rect(hx - 3, hy - 2, 6, 6, SKIN_LINE);
+  target.rect(hx - 2, hy - 1, 4, 4, SKIN);
+  target.set(hx + 1, hy, SKIN_DARK);
+  target.set(hx + 1, hy + 2, SKIN_DARK);
+}
+
+function paintThought(target) {
+  const cloud = "#e6e0cc";
+  target.disc(103, 62, 1, cloud);
+  target.disc(105, 59, 1, cloud);
+  target.ellipse(110, 52, 6, 5, "#2e2820");
+  target.ellipse(110, 52, 5, 4, cloud);
+  target.text(109, 50, "?", DOWN);
+}
+
+function paintLampLight(target) {
+  // warm cone from the banker's lamp onto the desk
+  for (let y = 109; y < 160; y += 1) {
+    const center = 21 + (y - 109) * 1.0;
+    const half = 5 + (y - 109) * 0.8;
+    for (let x = Math.floor(center - half); x <= center + half; x += 1) {
+      if (x < 0 || x >= W) continue;
+      const fall = 1 - Math.abs(x - center) / half;
+      const onDesk = y >= 128 ? 1 : 0.55;
+      target.blend(x, y, "#f2c46a", (0.06 + 0.14 * fall) * onDesk);
+    }
+  }
 }
 
 function paintFrame(target, frame, flakes, moving) {
   target.data.set(STATIC.data);
+  const t = frame % LOOP;
+  const thinking = t < 48;
 
-  // searchlight sweeping the sky from the watchtower (only lights up the sky, not the buildings)
-  const theta = -0.34 + 0.24 * Math.sin(frame * 0.045);
-  const halfWidth = 0.075;
-  for (let y = 0; y < 80; y += 1)
-    for (let x = 26; x < W; x += 1) {
-      if (!STATIC.sky[y * W + x]) continue;
-      const d = Math.abs(Math.atan2(y - 20, x - 25) - theta);
-      if (d < halfWidth) target.blend(x, y, "#d8d2b8", 0.05 + 0.16 * (1 - d / halfWidth));
+  // a faint searchlight sweeping the sky outside
+  const theta = -0.78 + 0.22 * Math.sin(frame * 0.04);
+  for (let y = WIN.y0; y <= WIN.y1; y += 1)
+    for (let x = WIN.x0; x <= WIN.x1; x += 1) {
+      if (STATIC.mask[y * W + x] !== SKY) continue;
+      const d = Math.abs(Math.atan2(y - 110, x + 30) - theta);
+      if (d < 0.06) target.blend(x, y, "#d8d2b8", 0.04 + 0.1 * (1 - d / 0.06));
     }
-  target.rect(23, 19, 2, 2, Math.floor(frame / 4) % 2 === 0 ? "#e0503a" : "#4a1d17");
-  target.rect(25, 19, 1, 2, "#d8d2b8");
+  // blinking antenna light
+  target.set(55, 35, Math.floor(frame / 5) % 2 === 0 ? "#e0503a" : "#4a1d17");
 
-  // the NEXT lamp buzzes
-  const lit = frame % 24 < 17 || frame % 24 === 19;
-  target.rect(70, 49, 21, 6, lit ? "#4a3214" : "#2a2416");
-  target.text(72, 49, "NEXT", lit ? "#f0b54a" : "#6a5a3a");
-  if (lit) {
-    for (let y = 45; y <= 58; y += 1)
-      for (let x = 66; x <= 94; x += 1) if (x < 69 || x > 91 || y < 48 || y > 55) target.blend(x, y, "#f0b54a", 0.07);
-  }
+  // the alien: thinking with the pen, or staring at the sheets
+  paintThinkingArm(target, thinking ? RUB[t % RUB.length] : 2);
+  paintFace(target, thinking, t === 52 || t === 53);
+  if (thinking && t >= 12 && Math.floor(t / 6) % 4 !== 3) paintThought(target);
 
-  // the official blinks now and then
-  if (frame % 36 === 0 || frame % 36 === 1) {
-    for (let x = 73; x <= 76; x += 1) target.copy(x, 89, x, 88);
-    for (let x = 84; x <= 87; x += 1) target.copy(x, 89, x, 88);
-  }
+  paintLampLight(target);
 
-  // the laser dzida crackles
-  const hot = frame % 3 !== 0;
-  const tip = 29 + GUARD_X;
-  for (let y = 96; y <= 101; y += 1) target.set(tip, y, hot ? "#ffd6f0" : "#e86fc0");
-  for (let y = 98; y <= 101; y += 1) {
-    target.set(tip - 1, y, hot ? "#e86fc0" : "#b0387f");
-    target.set(tip + 1, y, hot ? "#e86fc0" : "#b0387f");
-  }
-  if (hot) for (const [sx, sy] of [[tip - 2, 95], [tip + 2, 97], [tip - 3, 99]]) target.set(sx, sy, "#f6d9ee");
+  // steam from the coffee
+  for (let i = 0; i < 2; i += 1)
+    for (let y = 124; y < 136; y += 1) {
+      const x = 131 + i * 4 + Math.round(Math.sin((y + frame) * 0.7 + i * 2) * 1.2);
+      target.blend(x, y, "#d8d4c8", 0.12 + ((y - 124) / 12) * 0.3);
+    }
 
-  // snow
+  // snow, only where the window shows the night
   for (const flake of flakes) {
     if (moving) {
       flake.y += flake.speed;
       flake.x += Math.sin((flake.y + flake.phase) * 0.12) * 0.25;
-      if (flake.y >= H) {
-        flake.y = 0;
-        flake.x = (flake.x + 37) % W;
+      if (flake.y >= WIN.y1 + 1) {
+        flake.y = WIN.y0;
+        flake.x = WIN.x0 + ((flake.x - WIN.x0 + 29) % (WIN.x1 - WIN.x0));
       }
     }
-    target.set(flake.x, flake.y, flake.near ? "#d9d6cc" : "#8f8c83");
+    const fx = Math.round(flake.x);
+    const fy = Math.round(flake.y);
+    if (fx < 0 || fy < 0 || fx >= W || fy >= H || !STATIC.mask[fy * W + fx]) continue;
+    target.set(fx, fy, flake.near ? "#d9d6cc" : "#8f8c83");
   }
 }
 
@@ -566,7 +666,7 @@ export default function HeroIllustration() {
       width={W}
       height={H}
       role="img"
-      aria-label="Pixel-art night scene at the Galactic Exchange: a stern alien official in a peaked cap sits behind the glass of Booth 7 holding a rubber stamp. An investor permit, a 100 dollar bill and an approved form lie on the counter under a 'No refunds' notice. Snow falls, a guard with a laser spear stands by and a searchlight sweeps the sky from a watchtower."
+      aria-label="Pixel-art night scene: in a small room, a green alien with a huge afro, in a mustard sweater with a stock chart knitted on it, sits at a green-leather banker's desk covered in stock sheets and charts, rubbing a pen against his forehead while he thinks. A green banker's lamp, a calculator, a piggy bank, a sticky note with a question mark and a steaming coffee mug sit on the desk; through the window, snow falls on a dark city under a ringed planet."
     />
   );
 }

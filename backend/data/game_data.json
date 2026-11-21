@@ -1,9 +1,9 @@
 {
   "scenario": {
-    "id": "smoke-sparks-heartbeats",
-    "title": "Smoke, Sparks & Heartbeats",
-    "tagline": "Food / Energy / Medtech / Tech / Space / Banking",
-    "description": "A grill chain and a power company open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, watch for delayed effects and keep enough cash for rent.",
+    "id": "pizza-clay-spears",
+    "title": "Pizza, Clay & Laser Spears",
+    "tagline": "Pizza / Keramzyt / Kebab / Laser spears / Starships / Renovation",
+    "description": "A pizza chain and a keramzyt factory open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, watch for delayed effects and keep enough cash for rent.",
     "total_weeks": 12,
     "starting_cash": 3000.0,
     "initial_monthly_rent": 400.0,
@@ -15,125 +15,125 @@
       "critical": 0.7
     },
     "advisor_uses_per_game": 3,
-    "advisor_max_per_week": 1,
+    "advisor_cooldown_weeks": 1,
     "advisor_accuracy": 0.7,
     "risk_sensitivity": 0.3
   },
   "industries": {
     "food": {
-      "label": "Food & Restaurants",
+      "label": "Pizza & Restaurants",
       "color": "#E8483A"
     },
-    "energy": {
-      "label": "Energy",
+    "materials": {
+      "label": "Building Materials",
       "color": "#E39B0B"
     },
-    "tech": {
-      "label": "Technology",
-      "color": "#3A8DDE"
-    },
-    "medtech": {
-      "label": "Medical Technology",
+    "streetfood": {
+      "label": "Street Food",
       "color": "#14A085"
     },
-    "logistics": {
-      "label": "Space Logistics",
+    "defense": {
+      "label": "Laser Weapons",
+      "color": "#3A8DDE"
+    },
+    "starships": {
+      "label": "Starship Building",
       "color": "#8E6CCF"
     },
-    "finance": {
-      "label": "Banking",
+    "renovation": {
+      "label": "Renovation & Finishing",
       "color": "#A07A2C"
     }
   },
   "companies": [
     {
-      "id": "sizzle",
-      "name": "Sizzle & Co.",
-      "ticker": "SZZL",
+      "id": "cosmic-pizza",
+      "name": "Cosmic Pizza",
+      "ticker": "PIZA",
       "industry": "food",
-      "main_product": "Smash burgers and grill platters",
+      "main_product": "Pizza delivered anywhere in the system, still hot",
       "initial_price": 40.0,
       "dividend_per_share": 0.4,
       "bankruptcy_risk": 0.22,
-      "description": "A family-founded grill chain with 64 restaurants across Valdoria. Famous for smoky burgers, late-night opening hours and a pepper sauce nobody has managed to copy. Restaurants buy their meat and grain on monthly contracts.",
+      "description": "A pizza chain with 64 restaurants and a fleet of delivery pods across Valdoria and its moon. Famous for its meteor-crust pepperoni and a hot sauce nobody has managed to copy. Restaurants buy their flour, cheese and meat on monthly contracts.",
       "country": "Republic of Valdoria",
-      "owner": "Bernard Quillfeather",
-      "condition": "Steady and profitable. Meat and grain make up almost half of its costs, so food prices matter a lot.",
+      "owner": "Gianna Nebulotti",
+      "condition": "Steady and profitable. Flour, cheese and meat make up almost half of its costs, so food prices matter a lot.",
       "listed_week": 1
     },
     {
-      "id": "voltara",
-      "name": "Voltara Power",
-      "ticker": "VOLT",
-      "industry": "energy",
-      "main_product": "Electricity from wind farms and hydro plants",
+      "id": "keramzyt",
+      "name": "Fabric of Keramzyt",
+      "ticker": "KRMZ",
+      "industry": "materials",
+      "main_product": "Keramzyt - light clay pebbles baked in giant kilns, used in walls, floors and space bases",
       "initial_price": 60.0,
       "dividend_per_share": 0.9,
       "bankruptcy_risk": 0.12,
-      "description": "The biggest electricity supplier in the northern provinces. Runs 12 wind farms and two mountain hydro plants, and sells power to homes and businesses on long contracts.",
+      "description": "The biggest keramzyt maker in the northern provinces. It digs clay, bakes it into light, bubbly pebbles in gas-fired rotary kilns and sells them to builders on long contracts.",
       "country": "Kingdom of Nordhavia",
-      "owner": "Ingrid Solvang",
-      "condition": "Reliable and a bit boring - in a good way. Pays regular dividends, but depends on energy prices and government rules.",
+      "owner": "Zbigniew Glinka",
+      "condition": "Reliable and a bit boring - in a good way. Pays regular dividends, but depends on the building season and on energy prices for its kilns.",
       "listed_week": 1
     },
     {
-      "id": "medipulse",
-      "name": "MediPulse Labs",
-      "ticker": "MDPL",
-      "industry": "medtech",
-      "main_product": "Wearable heart monitors",
+      "id": "galac-kebab",
+      "name": "Galac-Kebab",
+      "ticker": "KBAB",
+      "industry": "streetfood",
+      "main_product": "Kebabs for every species, including a zero-gravity döner",
       "initial_price": 50.0,
       "dividend_per_share": 0.5,
       "bankruptcy_risk": 0.35,
-      "description": "A research-driven lab that designs wrist-worn heart monitors. Hospitals use them to watch patients after surgery; families use them to keep an eye on grandparents at home.",
+      "description": "A fast-growing kebab chain with stands at spaceports, mines and night markets. Its new Zero-G Döner is wrapped so tightly that nothing floats away on orbital stations.",
       "country": "Solmara Islands",
-      "owner": "Dr. Lena Marchetti-Voss",
-      "condition": "Promising products waiting for regulator approval. Strong research team, but modest profits so far - a bit risky.",
+      "owner": "Mehmet Orbital-Yilmaz",
+      "condition": "Promising new products waiting for food-safety approval. Loyal fans, but modest profits so far - a bit risky.",
       "listed_week": 3
     },
     {
-      "id": "pixelnest",
-      "name": "PixelNest",
-      "ticker": "PIXN",
-      "industry": "tech",
-      "main_product": "Smart thermostats and home sensors",
+      "id": "laser-dzida",
+      "name": "Laser Dzida Works",
+      "ticker": "DZDA",
+      "industry": "defense",
+      "main_product": "Laser spears (dzidas) for space rangers and moon-base guards",
       "initial_price": 80.0,
       "dividend_per_share": 0.2,
       "bankruptcy_risk": 0.3,
-      "description": "A fast-growing smart-home company that makes thermostats, door sensors and the app that connects them. Every product is built in one large factory on the edge of Port Lumen.",
+      "description": "A fast-growing weapons maker that builds laser spears - 'dzidas' - for rangers, guards and collectors. Every spear is assembled in one large factory on the edge of Port Lumen.",
       "country": "Federation of Kestria",
       "owner": "Theo Brightwater",
       "condition": "Growing fast, but it borrowed a lot of money and relies on a single factory for everything it sells.",
       "listed_week": 5
     },
     {
-      "id": "orbitra",
-      "name": "Orbitra Freight",
-      "ticker": "ORBT",
-      "industry": "logistics",
-      "main_product": "Cargo shuttles between Valdoria and its moon",
+      "id": "howl",
+      "name": "Howl Starships",
+      "ticker": "HOWL",
+      "industry": "starships",
+      "main_product": "Cargo starships with famously loud engines",
       "initial_price": 30.0,
       "dividend_per_share": 0.3,
       "bankruptcy_risk": 0.45,
-      "description": "A young shipping company that flies cargo shuttles between Valdoria and its moon. Busy when trade grows, quiet when ports or fuel cause trouble.",
+      "description": "A young shipyard that builds cargo starships for traders flying between Valdoria and its moon. Its ships are cheap and tough - and you can hear them howl from three valleys away.",
       "country": "Republic of Valdoria",
       "owner": "Captain Mira Okafor-Lund",
-      "condition": "A young company with big loans for its shuttles. Very sensitive to ports, strikes and fuel prices - clearly risky.",
+      "condition": "A young company with big loans for its shipyard. Very sensitive to trade, strikes and orders - clearly risky.",
       "listed_week": 7
     },
     {
-      "id": "vaultline",
-      "name": "Vaultline Bank",
-      "ticker": "VLTB",
-      "industry": "finance",
-      "main_product": "Savings accounts and loans",
+      "id": "lecicki",
+      "name": "Łęcicki Renovations",
+      "ticker": "LECK",
+      "industry": "renovation",
+      "main_product": "Flat finishing and renovations: tiles, plaster, paint and 'it'll be done by Monday'",
       "initial_price": 70.0,
       "dividend_per_share": 1.2,
       "bankruptcy_risk": 0.05,
-      "description": "A 120-year-old Valdorian bank that lends money to families and businesses. Known for steady, generous dividends.",
+      "description": "A 40-year-old family firm that finishes and renovates flats, offices and space-station cabins. Always busy, always slightly late, and known for steady, generous dividends.",
       "country": "Republic of Valdoria",
-      "owner": "Vaultline Savers' Cooperative",
-      "condition": "Very safe: an old bank with lots of savings. Earns more when interest rates go up.",
+      "owner": "The Łęcicki family",
+      "condition": "Very safe: a big order book and loyal customers. Gets more work when people fix up old homes instead of buying new ones.",
       "listed_week": 9
     }
   ],
@@ -142,14 +142,14 @@
       "week": 1,
       "theme": "A record harvest",
       "market_drift": {
-        "sizzle": 0.0,
-        "voltara": -0.005
+        "cosmic-pizza": 0.0,
+        "keramzyt": -0.005
       },
       "events": [
         {
-          "id": "w1-harvest",
-          "title": "Record harvest: meat and grain prices tumble",
-          "description": "Valdoria's farmers report their best season in 20 years. Wholesale prices for beef, chicken and wheat fell 18% this week. Supermarkets expect cheaper shelves soon, while restaurants still buy on monthly contracts.",
+          "id": "w1-students",
+          "title": "Record number of students enrol at Valdoria's universities",
+          "description": "Universities report 40% more first-year students than last year. The semester starts in two weeks - and the dorm kitchens have one hot plate per floor.",
           "is_noise": false,
           "effects": [
             {
@@ -158,30 +158,30 @@
               "change_type": "percent",
               "value": 0.2,
               "delay_weeks": 2,
-              "consequence_text": "The drop in meat and grain prices from 2 weeks ago finally reached restaurant kitchens. Food costs fell, margins grew - and Sizzle & Co. shares followed."
+              "consequence_text": "The student wave from Week 1 moved into the dorms - late-night pizza orders exploded and Cosmic Pizza's shares followed."
             }
           ]
         },
         {
           "id": "w1-heatwave",
-          "title": "Weather service warns of a long heatwave",
-          "description": "Forecasters expect record temperatures starting next week. Shops report that air conditioners are selling out across Valdoria.",
+          "title": "Long dry spell forecast - builders rush to start",
+          "description": "Forecasters expect weeks of dry, warm weather starting next week. Construction firms across Valdoria are moving their projects forward.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": 0.06,
               "delay_weeks": 1,
-              "consequence_text": "The heatwave forecast in Week 1 arrived - air conditioners ran day and night, Voltara sold more electricity and its shares rose."
+              "consequence_text": "The dry spell forecast in Week 1 arrived - building sites ordered keramzyt by the truckload and Fabric of Keramzyt's shares rose."
             }
           ]
         },
         {
           "id": "w1-noise-chef",
-          "title": "Celebrity chef: 'Burgers are so last season'",
-          "description": "TV chef Rocco Vantelli told a talk show that burgers are 'out' and that 'everyone will be eating foam and moss by spring'. The clip has 3 million views.",
+          "title": "Celebrity chef: 'Pizza is so last season'",
+          "description": "TV chef Rocco Vantelli told a talk show that pizza is 'out' and that 'everyone will be eating foam and moss by spring'. The clip has 3 million views.",
           "is_noise": true,
           "effects": []
         }
@@ -191,8 +191,8 @@
       "week": 2,
       "theme": "Taxes and profits",
       "market_drift": {
-        "sizzle": 0.01,
-        "voltara": 0.005
+        "cosmic-pizza": 0.01,
+        "keramzyt": 0.005
       },
       "events": [
         {
@@ -211,42 +211,42 @@
             },
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": -0.05,
               "delay_weeks": 0,
-              "consequence_text": "Investors worried that pricier energy means customers will use less of it - Voltara shares slipped right away."
+              "consequence_text": "Keramzyt is baked in gas-fired kilns - investors expected pricier energy to eat its profits, and the shares slipped right away."
             }
           ]
         },
         {
           "id": "w2-record",
-          "title": "Voltara reports a record quarter",
-          "description": "Voltara earned more than ever this quarter. The board announced that dividend payments to shareholders will go up starting next week.",
+          "title": "Fabric of Keramzyt reports a record quarter",
+          "description": "Fabric of Keramzyt sold more clay pebbles than ever this quarter. The board announced that dividend payments to shareholders will go up starting next week.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Record profits lifted Voltara's share price as soon as the results were published."
+              "consequence_text": "Record profits lifted Fabric of Keramzyt's share price as soon as the results were published."
             },
             {
               "target_type": "dividend",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "flat",
               "value": 0.6,
               "delay_weeks": 1,
-              "consequence_text": "The bigger dividend promised in Week 2 kicked in - Voltara now pays shareholders more cash every week."
+              "consequence_text": "The bigger dividend promised in Week 2 kicked in - Fabric of Keramzyt now pays shareholders more cash every week."
             }
           ]
         },
         {
           "id": "w2-noise-clouds",
-          "title": "Viral post: 'Wind turbines scare away the clouds'",
-          "description": "A post claiming that Voltara's wind turbines 'push rain clouds away' was shared 500,000 times. Weather scientists call it complete nonsense.",
+          "title": "Viral post: 'Keramzyt pebbles are alien eggs'",
+          "description": "A post claiming that keramzyt pebbles 'hatch at night' was shared 500,000 times. Geologists call it complete nonsense - it's baked clay.",
           "is_noise": true,
           "effects": []
         }
@@ -256,39 +256,39 @@
       "week": 3,
       "theme": "A new listing",
       "market_drift": {
-        "sizzle": 0.01,
-        "voltara": -0.005,
-        "medipulse": -0.01
+        "cosmic-pizza": 0.01,
+        "keramzyt": -0.005,
+        "galac-kebab": -0.01
       },
       "events": [
         {
-          "id": "w3-ipo-medipulse",
-          "title": "MediPulse Labs lists on the Galactic Exchange",
-          "description": "The heart-monitor maker sold its first shares at $50. Its new PulseBand 2 is waiting for regulator approval - a decision is expected in about two weeks.",
+          "id": "w3-ipo-galac-kebab",
+          "title": "Galac-Kebab lists on the Galactic Exchange",
+          "description": "The kebab chain sold its first shares at $50. Its new Zero-G Döner is waiting for food-safety approval for orbital stations - a decision is expected in about two weeks.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "percent",
               "value": 0.04,
               "delay_weeks": 0,
-              "consequence_text": "Hopeful investors bought MediPulse in its first week - the price edged up."
+              "consequence_text": "Hungry investors bought Galac-Kebab in its first week - the price edged up."
             },
             {
               "target_type": "stock_price",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "percent",
               "value": 0.15,
               "delay_weeks": 2,
-              "consequence_text": "The PulseBand 2 approval expected since Week 3 came through. MediPulse can now sell it to hospitals - and its share price jumped."
+              "consequence_text": "The Zero-G Döner approval expected since Week 3 came through. Galac-Kebab can now sell it on every orbital station - and its share price jumped."
             }
           ]
         },
         {
           "id": "w3-wages",
-          "title": "Restaurant workers win a higher minimum wage",
-          "description": "After long negotiations, restaurant staff in Valdoria will earn 12% more starting next week. Owners say they will have to raise menu prices or accept smaller profits.",
+          "title": "Pizza cooks and couriers win a higher minimum wage",
+          "description": "After long negotiations, restaurant staff and delivery couriers in Valdoria will earn 12% more starting next week. Owners say they will have to raise menu prices or accept smaller profits.",
           "is_noise": false,
           "effects": [
             {
@@ -297,7 +297,7 @@
               "change_type": "percent",
               "value": -0.08,
               "delay_weeks": 1,
-              "consequence_text": "The higher wages agreed in Week 3 showed up in restaurant costs - Sizzle & Co.'s profits shrank and its share price dipped."
+              "consequence_text": "The higher wages agreed in Week 3 showed up in restaurant costs - Cosmic Pizza's profits shrank and its share price dipped."
             },
             {
               "target_type": "dividend",
@@ -305,22 +305,22 @@
               "change_type": "percent",
               "value": -0.25,
               "delay_weeks": 1,
-              "consequence_text": "Bigger wage bills from Week 3 made Sizzle & Co. trim its dividend by a quarter."
+              "consequence_text": "Bigger wage bills from Week 3 made Cosmic Pizza trim its dividend by a quarter."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "sizzle",
+              "target_id": "cosmic-pizza",
               "change_type": "flat",
               "value": 0.06,
               "delay_weeks": 1,
-              "consequence_text": "Bigger wage bills from Week 3 squeezed Sizzle & Co.'s cash - its bankruptcy risk crept up."
+              "consequence_text": "Bigger wage bills from Week 3 squeezed Cosmic Pizza's cash - its bankruptcy risk crept up."
             }
           ]
         },
         {
           "id": "w3-noise-takeover",
-          "title": "Rumor: a foreign giant wants to buy Sizzle & Co.",
-          "description": "An anonymous forum user claims a huge foreign food group is about to buy Sizzle & Co. at a big premium. Neither company has commented.",
+          "title": "Rumor: a foreign giant wants to buy Cosmic Pizza",
+          "description": "An anonymous forum user claims a huge foreign food group is about to buy Cosmic Pizza at a big premium. Neither company has commented.",
           "is_noise": true,
           "effects": []
         }
@@ -330,55 +330,55 @@
       "week": 4,
       "theme": "Rent week",
       "market_drift": {
-        "sizzle": 0.0,
-        "voltara": -0.015,
-        "medipulse": -0.005
+        "cosmic-pizza": 0.0,
+        "keramzyt": -0.015,
+        "galac-kebab": -0.005
       },
       "events": [
         {
-          "id": "w4-pricecap",
-          "title": "Regulator caps electricity prices",
-          "description": "The energy regulator limited how much power companies may charge households this season. Customers cheer; energy companies grumble.",
+          "id": "w4-alien-takeover",
+          "title": "Hostile aliens launch a takeover of Fabric of Keramzyt",
+          "description": "A fleet of grumpy aliens from the Glutonian Empire bought 30% of the shares overnight. They demand that the kilns bake 'edible pebbles' and have parked a battle cruiser over the clay pit.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": -0.06,
               "delay_weeks": 0,
-              "consequence_text": "A cap on electricity prices means smaller profits ahead - Voltara shares dipped right away."
+              "consequence_text": "The hostile takeover attempt scared investors - Fabric of Keramzyt shares dipped right away."
             }
           ]
         },
         {
-          "id": "w4-recall",
-          "title": "MediPulse recalls a batch of wristband straps",
-          "description": "A supplier delivered faulty straps. MediPulse is replacing 5,000 of them for free.",
+          "id": "w4-falafel",
+          "title": "Falafel craze sweeps the galaxy",
+          "description": "A pop star's falafel diet went viral, and half of Valdoria now orders chickpea balls instead of meat. Kebab stands report long, quiet evenings.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "percent",
               "value": -0.06,
               "delay_weeks": 0,
-              "consequence_text": "The recall cost MediPulse money and trust - its shares dipped the same week."
+              "consequence_text": "Customers switched to falafel - Galac-Kebab's sales and shares dipped the same week."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "flat",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Paying for the recall hurt MediPulse's cash - its risk went up."
+              "consequence_text": "Cold grills ate into Galac-Kebab's cash - its risk went up."
             }
           ]
         },
         {
           "id": "w4-noise-yacht",
-          "title": "Gossip: MediPulse boss spotted on a luxury yacht",
-          "description": "A celebrity magazine printed blurry photos of someone who 'looks like' MediPulse's founder at a yacht party. The company says she was at a medical conference that day.",
+          "title": "Gossip: Galac-Kebab boss spotted on a luxury yacht",
+          "description": "A celebrity magazine printed blurry photos of someone who 'looks like' Galac-Kebab's founder at a yacht party. The company says he was at a food fair that day.",
           "is_noise": true,
           "effects": []
         }
@@ -388,32 +388,32 @@
       "week": 5,
       "theme": "Smart homes",
       "market_drift": {
-        "sizzle": 0.0,
-        "voltara": -0.005,
-        "medipulse": 0.01,
-        "pixelnest": 0.015
+        "cosmic-pizza": 0.0,
+        "keramzyt": -0.005,
+        "galac-kebab": 0.01,
+        "laser-dzida": 0.015
       },
       "events": [
         {
-          "id": "w5-ipo-pixelnest",
-          "title": "PixelNest lists with its HeatSmart thermostat",
-          "description": "The smart-home maker sold its first shares at $80. More than 40,000 people pre-ordered its new thermostat in 48 hours. Everything is built in one single factory.",
+          "id": "w5-ipo-laser-dzida",
+          "title": "Laser Dzida Works lists and unveils a brand-new technology",
+          "description": "The laser-spear maker sold its first shares at $80 and showed off the Dzida-3000: the first spear with a laser tip that 'never needs sharpening'. 40,000 rangers pre-ordered it in 48 hours. Every spear is built in one single factory.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "percent",
               "value": 0.08,
               "delay_weeks": 0,
-              "consequence_text": "Investors loved the HeatSmart pre-orders - PixelNest rose in its very first week."
+              "consequence_text": "Investors loved the new laser-tip technology - Laser Dzida Works rose in its very first week."
             }
           ]
         },
         {
           "id": "w5-drought",
           "title": "Drought hits the southern farm belt",
-          "description": "Two months without rain in the south. Farmers warn that harvests will be smaller and ingredients will cost more in a couple of weeks.",
+          "description": "Two months without rain in the south. Farmers warn that wheat and tomato harvests will be smaller and ingredients will cost more in a couple of weeks.",
           "is_noise": false,
           "effects": [
             {
@@ -422,22 +422,22 @@
               "change_type": "percent",
               "value": -0.07,
               "delay_weeks": 2,
-              "consequence_text": "The drought from Week 5 finally pushed up ingredient costs - restaurant profits shrank."
+              "consequence_text": "The drought from Week 5 finally pushed up flour and tomato costs - pizza profits shrank."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "sizzle",
+              "target_id": "cosmic-pizza",
               "change_type": "flat",
               "value": 0.04,
               "delay_weeks": 2,
-              "consequence_text": "Pricier ingredients after the Week 5 drought added a little risk to Sizzle & Co."
+              "consequence_text": "Pricier ingredients after the Week 5 drought added a little risk to Cosmic Pizza."
             }
           ]
         },
         {
           "id": "w5-noise-astro",
-          "title": "Astrologer: 'A golden week for energy stocks'",
-          "description": "A popular astrologer told her 2 million followers that 'Jupiter is smiling on energy companies' this week.",
+          "title": "Astrologer: 'A golden week for building stocks'",
+          "description": "A popular astrologer told her 2 million followers that 'Jupiter is smiling on anything made of clay' this week.",
           "is_noise": true,
           "effects": []
         }
@@ -447,45 +447,45 @@
       "week": 6,
       "theme": "Smoke on the horizon",
       "market_drift": {
-        "sizzle": 0.0,
-        "voltara": 0.01,
-        "medipulse": 0.015,
-        "pixelnest": 0.005
+        "cosmic-pizza": 0.0,
+        "keramzyt": 0.01,
+        "galac-kebab": 0.015,
+        "laser-dzida": 0.005
       },
       "events": [
         {
           "id": "w6-fire",
-          "title": "Fire at PixelNest's only factory",
-          "description": "A fire broke out overnight at PixelNest's factory in Port Lumen. Nobody was hurt, but the production lines are badly damaged and all HeatSmart deliveries are on hold.",
+          "title": "Testing the new laser tip sets the factory on fire",
+          "description": "An engineer tested the Dzida-3000's new laser tip indoors 'just for a second'. Nobody was hurt, but Laser Dzida Works' only factory in Port Lumen burned down to the walls and all deliveries are on hold.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "percent",
               "value": -0.35,
               "delay_weeks": 0,
-              "consequence_text": "The factory fire hit PixelNest immediately - investors sold the same week, expecting months without sales."
+              "consequence_text": "The factory fire hit Laser Dzida Works immediately - investors sold the same week, expecting months without sales."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "flat",
               "value": 0.2,
               "delay_weeks": 0,
-              "consequence_text": "With its only factory offline and loans to repay, PixelNest's bankruptcy risk jumped."
+              "consequence_text": "With its only factory offline and loans to repay, Laser Dzida Works' bankruptcy risk jumped."
             }
           ]
         },
         {
           "id": "w6-solar",
-          "title": "Voltara starts building an orbital solar farm",
-          "description": "Construction starts now; the giant solar farm should deliver its first power in about three weeks.",
+          "title": "Fabric of Keramzyt builds a giant kiln on the moon",
+          "description": "Construction starts now; the new moon kiln should bake its first pebbles for space-base builders in about three weeks.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": -0.03,
               "delay_weeks": 0,
@@ -493,34 +493,34 @@
             },
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": 0.12,
               "delay_weeks": 3,
-              "consequence_text": "The orbital solar farm announced in Week 6 started delivering power - Voltara's shares jumped."
+              "consequence_text": "The moon kiln announced in Week 6 started production - Fabric of Keramzyt's shares jumped."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "flat",
               "value": 0.06,
               "delay_weeks": 0,
-              "consequence_text": "Voltara borrowed heavily to build the solar farm - its bankruptcy risk rose."
+              "consequence_text": "Fabric of Keramzyt borrowed heavily to build the moon kiln - its bankruptcy risk rose."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "flat",
               "value": -0.08,
               "delay_weeks": 3,
-              "consequence_text": "With the solar farm earning money since Week 9, Voltara's debt looks safer."
+              "consequence_text": "With the moon kiln earning money since Week 9, Fabric of Keramzyt's debt looks safer."
             }
           ]
         },
         {
           "id": "w6-noise-fridge",
-          "title": "Online trend: 'Smart fridges are spying on your snacks'",
-          "description": "A viral video jokes that smart-home devices secretly count how many snacks you eat. Tech reviewers point out that the video is satire.",
+          "title": "Online trend: 'Laser spears can cut through time'",
+          "description": "A viral video claims a Dzida-3000 sliced 'a hole into last Tuesday'. Weapon reviewers point out that the video is satire.",
           "is_noise": true,
           "effects": []
         }
@@ -530,57 +530,57 @@
       "week": 7,
       "theme": "Cargo rush",
       "market_drift": {
-        "sizzle": -0.01,
-        "voltara": 0.005,
-        "medipulse": -0.015,
-        "pixelnest": 0.01,
-        "orbitra": 0.005
+        "cosmic-pizza": -0.01,
+        "keramzyt": 0.005,
+        "galac-kebab": -0.015,
+        "laser-dzida": 0.01,
+        "howl": 0.005
       },
       "events": [
         {
-          "id": "w7-ipo-orbitra",
-          "title": "Orbitra Freight lists on the Galactic Exchange",
-          "description": "The moon-to-moon cargo company sold its first shares at $30. Its founders promise 'boring, reliable deliveries'.",
+          "id": "w7-ipo-howl",
+          "title": "Howl Starships lists on the Galactic Exchange",
+          "description": "The shipyard sold its first shares at $30. Its founders promise 'loud engines, reliable ships'.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "orbitra",
+              "target_id": "howl",
               "change_type": "percent",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "Orbitra's first week of trading ended a little above its listing price."
+              "consequence_text": "Howl's first week of trading ended a little above its listing price."
             }
           ]
         },
         {
           "id": "w7-insurer",
-          "title": "PixelNest's insurer disputes the fire claim",
-          "description": "PixelNest's insurance company says the factory's sprinklers were not properly maintained and may refuse to pay for the damage. Lawyers expect a long fight.",
+          "title": "Laser Dzida Works' insurer disputes the fire claim",
+          "description": "The insurance company says the factory tested lasers indoors against safety rules and may refuse to pay for the damage. Lawyers expect a long fight.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "percent",
               "value": -0.1,
               "delay_weeks": 0,
-              "consequence_text": "News of the insurance dispute pushed PixelNest shares lower right away."
+              "consequence_text": "News of the insurance dispute pushed Laser Dzida Works shares lower right away."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "flat",
               "value": 0.1,
               "delay_weeks": 1,
-              "consequence_text": "The insurance dispute from Week 7 turned into real cash trouble - without a payout, PixelNest's bankruptcy risk climbed again."
+              "consequence_text": "The insurance dispute from Week 7 turned into real cash trouble - without a payout, Laser Dzida Works' bankruptcy risk climbed again."
             }
           ]
         },
         {
           "id": "w7-noise-meme",
-          "title": "Meme: 'Sizzle burgers cure Monday blues'",
-          "description": "A cartoon claiming Sizzle & Co. burgers 'fix bad moods' was shared a million times.",
+          "title": "Meme: 'Cosmic Pizza cures Monday blues'",
+          "description": "A cartoon claiming Cosmic Pizza 'fixes bad moods' was shared a million times.",
           "is_noise": true,
           "effects": []
         }
@@ -590,65 +590,65 @@
       "week": 8,
       "theme": "Rent week again",
       "market_drift": {
-        "sizzle": -0.01,
-        "voltara": 0.0,
-        "medipulse": -0.005,
-        "pixelnest": -0.01,
-        "orbitra": -0.005
+        "cosmic-pizza": -0.01,
+        "keramzyt": 0.0,
+        "galac-kebab": -0.005,
+        "laser-dzida": -0.01,
+        "howl": -0.005
       },
       "events": [
         {
           "id": "w8-credit",
-          "title": "Bank cuts PixelNest's credit line",
-          "description": "Valdoria Merchant Bank halved the amount PixelNest is allowed to borrow. Without new money, the company may struggle to pay suppliers and rebuild its factory.",
+          "title": "Bank cuts Laser Dzida Works' credit line",
+          "description": "Valdoria Merchant Bank halved the amount Laser Dzida Works is allowed to borrow. Without new money, the company may struggle to pay suppliers and rebuild its factory.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "percent",
               "value": -0.15,
               "delay_weeks": 0,
-              "consequence_text": "Losing its bank credit sent PixelNest shares down immediately."
+              "consequence_text": "Losing its bank credit sent Laser Dzida Works shares down immediately."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "pixelnest",
+              "target_id": "laser-dzida",
               "change_type": "flat",
               "value": 0.2,
               "delay_weeks": 1,
-              "consequence_text": "The credit cut from Week 8 left PixelNest unable to pay its bills - its bankruptcy risk crossed the danger line."
+              "consequence_text": "The credit cut from Week 8 left Laser Dzida Works unable to pay its bills - its bankruptcy risk crossed the danger line."
             }
           ]
         },
         {
-          "id": "w8-moonport",
-          "title": "New moonport opens in two weeks",
-          "description": "A giant cargo port on Valdoria's moon will open in about two weeks. Shipping companies expect to double their routes.",
+          "id": "w8-inquisition",
+          "title": "Howl builds a new shipyard for the Star Inquisition",
+          "description": "The Star Inquisition - the fleet's strictest and grumpiest order - needs 40 new patrol ships. Howl's new shipyard will open in about two weeks to build them.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "orbitra",
+              "target_id": "howl",
               "change_type": "percent",
               "value": 0.18,
               "delay_weeks": 2,
-              "consequence_text": "The moonport announced in Week 8 opened its gates - Orbitra's cargo doubled and its shares took off."
+              "consequence_text": "The Star Inquisition shipyard announced in Week 8 opened - patrol-ship orders flowed in and Howl's shares took off."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "orbitra",
+              "target_id": "howl",
               "change_type": "flat",
               "value": -0.1,
               "delay_weeks": 2,
-              "consequence_text": "Steady cargo from the new moonport made Orbitra's loans easier to repay."
+              "consequence_text": "A long contract with the Star Inquisition made Howl's loans easier to repay."
             }
           ]
         },
         {
           "id": "w8-noise-ufo",
-          "title": "Tourists 'see a UFO' over the moonport",
-          "description": "Blurry phone videos show a glowing dot above the moonport construction site. Fans call it 'proof of alien customers'.",
+          "title": "Tourists 'see a UFO' over Howl's test field",
+          "description": "Blurry phone videos show a glowing dot above the shipyard's test field. Fans call it 'proof of alien customers'.",
           "is_noise": true,
           "effects": []
         }
@@ -658,66 +658,66 @@
       "week": 9,
       "theme": "New money",
       "market_drift": {
-        "sizzle": -0.01,
-        "voltara": -0.015,
-        "medipulse": 0.005,
-        "pixelnest": 0.015,
-        "orbitra": -0.01,
-        "vaultline": -0.015
+        "cosmic-pizza": -0.01,
+        "keramzyt": -0.015,
+        "galac-kebab": 0.005,
+        "laser-dzida": 0.015,
+        "howl": -0.01,
+        "lecicki": -0.015
       },
       "events": [
         {
-          "id": "w9-ipo-vaultline",
-          "title": "Vaultline Bank lists its shares",
-          "description": "The 120-year-old Valdorian bank sold shares to the public for the first time. It is known for steady, generous dividends.",
+          "id": "w9-ipo-lecicki",
+          "title": "Łęcicki Renovations lists its shares",
+          "description": "The family renovation firm sold shares to the public for the first time. Its work is famously bad - but customers always pay, and Łęcicki simply moves on to a district where nobody knows him yet.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "vaultline",
+              "target_id": "lecicki",
               "change_type": "percent",
               "value": 0.03,
               "delay_weeks": 0,
-              "consequence_text": "Vaultline's debut was calm - exactly what its savers expected."
+              "consequence_text": "Łęcicki's debut was calm - the money keeps coming in, whatever the walls look like."
             }
           ]
         },
         {
           "id": "w9-rates",
           "title": "Central bank raises interest rates",
-          "description": "To slow rising prices, the central bank raised its main interest rate. Banks earn more on loans; big projects get more expensive.",
+          "description": "To slow rising prices, the central bank raised its main interest rate. Mortgages and big building projects get more expensive.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "percent",
               "value": -0.04,
               "delay_weeks": 0,
-              "consequence_text": "Higher rates make big power projects costlier - Voltara slipped right away."
+              "consequence_text": "Higher rates mean fewer new buildings - Fabric of Keramzyt slipped right away."
             },
             {
               "target_type": "stock_price",
-              "target_id": "vaultline",
+              "target_id": "lecicki",
               "change_type": "percent",
               "value": 0.12,
               "delay_weeks": 1,
-              "consequence_text": "Higher interest rates from Week 9 boosted Vaultline's lending profits."
+              "consequence_text": "With new flats too expensive after the Week 9 rate rise, Valdorians fixed up their old ones instead - Łęcicki's order book filled up."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "voltara",
+              "target_id": "keramzyt",
               "change_type": "flat",
               "value": 0.03,
               "delay_weeks": 0,
-              "consequence_text": "Higher interest rates make Voltara's construction loans more expensive."
+              "consequence_text": "Higher interest rates make Fabric of Keramzyt's moon-kiln loans more expensive."
             }
           ]
         },
         {
-          "id": "w9-noise-coin",
-          "title": "Influencer: 'MoonCoin will replace all banks'",
-          "description": "A famous streamer launched a joke currency called MoonCoin and told fans that banks are 'finished'.",
+          "id": "w9-noise-reviews",
+          "title": "Review portal: Łęcicki gets 1.1 stars",
+          "description": "'The tiles fell off after a week.' 'He painted my cat.' Nobody on Valdoria recommends Łęcicki to anyone. Commenters predict the end of the firm.",
           "is_noise": true,
           "effects": []
         }
@@ -727,12 +727,12 @@
       "week": 10,
       "theme": "Fees and strikes",
       "market_drift": {
-        "sizzle": 0.005,
-        "voltara": 0.01,
-        "medipulse": 0.015,
-        "pixelnest": -0.005,
-        "orbitra": 0.01,
-        "vaultline": 0.0
+        "cosmic-pizza": 0.005,
+        "keramzyt": 0.01,
+        "galac-kebab": 0.015,
+        "laser-dzida": -0.005,
+        "howl": 0.01,
+        "lecicki": 0.0
       },
       "events": [
         {
@@ -753,32 +753,32 @@
         },
         {
           "id": "w10-strike",
-          "title": "Moon dock workers go on strike",
-          "description": "Cargo is piling up at the moonport. The union says the strike could last several weeks.",
+          "title": "Howl shipyard welders go on strike",
+          "description": "Half-built starships are standing still at Howl's shipyard. The union says the strike could last several weeks.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "orbitra",
+              "target_id": "howl",
               "change_type": "percent",
               "value": -0.12,
               "delay_weeks": 0,
-              "consequence_text": "The strike froze Orbitra's deliveries the same week - its shares fell."
+              "consequence_text": "The strike froze Howl's deliveries the same week - its shares fell."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "orbitra",
+              "target_id": "howl",
               "change_type": "flat",
               "value": 0.1,
               "delay_weeks": 0,
-              "consequence_text": "Weeks without deliveries mean weeks without income - Orbitra's risk went up."
+              "consequence_text": "Weeks without finished ships mean weeks without income - Howl's risk went up."
             }
           ]
         },
         {
           "id": "w10-noise-ghost",
-          "title": "Rumor: a ghost haunts Voltara's hydro plant",
-          "description": "Night-shift workers joked about 'spooky noises' in the turbine hall. The story went viral.",
+          "title": "Rumor: a ghost haunts the keramzyt kiln",
+          "description": "Night-shift workers joked about 'spooky noises' in the kiln hall. The story went viral.",
           "is_noise": true,
           "effects": []
         }
@@ -788,59 +788,59 @@
       "week": 11,
       "theme": "Last orders",
       "market_drift": {
-        "sizzle": 0.015,
-        "voltara": 0.015,
-        "medipulse": -0.015,
-        "pixelnest": -0.015,
-        "orbitra": -0.015,
-        "vaultline": 0.015
+        "cosmic-pizza": 0.015,
+        "keramzyt": 0.015,
+        "galac-kebab": -0.015,
+        "laser-dzida": -0.015,
+        "howl": -0.015,
+        "lecicki": 0.015
       },
       "events": [
         {
-          "id": "w11-bank-dividend",
-          "title": "Vaultline promises a bigger dividend",
-          "description": "Higher interest income lets Vaultline pay shareholders more, starting next week.",
+          "id": "w11-new-colony",
+          "title": "Łęcicki moves to a brand-new moon colony",
+          "description": "Nobody on Valdoria will hire him twice, so Łęcicki is moving to the new moon colony: 10,000 fresh flats need finishing, and nobody there has heard of him yet. A bigger dividend starts next week.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "dividend",
-              "target_id": "vaultline",
+              "target_id": "lecicki",
               "change_type": "flat",
               "value": 0.4,
               "delay_weeks": 1,
-              "consequence_text": "Vaultline's bigger dividend promised in Week 11 is now being paid out."
+              "consequence_text": "Łęcicki's bigger dividend promised in Week 11 is now being paid out."
             }
           ]
         },
         {
-          "id": "w11-homecare",
-          "title": "MediPulse wins the national home-care program",
-          "description": "Every pensioner who wants one will get a free PulseBand. MediPulse will raise its dividend next week.",
+          "id": "w11-cup-final",
+          "title": "The Galactic Cup final comes to Valdoria",
+          "description": "Fans of two planets are flying in for the final. Every fan zone will be next to a Galac-Kebab stand, and the chain promises a bigger dividend from next week.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "percent",
               "value": 0.05,
               "delay_weeks": 0,
-              "consequence_text": "The home-care contract lifted MediPulse shares the same week."
+              "consequence_text": "Hungry football fans emptied every kebab grill - Galac-Kebab shares rose the same week."
             },
             {
               "target_type": "dividend",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "flat",
               "value": 0.2,
               "delay_weeks": 1,
-              "consequence_text": "MediPulse's bigger dividend promised in Week 11 is now being paid."
+              "consequence_text": "Galac-Kebab's bigger dividend promised in Week 11 is now being paid."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "flat",
               "value": -0.1,
               "delay_weeks": 0,
-              "consequence_text": "A two-year government contract makes MediPulse much safer."
+              "consequence_text": "Record fan-zone sales gave Galac-Kebab a fat cash cushion - its risk fell."
             }
           ]
         },
@@ -857,58 +857,58 @@
       "week": 12,
       "theme": "The final bell",
       "market_drift": {
-        "sizzle": 0.01,
-        "voltara": 0.005,
-        "medipulse": -0.01,
-        "pixelnest": -0.015,
-        "orbitra": 0.0,
-        "vaultline": 0.0
+        "cosmic-pizza": 0.01,
+        "keramzyt": 0.005,
+        "galac-kebab": -0.01,
+        "laser-dzida": -0.015,
+        "howl": 0.0,
+        "lecicki": 0.0
       },
       "events": [
         {
-          "id": "w12-export",
-          "title": "MediPulse signs an export deal with three countries",
-          "description": "Hospitals in Kestria, Nordhavia and the Solmara Islands will buy PulseBand 2 monitors for the next two years - MediPulse's biggest deal ever.",
+          "id": "w12-league",
+          "title": "Galac-Kebab becomes the official kebab of the Galactic League",
+          "description": "Stadiums on Kestria, Nordhavia and the Solmara Islands will serve only Galac-Kebab to fans for the next two years - the chain's biggest deal ever.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "stock_price",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "percent",
               "value": 0.1,
               "delay_weeks": 0,
-              "consequence_text": "The export deal lifted MediPulse shares the same week it was announced."
+              "consequence_text": "The league deal lifted Galac-Kebab shares the same week it was announced."
             },
             {
               "target_type": "bankruptcy_risk",
-              "target_id": "medipulse",
+              "target_id": "galac-kebab",
               "change_type": "flat",
               "value": -0.05,
               "delay_weeks": 0,
-              "consequence_text": "Export orders give MediPulse a safer, more steady income."
+              "consequence_text": "Two years of stadium crowds give Galac-Kebab a safer, steadier income."
             }
           ]
         },
         {
           "id": "w12-bonus",
-          "title": "Vaultline pays a year-end bonus dividend",
-          "description": "A strong year lets Vaultline add a one-off bonus to this week's dividend.",
+          "title": "Łęcicki pays a year-end bonus dividend",
+          "description": "A strong year lets Łęcicki add a one-off bonus to this week's dividend.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "dividend",
-              "target_id": "vaultline",
+              "target_id": "lecicki",
               "change_type": "flat",
               "value": 0.5,
               "delay_weeks": 0,
-              "consequence_text": "Vaultline's year-end bonus was added to this week's dividend."
+              "consequence_text": "Łęcicki's year-end bonus was added to this week's dividend."
             }
           ]
         },
         {
           "id": "w12-noise-merger",
-          "title": "Rumor: MediPulse and Orbitra to merge into 'MediCargo'",
-          "description": "A gossip site claims the two companies will fly 'hospitals into orbit'. Both deny it.",
+          "title": "Rumor: Galac-Kebab and Howl to merge into 'Kebab-Howl Express'",
+          "description": "A gossip site claims the two companies will 'fly kebabs into orbit at full howl'. Both deny it.",
           "is_noise": true,
           "effects": []
         }
@@ -917,62 +917,62 @@
   ],
   "noise_insights": {
     "w1-noise-chef": {
-      "related_company_id": "sizzle",
+      "related_company_id": "cosmic-pizza",
       "misleading_direction": "down",
-      "reveal": "One TV chef's opinion doesn't change how many burgers people actually buy. Sizzle & Co.'s sales were not affected."
+      "reveal": "One TV chef's opinion doesn't change how many pizzas people actually order. Cosmic Pizza's sales were not affected."
     },
     "w2-noise-clouds": {
-      "related_company_id": "voltara",
+      "related_company_id": "keramzyt",
       "misleading_direction": "down",
-      "reveal": "Wind turbines don't move clouds. A viral post isn't evidence - always ask who is behind a claim."
+      "reveal": "Keramzyt is baked clay - nothing hatches. A viral post isn't evidence: always ask who is behind a claim."
     },
     "w3-noise-takeover": {
-      "related_company_id": "sizzle",
+      "related_company_id": "cosmic-pizza",
       "misleading_direction": "up",
-      "reveal": "No buyer ever showed up - the 'takeover' was an anonymous rumor. If Sizzle & Co. rose this week, it was thanks to the cheap meat from Week 1."
+      "reveal": "No buyer ever showed up - the 'takeover' was an anonymous rumor. If Cosmic Pizza rose this week, it was thanks to the students from Week 1 moving into the dorms."
     },
     "w4-noise-yacht": {
-      "related_company_id": "medipulse",
+      "related_company_id": "galac-kebab",
       "misleading_direction": "down",
-      "reveal": "A blurry gossip photo says nothing about how a company is doing. MediPulse's founder was at a medical conference."
+      "reveal": "A blurry gossip photo says nothing about how a company is doing. Galac-Kebab's founder was at a food fair."
     },
     "w5-noise-astro": {
-      "related_company_id": "voltara",
+      "related_company_id": "keramzyt",
       "misleading_direction": "up",
-      "reveal": "Horoscopes don't set share prices. Voltara moved because of real news - like the heatwave, its record quarter and the price cap."
+      "reveal": "Horoscopes don't set share prices. Fabric of Keramzyt moved because of real news - the dry spell, its record quarter and the alien takeover attempt."
     },
     "w6-noise-fridge": {
-      "related_company_id": "pixelnest",
+      "related_company_id": "laser-dzida",
       "misleading_direction": "down",
-      "reveal": "The video was a joke. PixelNest's real problem this week was the factory fire - not snack-counting fridges."
+      "reveal": "The video was a joke. Laser Dzida Works' real problem this week was the factory fire caused by its own new technology."
     },
     "w7-noise-meme": {
-      "related_company_id": "sizzle",
+      "related_company_id": "cosmic-pizza",
       "misleading_direction": "up",
-      "reveal": "A funny meme doesn't sell more burgers. Sizzle & Co. was really moved by wages and food prices."
+      "reveal": "A funny meme doesn't sell more pizza. Cosmic Pizza was really moved by students, wages and food prices."
     },
     "w8-noise-ufo": {
-      "related_company_id": "orbitra",
+      "related_company_id": "howl",
       "misleading_direction": "up",
-      "reveal": "A glowing dot in a blurry video isn't a customer. Orbitra's real news was the new moonport."
+      "reveal": "A glowing dot in a blurry video isn't a customer. Howl's real news was the Star Inquisition shipyard."
     },
-    "w9-noise-coin": {
-      "related_company_id": "vaultline",
+    "w9-noise-reviews": {
+      "related_company_id": "lecicki",
       "misleading_direction": "down",
-      "reveal": "A joke coin from a streamer doesn't replace banks. Vaultline's business was unaffected."
+      "reveal": "Bad reviews didn't change the money: customers always pay, and Łęcicki just moves on to a district where nobody has read them. His income stayed exactly the same."
     },
     "w10-noise-ghost": {
-      "related_company_id": "voltara",
+      "related_company_id": "keramzyt",
       "misleading_direction": "down",
-      "reveal": "There is no ghost - just noisy old pipes. Voltara's real story was its orbital solar farm."
+      "reveal": "There is no ghost - just a noisy old kiln. Fabric of Keramzyt's real story was its moon kiln."
     },
     "w11-noise-diet": {
-      "related_company_id": "sizzle",
+      "related_company_id": "cosmic-pizza",
       "misleading_direction": "down",
       "reveal": "One celebrity's diet doesn't change what millions of people eat."
     },
     "w12-noise-merger": {
-      "related_company_id": "medipulse",
+      "related_company_id": "galac-kebab",
       "misleading_direction": "up",
       "reveal": "There was no merger - both companies denied it, and nothing changed."
     }
@@ -984,7 +984,7 @@
       "title_quiet": "A calm week on the market",
       "summary_moves": "Biggest price moves this week: {moves}.",
       "summary_no_moves": "Share prices barely moved this week.",
-      "lag_with_delayed": "Markets don't always react the moment news breaks. Restaurants buy food on monthly contracts, new laws start later and bills arrive weeks after a decision - so an effect can land long after the headline. This week: {items}.",
+      "lag_with_delayed": "Markets don't always react the moment news breaks. Restaurants buy ingredients on monthly contracts, new laws start later and bills arrive weeks after a decision - so an effect can land long after the headline. This week: {items}.",
       "lag_without_delayed": "Nothing from older news landed this week - but stay alert. Some headlines need one, two or even three weeks to reach a company's costs, its profits or your own bills. Re-read earlier news before you trade.",
       "immediate_note": "Some news moved prices the very same week: {items}.",
       "noise_note": "Not every headline matters: {items} turned out to be noise and changed nothing.",

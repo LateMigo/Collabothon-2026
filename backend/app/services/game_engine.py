@@ -296,8 +296,9 @@ class GameEngine:
             s = self.repo.scenario
             if session.advisor_uses_left <= 0:
                 raise AdvisorUnavailableError("You have used all your advisor hints for this game.")
-            if session.advisor_used_weeks.count(session.current_week) >= s.advisor_max_per_week:
-                raise AdvisorUnavailableError("The advisor is busy - you can ask again next week.")
+            next_week = self._advisor_next_week(session)
+            if next_week > session.current_week:
+                raise AdvisorUnavailableError(f"The advisor is busy - you can ask again in Week {next_week}.")
 
             # Seeded draw: the same seed reproduces the same advisor luck (useful for demos).
             rng = random.Random(f"{session.seed}:advisor:{session.current_week}:{session.advisor_uses_left}")
@@ -334,6 +335,12 @@ class GameEngine:
                 disclaimer=ADVISOR_DISCLAIMER,
                 state=self._build_state(session),
             )
+
+    def _advisor_next_week(self, session) -> int:
+        """First week the advisor can be asked again (one hint per `advisor_cooldown_weeks`)."""
+        if not session.advisor_used_weeks:
+            return 1
+        return max(session.advisor_used_weeks) + self.repo.scenario.advisor_cooldown_weeks
 
     # -------------------------------------------------------------- next week
     async def next_week(self, session_id: str) -> NextWeekResponse:
@@ -1197,12 +1204,17 @@ class GameEngine:
             weeks_until_due=(next_due - session.current_week) if next_due is not None else None,
             total_paid=session.total_rent_paid,
         )
-        used_this_week = session.advisor_used_weeks.count(session.current_week) >= s.advisor_max_per_week
+        advisor_next = self._advisor_next_week(session)
+        on_cooldown = advisor_next > session.current_week
         advisor = AdvisorView(
             uses_left=session.advisor_uses_left,
             uses_total=s.advisor_uses_per_game,
-            can_use=not session.is_game_over and session.advisor_uses_left > 0 and not used_this_week,
-            used_this_week=used_this_week,
+            can_use=not session.is_game_over and session.advisor_uses_left > 0 and not on_cooldown,
+            used_this_week=on_cooldown,
+            cooldown_weeks=s.advisor_cooldown_weeks,
+            next_available_week=(
+                advisor_next if on_cooldown and session.advisor_uses_left > 0 and advisor_next <= s.total_weeks else None
+            ),
             accuracy_percent=round(s.advisor_accuracy * 100),
             disclaimer=ADVISOR_DISCLAIMER,
         )

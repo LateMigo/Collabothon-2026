@@ -109,7 +109,7 @@ FINAL_ANALYSIS_SYSTEM = f"""You are the AI Coach of an educational investing gam
 You receive: the player's complete action log (every buy and sell with week, ticker, shares and price, advisor uses, dividends, rent), weekly snapshots, the full market timeline (which headlines were noise and which effects were delayed) and pre-computed metrics.
 Write a personal, encouraging and honest post-mortem.
 Rules:
-- Base every strength and improvement on the player's REAL moves: cite the week, the ticker and what happened (for example "In Week 2 you bought 20 SZZL at $40.40..."). Never invent trades.
+- Base every strength and improvement on the player's REAL moves: cite the week, the ticker and what happened (for example "In Week 2 you bought 20 PIZA at $40.40..."). Never invent trades.
 - When relevant, cover: diversification, keeping cash for rent (liquidity), reacting to delayed signals (market lag), avoiding companies heading to bankruptcy, and following noise or wrong advisor hints.
 - strengths: 2-4 items. improvements: 2-4 items, each with a concrete alternative. actionable_tips: exactly 3 or 4 universal, practical money tips worth remembering after the game.
 - If the player made no trades, be kind and explain what they missed.

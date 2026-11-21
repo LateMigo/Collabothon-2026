@@ -1,20 +1,8 @@
 import { useEffect, useState } from "react";
 import { money, moneyCompact, pct, plural, readStorage, tone, writeStorage } from "../utils/format.js";
+import BrandMark from "./BrandMark.jsx";
 
 const COLLAPSED_KEY = "fq.hudCollapsed";
-
-/** Crude little planet - the exchange's "official" emblem. */
-function BrandMark() {
-  return (
-    <svg className="brand__mark" viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="21" r="12" fill="var(--magenta)" stroke="#111" strokeWidth="2.5" />
-      <circle cx="15" cy="17" r="2.6" fill="#b8329f" />
-      <circle cx="24" cy="26" r="2" fill="#b8329f" />
-      <path d="M3 27 C 8 17, 33 11, 38 15" fill="none" stroke="#111" strokeWidth="5.5" strokeLinecap="round" />
-      <path d="M3 27 C 8 17, 33 11, 38 15" fill="none" stroke="var(--alien)" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 /** Shared rent logic for the full readout and the collapsed strip. */
 function rentStatus(rent, cash) {

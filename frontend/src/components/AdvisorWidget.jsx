@@ -7,7 +7,8 @@ export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAs
   let buttonText = "Ask the advisor";
   if (busy) buttonText = "The advisor is thinking…";
   else if (advisor.uses_left === 0) buttonText = "No hints left";
-  else if (advisor.used_this_week) buttonText = "Next hint: next week";
+  else if (advisor.used_this_week)
+    buttonText = advisor.next_available_week ? `Next hint: Week ${advisor.next_available_week}` : "No more hints this season";
 
   return (
     <section className="advisor" aria-labelledby="advisor-title">
@@ -16,10 +17,10 @@ export default function AdvisorWidget({ advisor, advice, currentWeek, busy, onAs
           <InvestorAvatar size={52} />
         </span>
         <div>
-          <p className="advisor__channel">Channel 7 &middot; Agent Gloop</p>
+          <p className="advisor__channel">Channel 7 &middot; Agent Vorr</p>
           <h2 id="advisor-title">Investment Advisor</h2>
           <p>
-            {advisor.uses_left} of {advisor.uses_total} hints left &middot; max 1 per week
+            {advisor.uses_left} of {advisor.uses_total} hints left &middot; {advisor.cooldown_weeks > 1 ? `1 every ${advisor.cooldown_weeks} weeks` : "max 1 per week"}
           </p>
         </div>
       </header>

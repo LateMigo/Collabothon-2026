@@ -192,7 +192,7 @@ class ScenarioSettings(_StrictModel):
     )
     risk_thresholds: RiskThresholds
     advisor_uses_per_game: int = Field(ge=0)
-    advisor_max_per_week: int = Field(ge=1)
+    advisor_cooldown_weeks: int = Field(default=1, ge=1, description="One advisor hint per this many weeks.")
     advisor_accuracy: float = Field(ge=0, le=1)
 
 
@@ -502,6 +502,8 @@ class AdvisorView(BaseModel):
     uses_total: int
     can_use: bool
     used_this_week: bool
+    cooldown_weeks: int
+    next_available_week: int | None
     accuracy_percent: int
     disclaimer: str
 

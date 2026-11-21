@@ -3,7 +3,7 @@
     "id": "pizza-clay-spears",
     "title": "Pizza, Clay & Laser Spears",
     "tagline": "Pizza / Keramzyt / Kebab / Laser spears / Starships / Renovation",
-    "description": "A pizza chain and a keramzyt factory open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, check each company's hard data, watch for delayed effects and keep enough money for rent - in cash or in the safe savings vault.",
+    "description": "A pizza chain and a keramzyt factory open the season in the Republic of Valdoria - and every 2 weeks a new company joins the exchange. Read the news, check each company's hard data, watch for delayed effects and keep enough money for rent - in cash, in the safe savings vault, or in bonds and term deposits that pay back on time.",
     "total_weeks": 12,
     "starting_cash": 3000.0,
     "initial_monthly_rent": 400.0,
@@ -18,7 +18,7 @@
     "advisor_cooldown_weeks": 1,
     "advisor_accuracy": 0.7,
     "risk_sensitivity": 0.12,
-    "savings_account_name": "Galactic Savings Vault",
+    "savings_account_name": "Commerzbank Savings",
     "savings_weekly_rate": 0.003
   },
   "industries": {
@@ -55,7 +55,8 @@
       "industry": "food",
       "main_product": "Pizza delivered anywhere in the system, still hot",
       "initial_price": 40.0,
-      "dividend_per_share": 0.4,
+      "dividend_per_share": 1.6,
+      "dividend_every_weeks": 4,
       "bankruptcy_risk": 0.22,
       "description": "A pizza chain with 64 restaurants and a fleet of delivery pods across Valdoria and its moon. Famous for its meteor-crust pepperoni and a hot sauce nobody has managed to copy. Restaurants buy their flour, cheese and meat on monthly contracts.",
       "country": "Republic of Valdoria",
@@ -76,7 +77,8 @@
       "industry": "materials",
       "main_product": "Keramzyt - light clay pebbles baked in giant kilns, used in walls, floors and space bases",
       "initial_price": 60.0,
-      "dividend_per_share": 0.9,
+      "dividend_per_share": 2.7,
+      "dividend_every_weeks": 3,
       "bankruptcy_risk": 0.12,
       "description": "The biggest keramzyt maker in the northern provinces. It digs clay, bakes it into light, bubbly pebbles in gas-fired rotary kilns and sells them to builders on long contracts.",
       "country": "Kingdom of Nordhavia",
@@ -97,7 +99,8 @@
       "industry": "streetfood",
       "main_product": "Kebabs for every species, including a zero-gravity döner",
       "initial_price": 50.0,
-      "dividend_per_share": 0.5,
+      "dividend_per_share": 1.0,
+      "dividend_every_weeks": 2,
       "bankruptcy_risk": 0.35,
       "description": "A fast-growing kebab chain with stands at spaceports, mines and night markets. Its new Zero-G Döner is wrapped so tightly that nothing floats away on orbital stations.",
       "country": "Solmara Islands",
@@ -118,7 +121,8 @@
       "industry": "defense",
       "main_product": "Laser spears (dzidas) for space rangers and moon-base guards",
       "initial_price": 80.0,
-      "dividend_per_share": 0.2,
+      "dividend_per_share": 0.8,
+      "dividend_every_weeks": 4,
       "bankruptcy_risk": 0.3,
       "description": "A fast-growing weapons maker that builds laser spears - 'dzidas' - for rangers, guards and collectors. Every spear is assembled in one large factory on the edge of Port Lumen.",
       "country": "Federation of Kestria",
@@ -139,7 +143,8 @@
       "industry": "starships",
       "main_product": "Cargo starships with famously loud engines",
       "initial_price": 30.0,
-      "dividend_per_share": 0.3,
+      "dividend_per_share": 0.9,
+      "dividend_every_weeks": 3,
       "bankruptcy_risk": 0.45,
       "description": "A young shipyard that builds cargo starships for traders flying between Valdoria and its moon. Its ships are cheap and tough - and you can hear them howl from three valleys away.",
       "country": "Republic of Valdoria",
@@ -160,7 +165,8 @@
       "industry": "renovation",
       "main_product": "Flat finishing and renovations: tiles, plaster, paint and 'it'll be done by Monday'",
       "initial_price": 70.0,
-      "dividend_per_share": 1.2,
+      "dividend_per_share": 2.4,
+      "dividend_every_weeks": 2,
       "bankruptcy_risk": 0.05,
       "description": "A 40-year-old family firm that finishes and renovates flats, offices and space-station cabins. Always busy, always slightly late, and known for steady, generous dividends.",
       "country": "Republic of Valdoria",
@@ -180,8 +186,8 @@
       "week": 1,
       "theme": "A record harvest",
       "market_drift": {
-        "cosmic-pizza": 0.0,
-        "keramzyt": -0.015
+        "cosmic-pizza": 0.04,
+        "keramzyt": -0.05
       },
       "events": [
         {
@@ -239,8 +245,8 @@
       "week": 2,
       "theme": "Taxes and profits",
       "market_drift": {
-        "cosmic-pizza": 0.03,
-        "keramzyt": 0.015
+        "cosmic-pizza": 0.06,
+        "keramzyt": 0.03
       },
       "reports": {
         "keramzyt": {
@@ -252,7 +258,7 @@
         {
           "id": "w2-excise",
           "title": "Parliament raises the energy excise tax",
-          "description": "Lawmakers voted to raise the excise tax on electricity and gas by 20%, starting next week. Landlords warn that the cost of heating and lighting buildings will be passed on to tenants.",
+          "description": "Lawmakers voted to raise the excise tax on electricity and gas by 20%. Landlords warn that once their current energy contracts run out - in about three weeks - the higher bills will be passed on to tenants.",
           "is_noise": false,
           "effects": [
             {
@@ -260,12 +266,12 @@
               "target_id": "global",
               "change_type": "flat",
               "value": 80,
-              "delay_weeks": 1,
-              "consequence_text": "The energy excise voted in Week 2 just reached your landlord's bills - your monthly rent went up by $80.",
+              "delay_weeks": 3,
+              "consequence_text": "The energy excise voted in Week 2 finally reached your landlord's bills - your monthly rent went up by $80.",
               "cause_chain": [
                 "Energy tax goes up",
-                "Heating buildings costs landlords more",
-                "Landlords pass it on to tenants"
+                "Landlords' energy contracts run out",
+                "Landlords pass the cost on to tenants"
               ]
             },
             {
@@ -305,9 +311,9 @@
               "target_type": "dividend",
               "target_id": "keramzyt",
               "change_type": "flat",
-              "value": 0.6,
+              "value": 1.8,
               "delay_weeks": 1,
-              "consequence_text": "The bigger dividend promised in Week 2 kicked in - Fabric of Keramzyt now pays shareholders more cash every week.",
+              "consequence_text": "The bigger dividend promised in Week 2 kicked in - Fabric of Keramzyt now pays more on every payout day.",
               "cause_chain": [
                 "Record profits",
                 "The board shares more cash with owners"
@@ -328,9 +334,9 @@
       "week": 3,
       "theme": "A new listing",
       "market_drift": {
-        "cosmic-pizza": 0.03,
-        "keramzyt": -0.015,
-        "galac-kebab": -0.03
+        "cosmic-pizza": 0.05,
+        "keramzyt": -0.04,
+        "galac-kebab": -0.06
       },
       "reports": {
         "cosmic-pizza": {
@@ -374,6 +380,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w3-noise-takeover",
+          "title": "Rumor: a foreign giant wants to buy Cosmic Pizza",
+          "description": "An anonymous forum user claims a huge foreign food group is about to buy Cosmic Pizza at a big premium. Neither company has commented.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w3-wages",
@@ -421,11 +434,25 @@
           ]
         },
         {
-          "id": "w3-noise-takeover",
-          "title": "Rumor: a foreign giant wants to buy Cosmic Pizza",
-          "description": "An anonymous forum user claims a huge foreign food group is about to buy Cosmic Pizza at a big premium. Neither company has commented.",
-          "is_noise": true,
-          "effects": []
+          "id": "w3-housing",
+          "title": "Parliament approves 5,000 new council flats",
+          "description": "Valdoria will build 5,000 cheap council flats for young families. Builders say the first foundations will be poured in about three weeks - and every wall needs light, warm building material.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "keramzyt",
+              "change_type": "percent",
+              "value": 0.22,
+              "delay_weeks": 3,
+              "consequence_text": "The council-flat building sites approved in Week 3 opened - builders ordered mountains of keramzyt and Fabric of Keramzyt's shares climbed.",
+              "cause_chain": [
+                "5,000 new flats approved",
+                "Building sites need light walls",
+                "Big keramzyt orders"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -433,9 +460,9 @@
       "week": 4,
       "theme": "Rent week",
       "market_drift": {
-        "cosmic-pizza": 0.0,
-        "keramzyt": -0.045,
-        "galac-kebab": -0.015
+        "cosmic-pizza": -0.04,
+        "keramzyt": -0.08,
+        "galac-kebab": -0.04
       },
       "reports": {
         "cosmic-pizza": {
@@ -467,6 +494,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w4-noise-yacht",
+          "title": "Gossip: Galac-Kebab boss spotted on a luxury yacht",
+          "description": "A celebrity magazine printed blurry photos of someone who 'looks like' Galac-Kebab's founder at a yacht party. The company says he was at a food fair that day.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w4-falafel",
@@ -501,11 +535,25 @@
           ]
         },
         {
-          "id": "w4-noise-yacht",
-          "title": "Gossip: Galac-Kebab boss spotted on a luxury yacht",
-          "description": "A celebrity magazine printed blurry photos of someone who 'looks like' Galac-Kebab's founder at a yacht party. The company says he was at a food fair that day.",
-          "is_noise": true,
-          "effects": []
+          "id": "w4-moon-pizza",
+          "title": "Cosmic Pizza opens its first restaurant on the moon",
+          "description": "Next week Cosmic Pizza opens a restaurant right next to the moon spaceport. 9,000 miners live there - and until now the nearest pizza was 380,000 km away.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "cosmic-pizza",
+              "change_type": "percent",
+              "value": 0.18,
+              "delay_weeks": 1,
+              "consequence_text": "Cosmic Pizza's moon restaurant (announced in Week 4) opened to queues of hungry miners - and its shares rose.",
+              "cause_chain": [
+                "A new restaurant on the moon",
+                "9,000 miners without pizza",
+                "New customers, more sales"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -513,10 +561,10 @@
       "week": 5,
       "theme": "Smart homes",
       "market_drift": {
-        "cosmic-pizza": 0.0,
-        "keramzyt": -0.015,
-        "galac-kebab": 0.03,
-        "laser-dzida": 0.045
+        "cosmic-pizza": 0.03,
+        "keramzyt": -0.05,
+        "galac-kebab": 0.06,
+        "laser-dzida": 0.08
       },
       "reports": {
         "cosmic-pizza": {
@@ -547,6 +595,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w5-noise-astro",
+          "title": "Astrologer: 'A golden week for building stocks'",
+          "description": "A popular astrologer told her 2 million followers that 'Jupiter is smiling on anything made of clay' this week.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w5-drought",
@@ -582,11 +637,44 @@
           ]
         },
         {
-          "id": "w5-noise-astro",
-          "title": "Astrologer: 'A golden week for building stocks'",
-          "description": "A popular astrologer told her 2 million followers that 'Jupiter is smiling on anything made of clay' this week.",
+          "id": "w5-noise-sock",
+          "title": "Food blogger: 'The Zero-G Döner tastes like an old sock'",
+          "description": "A food blogger with 80,000 followers tried a prototype Zero-G Döner and gave it one star out of ten. Galac-Kebab says the final recipe is different.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w5-court",
+          "title": "Court orders the aliens to sell their Keramzyt shares",
+          "description": "The Galactic Trade Court ruled that the Glutonian Empire bought its 30% stake illegally. The aliens have two weeks to sell every share and move their battle cruiser away from the clay pit.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "keramzyt",
+              "change_type": "percent",
+              "value": 0.15,
+              "delay_weeks": 2,
+              "consequence_text": "The court deadline from Week 5 ran out - the Glutonians sold their stake, the battle cruiser left and Fabric of Keramzyt's shares bounced back.",
+              "cause_chain": [
+                "Court blocks the takeover",
+                "The aliens must sell and leave",
+                "The kilns work in peace again"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "keramzyt",
+              "change_type": "flat",
+              "value": -0.04,
+              "delay_weeks": 2,
+              "consequence_text": "Without a battle cruiser over the clay pit, Fabric of Keramzyt looks a lot safer.",
+              "cause_chain": [
+                "The takeover threat is gone",
+                "Calm returns to the company"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -594,10 +682,10 @@
       "week": 6,
       "theme": "Smoke on the horizon",
       "market_drift": {
-        "cosmic-pizza": 0.0,
-        "keramzyt": 0.03,
-        "galac-kebab": 0.045,
-        "laser-dzida": 0.015
+        "cosmic-pizza": -0.05,
+        "keramzyt": 0.06,
+        "galac-kebab": 0.07,
+        "laser-dzida": 0.04
       },
       "reports": {
         "keramzyt": {
@@ -648,6 +736,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w6-noise-fridge",
+          "title": "Online trend: 'Laser spears can cut through time'",
+          "description": "A viral video claims a Dzida-3000 sliced 'a hole into last Tuesday'. Weapon reviewers point out that the video is satire.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w6-solar",
@@ -707,11 +802,32 @@
           ]
         },
         {
-          "id": "w6-noise-fridge",
-          "title": "Online trend: 'Laser spears can cut through time'",
-          "description": "A viral video claims a Dzida-3000 sliced 'a hole into last Tuesday'. Weapon reviewers point out that the video is satire.",
+          "id": "w6-noise-pod",
+          "title": "Viral video: 'Cosmic Pizza delivery pod crashes into a lake'",
+          "description": "A shaky video shows a pod with a pizza logo diving into a lake. It has 2 million views. A toy shop later said it was one of its remote-controlled models.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w6-moon-trade",
+          "title": "Valdoria and its moon sign a free-trade deal",
+          "description": "From next month there will be no customs fees on goods flying between Valdoria and its moon. Traders expect cargo flights to double within two weeks - and they will need more cargo ships.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "howl",
+              "change_type": "percent",
+              "value": 0.2,
+              "delay_weeks": 2,
+              "consequence_text": "The moon trade deal signed in Week 6 kicked in - traders ordered new cargo ships and Howl Starships' shares rose.",
+              "cause_chain": [
+                "No more customs fees",
+                "Twice as many cargo flights",
+                "Traders need more ships"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -719,11 +835,11 @@
       "week": 7,
       "theme": "Cargo rush",
       "market_drift": {
-        "cosmic-pizza": -0.03,
-        "keramzyt": 0.015,
-        "galac-kebab": -0.045,
-        "laser-dzida": 0.03,
-        "howl": 0.015
+        "cosmic-pizza": -0.06,
+        "keramzyt": 0.04,
+        "galac-kebab": -0.08,
+        "laser-dzida": 0.06,
+        "howl": 0.05
       },
       "reports": {
         "cosmic-pizza": {
@@ -756,6 +872,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w7-noise-meme",
+          "title": "Meme: 'Cosmic Pizza cures Monday blues'",
+          "description": "A cartoon claiming Cosmic Pizza 'fixes bad moods' was shared a million times.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w7-insurer",
@@ -791,11 +914,65 @@
           ]
         },
         {
-          "id": "w7-noise-meme",
-          "title": "Meme: 'Cosmic Pizza cures Monday blues'",
-          "description": "A cartoon claiming Cosmic Pizza 'fixes bad moods' was shared a million times.",
+          "id": "w7-noise-popstar",
+          "title": "Pop star buys a Howl ship 'because it's so loud'",
+          "description": "Singer Nova Klang bought a Howl cargo ship to go on tour. Her fans posted 'Howl to the moon!' a million times.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w7-meat",
+          "title": "Herd sickness on the Solmara Islands - meat prices set to jump",
+          "description": "Vets have closed half the cattle farms on the Solmara Islands. Butchers warn that meat will cost much more once their current stock runs out next week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "galac-kebab",
+              "change_type": "percent",
+              "value": -0.2,
+              "delay_weeks": 1,
+              "consequence_text": "The meat shortage from Week 7 reached the grills - kebab meat got expensive, Galac-Kebab's profit shrank and its shares fell.",
+              "cause_chain": [
+                "Half the cattle farms close",
+                "Meat gets expensive",
+                "Every kebab costs more to make"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "galac-kebab",
+              "change_type": "flat",
+              "value": 0.05,
+              "delay_weeks": 1,
+              "consequence_text": "Pricier meat since the Week 7 news ate into Galac-Kebab's thin cash cushion.",
+              "cause_chain": [
+                "Meat costs more",
+                "Less cash left each week"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w7-moon-coin",
+          "title": "'Moon-coin' crash scares the whole exchange",
+          "description": "A popular digital coin lost 90% of its value overnight. Frightened investors are selling everything they own - good companies and bad ones alike.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "global",
+              "change_type": "percent",
+              "value": -0.1,
+              "delay_weeks": 0,
+              "consequence_text": "Panic after the moon-coin crash dragged down every share on the exchange the same week - even companies with nothing to do with it. Only savings and bonds stayed calm.",
+              "cause_chain": [
+                "A digital coin crashes",
+                "Scared investors sell everything",
+                "Good shares fall with bad ones"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -803,11 +980,11 @@
       "week": 8,
       "theme": "Rent week again",
       "market_drift": {
-        "cosmic-pizza": -0.03,
-        "keramzyt": 0.0,
-        "galac-kebab": -0.015,
-        "laser-dzida": -0.03,
-        "howl": -0.015
+        "cosmic-pizza": -0.07,
+        "keramzyt": -0.03,
+        "galac-kebab": -0.04,
+        "laser-dzida": -0.06,
+        "howl": -0.06
       },
       "reports": {
         "laser-dzida": {
@@ -825,7 +1002,7 @@
         {
           "id": "w8-credit",
           "title": "Bank cuts Laser Dzida Works' credit line",
-          "description": "Valdoria Merchant Bank halved the amount Laser Dzida Works is allowed to borrow. Without new money, the company may struggle to pay suppliers and rebuild its factory.",
+          "description": "Commerzbank halved the amount Laser Dzida Works is allowed to borrow. Without new money, the company may struggle to pay suppliers and rebuild its factory.",
           "is_noise": false,
           "effects": [
             {
@@ -853,6 +1030,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w8-noise-ufo",
+          "title": "Tourists 'see a UFO' over Howl's test field",
+          "description": "Blurry phone videos show a glowing dot above the shipyard's test field. Fans call it 'proof of alien customers'.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w8-inquisition",
@@ -888,11 +1072,78 @@
           ]
         },
         {
-          "id": "w8-noise-ufo",
-          "title": "Tourists 'see a UFO' over Howl's test field",
-          "description": "Blurry phone videos show a glowing dot above the shipyard's test field. Fans call it 'proof of alien customers'.",
+          "id": "w8-noise-comeback",
+          "title": "Laser Dzida boss: 'Our comeback spear will make shareholders rich'",
+          "description": "At a press conference, owner Theo Brightwater promised a 'comeback spear' and called the share price 'a bargain'. He did not say where the money to rebuild the factory would come from.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w8-rain",
+          "title": "Rain returns to the southern farm belt",
+          "description": "After the long drought, a week of steady rain has soaked the fields. Farmers expect a bumper harvest - and cheaper flour and tomatoes in about two weeks.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "food",
+              "change_type": "percent",
+              "value": 0.22,
+              "delay_weeks": 2,
+              "consequence_text": "The rain from Week 8 brought a big harvest - flour and tomatoes got cheaper and Cosmic Pizza's profits (and shares) recovered.",
+              "cause_chain": [
+                "Rain ends the drought",
+                "A big harvest arrives",
+                "Ingredients get cheaper"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "cosmic-pizza",
+              "change_type": "flat",
+              "value": -0.05,
+              "delay_weeks": 2,
+              "consequence_text": "Cheaper ingredients since the Week 8 rain left Cosmic Pizza more cash to spare.",
+              "cause_chain": [
+                "Ingredients get cheaper",
+                "More cash left each month"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w8-cup-host",
+          "title": "Valdoria will host the Galactic Cup final in Week 11",
+          "description": "The league picked Valdoria for this season's final. 200,000 fans from two planets are expected in three weeks - and all of them will be hungry.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "galac-kebab",
+              "change_type": "percent",
+              "value": 0.1,
+              "delay_weeks": 3,
+              "consequence_text": "The Galactic Cup crowds announced in Week 8 arrived - fan zones emptied the kebab grills.",
+              "cause_chain": [
+                "200,000 fans fly in",
+                "Fans eat street food",
+                "Kebab sales jump"
+              ]
+            },
+            {
+              "target_type": "stock_price",
+              "target_id": "cosmic-pizza",
+              "change_type": "percent",
+              "value": 0.1,
+              "delay_weeks": 3,
+              "consequence_text": "Fans in town for the Galactic Cup (announced in Week 8) ordered pizza to their hotels all weekend.",
+              "cause_chain": [
+                "200,000 fans fly in",
+                "Hotels order pizza all night",
+                "Pizza sales jump"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -900,12 +1151,12 @@
       "week": 9,
       "theme": "New money",
       "market_drift": {
-        "cosmic-pizza": -0.03,
-        "keramzyt": -0.045,
-        "galac-kebab": 0.015,
-        "laser-dzida": 0.045,
-        "howl": -0.03,
-        "lecicki": -0.045
+        "cosmic-pizza": -0.05,
+        "keramzyt": -0.08,
+        "galac-kebab": 0.04,
+        "laser-dzida": 0.08,
+        "howl": -0.08,
+        "lecicki": -0.07
       },
       "reports": {
         "keramzyt": {
@@ -936,6 +1187,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "w9-noise-reviews",
+          "title": "Review portal: Łęcicki gets 1.1 stars",
+          "description": "'The tiles fell off after a week.' 'He painted my cat.' Nobody on Valdoria recommends Łęcicki to anyone. Commenters predict the end of the firm.",
+          "is_noise": true,
+          "effects": []
         },
         {
           "id": "w9-rates",
@@ -996,11 +1254,65 @@
           ]
         },
         {
-          "id": "w9-noise-reviews",
-          "title": "Review portal: Łęcicki gets 1.1 stars",
-          "description": "'The tiles fell off after a week.' 'He painted my cat.' Nobody on Valdoria recommends Łęcicki to anyone. Commenters predict the end of the firm.",
+          "id": "w9-noise-moon-dust",
+          "title": "Blogger: 'Moon-kiln pebbles are radioactive'",
+          "description": "A conspiracy blogger claims pebbles from Fabric of Keramzyt's moon kiln 'glow in the dark'. Safety inspectors measured them and found nothing unusual.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w9-howl-recall",
+          "title": "Howl recalls 12 freighters with faulty engines",
+          "description": "Inspectors found cracked engine mounts on Howl's newest freighters. All 12 ships must come back to the shipyard for free repairs this week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "howl",
+              "change_type": "percent",
+              "value": -0.15,
+              "delay_weeks": 0,
+              "consequence_text": "Paying for 12 free engine repairs hit Howl's profits right away - its shares dropped the same week.",
+              "cause_chain": [
+                "12 ships need free repairs",
+                "Repairs cost money instead of earning it",
+                "Less profit this season"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "howl",
+              "change_type": "flat",
+              "value": 0.04,
+              "delay_weeks": 0,
+              "consequence_text": "The recall drained some of Howl's thin cash cushion.",
+              "cause_chain": [
+                "Expensive repairs",
+                "Cash gets thinner"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w9-kebab-stations",
+          "title": "Galac-Kebab opens 40 stands on orbital stations",
+          "description": "With its food-safety approval in hand, Galac-Kebab is opening 40 Zero-G Döner stands on orbital stations. The first ones start serving next week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "galac-kebab",
+              "change_type": "percent",
+              "value": 0.15,
+              "delay_weeks": 1,
+              "consequence_text": "The 40 orbital stands announced in Week 9 opened - station crews queued for Zero-G Döners and Galac-Kebab's shares rose.",
+              "cause_chain": [
+                "40 new stands in orbit",
+                "Station crews want hot food",
+                "More kebabs sold"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1008,12 +1320,12 @@
       "week": 10,
       "theme": "Fees and strikes",
       "market_drift": {
-        "cosmic-pizza": 0.015,
-        "keramzyt": 0.03,
-        "galac-kebab": 0.045,
-        "laser-dzida": -0.015,
-        "howl": 0.03,
-        "lecicki": 0.0
+        "cosmic-pizza": 0.04,
+        "keramzyt": 0.06,
+        "galac-kebab": 0.07,
+        "laser-dzida": -0.04,
+        "howl": 0.07,
+        "lecicki": 0.03
       },
       "reports": {
         "keramzyt": {
@@ -1051,6 +1363,13 @@
           ]
         },
         {
+          "id": "w10-noise-ghost",
+          "title": "Rumor: a ghost haunts the keramzyt kiln",
+          "description": "Night-shift workers joked about 'spooky noises' in the kiln hall. The story went viral.",
+          "is_noise": true,
+          "effects": []
+        },
+        {
           "id": "w10-strike",
           "title": "Howl shipyard welders go on strike",
           "description": "Half-built starships are standing still at Howl's shipyard. The union says the strike could last several weeks.",
@@ -1084,11 +1403,53 @@
           ]
         },
         {
-          "id": "w10-noise-ghost",
-          "title": "Rumor: a ghost haunts the keramzyt kiln",
-          "description": "Night-shift workers joked about 'spooky noises' in the kiln hall. The story went viral.",
+          "id": "w10-noise-pineapple",
+          "title": "Petition to ban pineapple on pizza gets 2 million signatures",
+          "description": "A petition demanding a 'galaxy-wide pineapple ban' went viral. Parliament says it has no plans to discuss it.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w10-frost",
+          "title": "Early frost warning: building sites to close for winter",
+          "description": "Forecasters expect hard frost from next week, much earlier than usual. Most building sites in Valdoria will stop pouring walls until spring.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "keramzyt",
+              "change_type": "percent",
+              "value": -0.15,
+              "delay_weeks": 1,
+              "consequence_text": "The frost forecast in Week 10 arrived - building sites closed early and keramzyt orders froze too.",
+              "cause_chain": [
+                "Hard frost comes early",
+                "Building sites close for winter",
+                "Fewer keramzyt orders"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w10-parliament",
+          "title": "Łęcicki wins the contract to renovate the Parliament",
+          "description": "The Parliament building needs new floors, paint and 600 doors. Łęcicki's offer was the cheapest by far - work starts next week and, as always, is paid in advance.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "lecicki",
+              "change_type": "percent",
+              "value": 0.15,
+              "delay_weeks": 1,
+              "consequence_text": "The Parliament contract won in Week 10 started - paid in advance, as always - and Łęcicki's shares rose.",
+              "cause_chain": [
+                "A huge government contract",
+                "Paid before the work starts",
+                "Plenty of cash coming in"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1096,12 +1457,12 @@
       "week": 11,
       "theme": "Last orders",
       "market_drift": {
-        "cosmic-pizza": 0.045,
-        "keramzyt": 0.045,
-        "galac-kebab": -0.045,
-        "laser-dzida": -0.045,
-        "howl": -0.045,
-        "lecicki": 0.045
+        "cosmic-pizza": 0.08,
+        "keramzyt": 0.07,
+        "galac-kebab": -0.07,
+        "laser-dzida": -0.08,
+        "howl": -0.1,
+        "lecicki": 0.06
       },
       "reports": {
         "cosmic-pizza": {
@@ -1126,14 +1487,14 @@
         {
           "id": "w11-new-colony",
           "title": "Łęcicki moves to a brand-new moon colony",
-          "description": "Nobody on Valdoria will hire him twice, so Łęcicki is moving to the new moon colony: 10,000 fresh flats need finishing, and nobody there has heard of him yet. A bigger dividend starts next week.",
+          "description": "Nobody on Valdoria will hire him twice, so Łęcicki is moving to the new moon colony: 10,000 fresh flats need finishing, and nobody there has heard of him yet. A bigger dividend starts with the next payout.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "dividend",
               "target_id": "lecicki",
               "change_type": "flat",
-              "value": 0.4,
+              "value": 0.8,
               "delay_weeks": 1,
               "consequence_text": "Łęcicki's bigger dividend promised in Week 11 is now being paid out.",
               "cause_chain": [
@@ -1145,9 +1506,16 @@
           ]
         },
         {
+          "id": "w11-noise-diet",
+          "title": "Celebrity diet: 'Only eat purple food'",
+          "description": "A pop star says she eats only purple food now. Nutrition experts are not impressed.",
+          "is_noise": true,
+          "effects": []
+        },
+        {
           "id": "w11-cup-final",
-          "title": "The Galactic Cup final comes to Valdoria",
-          "description": "Fans of two planets are flying in for the final. Every fan zone will be next to a Galac-Kebab stand, and the chain promises a bigger dividend from next week.",
+          "title": "The Galactic Cup final weekend begins",
+          "description": "Fans of two planets have landed for the final. Every fan zone has a Galac-Kebab stand next to it, and the chain promises a bigger dividend at its next payout.",
           "is_noise": false,
           "effects": [
             {
@@ -1167,7 +1535,7 @@
               "target_type": "dividend",
               "target_id": "galac-kebab",
               "change_type": "flat",
-              "value": 0.2,
+              "value": 0.4,
               "delay_weeks": 1,
               "consequence_text": "Galac-Kebab's bigger dividend promised in Week 11 is now being paid.",
               "cause_chain": [
@@ -1190,11 +1558,65 @@
           ]
         },
         {
-          "id": "w11-noise-diet",
-          "title": "Celebrity diet: 'Only eat purple food'",
-          "description": "A pop star says she eats only purple food now. Nutrition experts are not impressed.",
+          "id": "w11-noise-founder",
+          "title": "Rumor: Howl's founder is leaving for a rival shipyard",
+          "description": "A gossip site claims Captain Mira Okafor-Lund was seen at a rival shipyard's party. Howl says she was at her cousin's wedding.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w11-strike-ends",
+          "title": "Howl's welders accept a deal - work restarts next week",
+          "description": "After two weeks of standstill, the union accepted a 10% raise. The half-built starships will be finished and delivered from next week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "howl",
+              "change_type": "percent",
+              "value": 0.25,
+              "delay_weeks": 1,
+              "consequence_text": "The strike deal from Week 11 got the shipyard moving - finished ships were delivered and paid for, and Howl's shares jumped back.",
+              "cause_chain": [
+                "The strike ends",
+                "Ships get finished again",
+                "Customers pay on delivery"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "howl",
+              "change_type": "flat",
+              "value": -0.08,
+              "delay_weeks": 1,
+              "consequence_text": "Delivered ships brought cash back into Howl - its risk eased.",
+              "cause_chain": [
+                "Ships are delivered",
+                "Cash comes back in"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w11-moon-order",
+          "title": "Moon colony orders keramzyt for 10,000 new flats",
+          "description": "The new moon colony picked Fabric of Keramzyt's moon kiln to supply walls for 10,000 flats. There is no winter on the moon, so building goes on all year. Deliveries start next week.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "keramzyt",
+              "change_type": "percent",
+              "value": 0.14,
+              "delay_weeks": 1,
+              "consequence_text": "Deliveries to the moon colony (ordered in Week 11) began - Fabric of Keramzyt kept selling while Valdoria's building sites were frozen.",
+              "cause_chain": [
+                "A huge order from the moon",
+                "No winter on the moon",
+                "Sales go on all year"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1202,12 +1624,12 @@
       "week": 12,
       "theme": "The final bell",
       "market_drift": {
-        "cosmic-pizza": 0.03,
-        "keramzyt": 0.015,
-        "galac-kebab": -0.03,
-        "laser-dzida": -0.045,
-        "howl": 0.0,
-        "lecicki": 0.0
+        "cosmic-pizza": 0.05,
+        "keramzyt": 0.04,
+        "galac-kebab": -0.05,
+        "laser-dzida": -0.08,
+        "howl": 0.04,
+        "lecicki": -0.03
       },
       "reports": {
         "galac-kebab": {
@@ -1252,18 +1674,25 @@
           ]
         },
         {
+          "id": "w12-noise-merger",
+          "title": "Rumor: Galac-Kebab and Howl to merge into 'Kebab-Howl Express'",
+          "description": "A gossip site claims the two companies will 'fly kebabs into orbit at full howl'. Both deny it.",
+          "is_noise": true,
+          "effects": []
+        },
+        {
           "id": "w12-bonus",
           "title": "Łęcicki pays a year-end bonus dividend",
-          "description": "A strong year lets Łęcicki add a one-off bonus to this week's dividend.",
+          "description": "A strong year lets Łęcicki add a one-off bonus to this week's dividend payout.",
           "is_noise": false,
           "effects": [
             {
               "target_type": "dividend",
               "target_id": "lecicki",
               "change_type": "flat",
-              "value": 0.5,
+              "value": 1.0,
               "delay_weeks": 0,
-              "consequence_text": "Łęcicki's year-end bonus was added to this week's dividend.",
+              "consequence_text": "Łęcicki's year-end bonus was added to this week's payout.",
               "cause_chain": [
                 "A strong year",
                 "A one-off bonus for owners"
@@ -1272,13 +1701,170 @@
           ]
         },
         {
-          "id": "w12-noise-merger",
-          "title": "Rumor: Galac-Kebab and Howl to merge into 'Kebab-Howl Express'",
-          "description": "A gossip site claims the two companies will 'fly kebabs into orbit at full howl'. Both deny it.",
+          "id": "w12-noise-prophecy",
+          "title": "Fortune teller: 'The whole exchange will crash on Monday'",
+          "description": "A famous fortune teller read tea leaves on live TV and predicted a giant crash 'after the final bell'. Economists say tea leaves don't read balance sheets.",
           "is_noise": true,
           "effects": []
+        },
+        {
+          "id": "w12-inspectors",
+          "title": "Inspectors find Łęcicki's tiles were glued with toothpaste",
+          "description": "Building inspectors fined Łęcicki Renovations after tiles fell off in 300 flats - they had been glued with toothpaste. The firm must redo the work for free.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "lecicki",
+              "change_type": "percent",
+              "value": -0.2,
+              "delay_weeks": 0,
+              "consequence_text": "The fine and 300 free repairs cost Łęcicki real money - its shares dropped the same week.",
+              "cause_chain": [
+                "Inspectors find bad work",
+                "A fine and free repairs",
+                "Less profit this season"
+              ]
+            },
+            {
+              "target_type": "bankruptcy_risk",
+              "target_id": "lecicki",
+              "change_type": "flat",
+              "value": 0.04,
+              "delay_weeks": 0,
+              "consequence_text": "Paying for free repairs thinned Łęcicki's cash a little.",
+              "cause_chain": [
+                "Free repairs cost money",
+                "Cash gets thinner"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "w12-pizza-record",
+          "title": "Cosmic Pizza reports its best season ever",
+          "description": "Students, moon miners and football fans helped Cosmic Pizza sell more pizza this season than ever before. The results were published this morning.",
+          "is_noise": false,
+          "effects": [
+            {
+              "target_type": "stock_price",
+              "target_id": "cosmic-pizza",
+              "change_type": "percent",
+              "value": 0.1,
+              "delay_weeks": 0,
+              "consequence_text": "Record season results lifted Cosmic Pizza's shares the day they were published.",
+              "cause_chain": [
+                "Record sales this season",
+                "More profit for the company"
+              ]
+            }
+          ]
         }
       ]
+    }
+  ],
+  "fixed_income": [
+    {
+      "id": "vault-deposit-2",
+      "kind": "deposit",
+      "name": "2-week term deposit",
+      "issuer": "Commerzbank",
+      "description": "Lock money in the bank for 2 weeks for a better rate than the savings account. Need it back sooner? You get your money back, but no interest.",
+      "weekly_rate": 0.004,
+      "term_weeks": 2,
+      "min_amount": 100,
+      "early_exit_fee": 0.0
+    },
+    {
+      "id": "vault-deposit-4",
+      "kind": "deposit",
+      "name": "4-week term deposit",
+      "issuer": "Commerzbank",
+      "description": "Locked for 4 weeks - about one rent period. Open it right after rent day and it pays back just before the next one. Leaving early costs you all the interest.",
+      "weekly_rate": 0.005,
+      "term_weeks": 4,
+      "min_amount": 100,
+      "early_exit_fee": 0.0
+    },
+    {
+      "id": "vault-deposit-8",
+      "kind": "deposit",
+      "name": "8-week term deposit",
+      "issuer": "Commerzbank",
+      "description": "The bank's best rate - but your money is locked for 8 weeks. Great for money you surely won't need for rent; leaving early costs you all the interest.",
+      "weekly_rate": 0.0065,
+      "term_weeks": 8,
+      "min_amount": 100,
+      "early_exit_fee": 0.0
+    },
+    {
+      "id": "treasury-6",
+      "kind": "bond",
+      "name": "Valdoria Treasury Bond (Week 6)",
+      "issuer": "Republic of Valdoria",
+      "description": "Lend money to the government until the end of Week 6 - halfway through the season. The Republic always pays its debts. Selling before Week 6 costs a 2% fee and the interest.",
+      "weekly_rate": 0.006,
+      "maturity_week": 6,
+      "available_until_week": 5,
+      "min_amount": 100,
+      "early_exit_fee": 0.02
+    },
+    {
+      "id": "treasury-12",
+      "kind": "bond",
+      "name": "Valdoria Treasury Bond (Week 12)",
+      "issuer": "Republic of Valdoria",
+      "description": "Lend money to the government until the very end of the season for a higher rate. No default risk - but the money is locked: selling early costs a 3% fee and the interest.",
+      "weekly_rate": 0.008,
+      "maturity_week": 12,
+      "available_until_week": 11,
+      "min_amount": 100,
+      "early_exit_fee": 0.03
+    },
+    {
+      "id": "keramzyt-bond",
+      "kind": "bond",
+      "name": "Fabric of Keramzyt moon-kiln bond",
+      "issuer": "Fabric of Keramzyt",
+      "issuer_company_id": "keramzyt",
+      "description": "Lend money to Fabric of Keramzyt for its moon kiln until the end of Week 12. A company bond pays more than a government one - but if the company goes bankrupt, most of the money is lost.",
+      "weekly_rate": 0.011,
+      "maturity_week": 12,
+      "available_from_week": 6,
+      "available_until_week": 11,
+      "min_amount": 100,
+      "early_exit_fee": 0.04,
+      "recovery_rate": 0.4
+    },
+    {
+      "id": "howl-bond",
+      "kind": "bond",
+      "name": "Howl Starships shipyard bond",
+      "issuer": "Howl Starships",
+      "issuer_company_id": "howl",
+      "description": "A young shipyard with big loans pays a high rate to borrow more. You are paid back at the end of Week 12 - if Howl survives until then. Check its bankruptcy risk first.",
+      "weekly_rate": 0.018,
+      "maturity_week": 12,
+      "available_from_week": 7,
+      "available_until_week": 11,
+      "min_amount": 100,
+      "early_exit_fee": 0.06,
+      "recovery_rate": 0.25
+    },
+    {
+      "id": "dzida-bond",
+      "kind": "bond",
+      "name": "Laser Dzida Works high-yield bond",
+      "issuer": "Laser Dzida Works",
+      "issuer_company_id": "laser-dzida",
+      "description": "3% interest every week! Laser Dzida Works needs money fast. Remember: the higher the rate, the more the borrower is worried nobody will lend to it. If it goes bankrupt, you get back only 15%.",
+      "weekly_rate": 0.03,
+      "maturity_week": 12,
+      "available_from_week": 5,
+      "available_until_week": 11,
+      "min_amount": 100,
+      "early_exit_fee": 0.1,
+      "recovery_rate": 0.15
     }
   ],
   "noise_insights": {
@@ -1401,6 +1987,86 @@
         "Mergers can lift share prices",
         "Galac-Kebab could jump"
       ]
+    },
+    "w5-noise-sock": {
+      "related_company_id": "galac-kebab",
+      "misleading_direction": "down",
+      "reveal": "One blogger's taste test doesn't decide a food-safety approval. The approval expected since Week 3 came through and Galac-Kebab's shares jumped anyway.",
+      "misleading_chain": [
+        "A blogger hates the new döner",
+        "Customers might stay away",
+        "Galac-Kebab could sell less"
+      ]
+    },
+    "w6-noise-pod": {
+      "related_company_id": "cosmic-pizza",
+      "misleading_direction": "down",
+      "reveal": "It was a toy, not a real delivery pod - Cosmic Pizza's deliveries and sales never changed.",
+      "misleading_chain": [
+        "A pizza pod crashes on video",
+        "Customers may fear lost orders",
+        "Cosmic Pizza could sell less"
+      ]
+    },
+    "w7-noise-popstar": {
+      "related_company_id": "howl",
+      "misleading_direction": "up",
+      "reveal": "One celebrity buying one ship doesn't change a shipyard's order book. Howl moved because of real news: the moon trade deal, the recall, the Star Inquisition contract and the strike.",
+      "misleading_chain": [
+        "A pop star buys a Howl ship",
+        "Millions of fans see it",
+        "Orders could pour in"
+      ]
+    },
+    "w8-noise-comeback": {
+      "related_company_id": "laser-dzida",
+      "misleading_direction": "up",
+      "reveal": "Promises are not money. With no factory, no insurance payout and no bank credit, Laser Dzida Works went bankrupt - a cheap-looking share can still fall to zero.",
+      "misleading_chain": [
+        "The boss promises a comeback",
+        "The shares look cheap",
+        "The price could bounce back"
+      ]
+    },
+    "w9-noise-moon-dust": {
+      "related_company_id": "keramzyt",
+      "misleading_direction": "down",
+      "reveal": "Inspectors measured the pebbles and found nothing - the 'glow' was a phone filter. The moon kiln's real news was its first production week.",
+      "misleading_chain": [
+        "Claim: the pebbles are radioactive",
+        "Builders might stop buying",
+        "Keramzyt could lose orders"
+      ]
+    },
+    "w10-noise-pineapple": {
+      "related_company_id": "cosmic-pizza",
+      "misleading_direction": "down",
+      "reveal": "Nobody banned anything, and Cosmic Pizza still sells pineapple pizza to whoever orders it. Its real news was the big harvest after the rain.",
+      "misleading_chain": [
+        "A ban on pineapple pizza?",
+        "Cosmic Pizza could lose a menu item",
+        "Sales might drop"
+      ]
+    },
+    "w11-noise-founder": {
+      "related_company_id": "howl",
+      "misleading_direction": "down",
+      "reveal": "She was at a family wedding and still runs Howl. The real news was the end of the strike - and Howl's shares jumped when work restarted.",
+      "misleading_chain": [
+        "The founder may leave",
+        "The shipyard could lose its leader",
+        "Howl's shares could fall"
+      ]
+    },
+    "w12-noise-prophecy": {
+      "related_company_id": null,
+      "misleading_direction": "down",
+      "reveal": "Tea leaves don't move markets. Nothing crashed - selling everything in a panic would only have cost you the selling fee.",
+      "misleading_chain": [
+        "A fortune teller predicts a crash",
+        "Everyone might sell at once",
+        "All prices could fall"
+      ]
     }
   },
   "fallback_texts": {
@@ -1416,18 +2082,21 @@
       "noise_note": "Not every headline matters: {items} turned out to be noise and changed nothing.",
       "rent_change_note": "Your monthly rent changed by {delta} (now {rent}) because of news from Week {source_week}.",
       "rent_paid_note": "You paid {amount} in rent this week.",
-      "dividend_note": "Your shares paid you {amount} in dividends - cash just for owning them.",
+      "dividend_note": "Companies with a payout day this week paid you {amount} in dividends - cash just for owning their shares.",
       "bankruptcy_note": "{names} went bankrupt. Its shares are now worth $0 and can no longer be traded.",
       "takeaway_delayed": "Today's headline can be next month's price move. Before you trade, look back at older news.",
       "takeaway_immediate": "Big surprises, like disasters, hit prices right away. Spreading your money across companies softens the blow.",
       "takeaway_quiet": "Calm weeks are a good moment to check your plan and your cash reserve for upcoming bills.",
       "savings_note": "Your savings account paid you {amount} in interest ({rate} of your balance) - small, but completely safe.",
       "savings_rent_note": "Your cash was short on rent day, so {amount} moved automatically from savings - exactly what a bill buffer is for.",
-      "savings_rate_note": "Interest rates rose because of news from Week {source_week}: your savings now earn {new} a week instead of {old}."
+      "savings_rate_note": "Interest rates rose because of news from Week {source_week}: your savings now earn {new} a week instead of {old}.",
+      "fixed_income_note": "Your bonds and term deposits earned {amount} in interest this week - a fixed rate for locking money away.",
+      "fixed_income_matured_note": "{name} reached maturity and paid back {amount} ({interest} of it interest) into your cash.",
+      "fixed_income_default_note": "{name} defaulted: its issuer went bankrupt, so you got back only {recovered} and lost {lost}. A higher interest rate always comes with a higher risk."
     },
     "glossary": {
       "Market lag": "The delay between a piece of news and its effect on prices. Some news needs weeks to show up.",
-      "Dividend": "Cash a company pays to its shareholders, just for owning its shares.",
+      "Dividend": "Cash a company pays to its shareholders on its payout days, just for owning its shares.",
       "Share price": "What one small piece of a company costs right now.",
       "Bankruptcy risk": "How likely a company is to run out of money. If it goes bankrupt, its shares can become worthless.",
       "Liquidity": "How much cash you can use right away - for example, to pay your rent.",
@@ -1440,13 +2109,18 @@
       "Interest rate": "The percentage a bank pays (or charges) for money. When the central bank raises it, savings earn more and loans cost more.",
       "Profit margin": "How many cents of every dollar of sales a company keeps as profit.",
       "Debt": "Money a company has borrowed and must pay back, usually with interest.",
-      "Emergency fund": "Savings kept only for bills and surprises, so you never have to sell investments in a hurry."
+      "Emergency fund": "Savings kept only for bills and surprises, so you never have to sell investments in a hurry.",
+      "Dividend calendar": "Each company pays dividends on its own schedule - every 2, 3 or 4 weeks. Only people who own the shares on payout day get paid.",
+      "Bond": "A loan you give to a government or a company. It pays you a fixed interest and gives your money back on a set date.",
+      "Term deposit": "Money locked in a bank for a fixed time in exchange for a better interest rate. Take it out early and you lose the interest.",
+      "Maturity": "The day a bond or term deposit pays your money back, together with the interest.",
+      "Default": "When a borrower can't pay its debts. A bankrupt company's bonds default, and lenders get back only a small part."
     },
     "advisor": {
       "accurate_delayed": "Keep an eye on {company} ({ticker}). '{event}' could {direction} its price {timing}. Markets often need time to catch up with news.",
       "accurate_immediate": "'{event}' looks important for {company} ({ticker}). I'd expect it to {direction} the price {timing}.",
       "accurate_risk": "Careful with {company} ({ticker}). After '{event}', its money problems look serious - if a company goes bankrupt, its shares can be worth nothing.",
-      "accurate_dividend": "'{event}' could change how much {company} ({ticker}) pays its shareholders {timing}. Dividends add up week after week.",
+      "accurate_dividend": "'{event}' could change how much {company} ({ticker}) pays its shareholders {timing}. Check its payout calendar - only owners on payout day get the cash.",
       "accurate_rent": "'{event}' may not move share prices much, but it could make your bills bigger {timing}. Keep some cash ready for rent.",
       "misleading_noise": "Big news! '{event}' could really {direction} the price of {company} ({ticker}) - and fast. If I were you, I'd act this week.",
       "misleading_inverted": "I have a feeling about {company} ({ticker}): after '{event}', I think the market will {direction} its price. Trust me on this one.",
@@ -1533,7 +2207,7 @@
         },
         "dividends": {
           "title": "Let dividends work for you",
-          "tip": "Steady companies that pay dividends hand you cash regularly - even in weeks when prices stand still."
+          "tip": "Steady companies pay you cash on their payout days - even in weeks when prices stand still. Check each company's dividend calendar before you buy or sell."
         },
         "advisor": {
           "title": "Trust, but verify",
@@ -1587,7 +2261,7 @@
         },
         "s_profit": {
           "title": "You grew your money",
-          "detail": "You finished with {net_worth}, a return of {roi}, after paying all your bills."
+          "detail": "You finished with {net_worth}. Your investments returned {roi} - and you paid all your bills on top of that."
         },
         "s_finished": {
           "title": "You stayed in the game",
@@ -1652,6 +2326,14 @@
         "i_bought_bad_news": {
           "title": "You bought into bad news",
           "detail": "In Week {buy_week} you bought {ticker} even though '{event}' (Week {source_week}) had already warned about it - in Week {trigger_week} it hit the price ({impact}), about {loss} on your shares."
+        },
+        "s_fixed_income": {
+          "title": "Your bonds and deposits paid off",
+          "detail": "Your {count} bond and deposit purchases earned {interest} in fixed interest - money that grew without any price swings."
+        },
+        "i_bond_default": {
+          "title": "A high-yield bond went bust",
+          "detail": "{name} defaulted when its issuer went bankrupt in Week {week} - about {loss} was lost. A very high interest rate is the market's warning that the borrower might not pay back."
         }
       },
       "verdicts": {

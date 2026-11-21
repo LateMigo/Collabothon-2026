@@ -42,6 +42,19 @@ from app.models.schemas import (
     FinalAnalysisContext,
     FinalAnalysisResponse,
     FinalStats,
+    FixedIncomeAction,
+    FixedIncomeDefault,
+    FixedIncomeHolding,
+    FixedIncomeHoldingView,
+    FixedIncomeKind,
+    FixedIncomeOfferView,
+    FixedIncomePayout,
+    FixedIncomeProduct,
+    FixedIncomeRequest,
+    FixedIncomeResponse,
+    FixedIncomeStatus,
+    FixedIncomeUpdate,
+    FixedIncomeView,
     FundamentalsView,
     GameMode,
     GameSession,
@@ -58,6 +71,7 @@ from app.models.schemas import (
     RentUpdate,
     RentView,
     RiskLevel,
+    RiskScale,
     SavingsAction,
     SavingsRequest,
     SavingsResponse,
@@ -161,6 +175,7 @@ class GameEngine:
             listing_interval_weeks=self._listing_interval(),
             savings_account_name=s.savings_account_name,
             savings_weekly_rate_pct=rate_pct(s.savings_weekly_rate),
+            fixed_income_products=len(self.repo.fixed_income_products),
             available_modes=[GameMode.SINGLE_INVESTOR],
             coming_soon_modes=[GameMode.CEO],
         )
@@ -347,6 +362,118 @@ class GameEngine:
                 state=self._build_state(session),
             )
 
+    # ----------------------------------------------------- bonds & deposits
+    async def fixed_income(self, session_id: str, request: FixedIncomeRequest) -> FixedIncomeResponse:
+        """Buy a bond / open a term deposit with cash, or cash one out before it matures."""
+        async with self.store.lock(session_id):
+            session = await self._load(session_id)
+            self._ensure_running(session)
+            week = session.current_week
+            if request.action == FixedIncomeAction.BUY:
+                product = self.repo.fixed_income_product(request.product_id or "")
+                if product is None:
+                    raise InvalidTradeError("Unknown bond or deposit.")
+                reason = self._fi_unavailable_reason(session, product, week)
+                if reason:
+                    raise InvalidTradeError(reason)
+                requested = r2(request.amount or 0.0)
+                amount = r2(min(requested, session.cash))
+                if amount < product.min_amount:
+                    if session.cash < product.min_amount:
+                        raise InvalidTradeError(
+                            f"You need at least {money(product.min_amount)} in cash for the {product.name}."
+                        )
+                    raise InvalidTradeError(f"The minimum for the {product.name} is {money(product.min_amount)}.")
+                maturity = self.repo.fixed_income_maturity(product, week)
+                holding = FixedIncomeHolding(
+                    holding_id=uuid.uuid4().hex[:12],
+                    product_id=product.id,
+                    principal=amount,
+                    opened_week=week,
+                    maturity_week=maturity,
+                    weekly_rate=product.weekly_rate,
+                )
+                session.fixed_income.append(holding)
+                session.cash = r2(session.cash - amount)
+                verb = "Opened" if product.kind == FixedIncomeKind.DEPOSIT else "Bought"
+                note = f"{verb} {product.name}: {money(amount)} at {rate_pct(product.weekly_rate):g}% a week"
+                self._log(
+                    session,
+                    action_type=ActionType.FIXED_INCOME_BUY,
+                    company_id=product.issuer_company_id,
+                    amount=amount,
+                    note=note,
+                    details={
+                        "product_id": product.id,
+                        "holding_id": holding.holding_id,
+                        "maturity_week": maturity,
+                        "weekly_rate": product.weekly_rate,
+                        "was_clamped": abs(amount - requested) > 0.004,
+                    },
+                )
+                await self.store.save(session)
+                payout = self._fi_payout_at_maturity(holding)
+                message = (
+                    f"{note}. It pays back {money(payout)} at the end of Week {maturity} "
+                    f"({money(payout - amount)} interest)."
+                )
+                if abs(amount - requested) > 0.004:
+                    message += f" (Adjusted from {money(requested)} to the cash you have.)"
+                return FixedIncomeResponse(
+                    action=request.action,
+                    holding_id=holding.holding_id,
+                    amount=amount,
+                    message=message,
+                    state=self._build_state(session),
+                )
+
+            holding = next(
+                (h for h in session.fixed_income if h.holding_id == (request.holding_id or "")), None
+            )
+            if holding is None:
+                raise InvalidTradeError("Unknown bond or deposit.")
+            if holding.status != FixedIncomeStatus.ACTIVE:
+                raise InvalidTradeError("This bond or deposit is already closed.")
+            product = self.repo.fixed_income_product(holding.product_id)
+            back = self._fi_early_exit_value(holding)
+            lost_interest = holding.accrued_interest
+            fee = r2(holding.principal - back)
+            holding.status = FixedIncomeStatus.CLOSED_EARLY
+            holding.closed_week = week
+            holding.payout = back
+            session.cash = r2(session.cash + back)
+            name = product.name if product else holding.product_id
+            note = f"Cashed out {name} early: got {money(back)} back"
+            self._log(
+                session,
+                action_type=ActionType.FIXED_INCOME_EXIT,
+                company_id=product.issuer_company_id if product else None,
+                amount=back,
+                note=note,
+                details={
+                    "product_id": holding.product_id,
+                    "holding_id": holding.holding_id,
+                    "fee": fee,
+                    "lost_interest": lost_interest,
+                },
+            )
+            await self.store.save(session)
+            message = f"{note} from {money(holding.principal)}."
+            extras = []
+            if fee > 0:
+                extras.append(f"{money(fee)} early-exit fee")
+            if lost_interest > 0:
+                extras.append(f"{money(lost_interest)} of interest lost")
+            if extras:
+                message += " Cost of leaving early: " + " and ".join(extras) + "."
+            return FixedIncomeResponse(
+                action=request.action,
+                holding_id=holding.holding_id,
+                amount=back,
+                message=message,
+                state=self._build_state(session),
+            )
+
     # ---------------------------------------------------------------- advisor
     async def use_advisor(self, session_id: str) -> AdvisorResponse:
         async with self.store.lock(session_id):
@@ -415,6 +542,7 @@ class GameEngine:
                 raise GameOverError("There is no scripted content for this week.")
 
             net_worth_before = self._net_worth(session)
+            stocks_before = self._stocks_value(session)
             prices_before = {cid: c.price for cid, c in session.companies.items() if self._is_listed(cid, week)}
             holdings_before = {cid: p.shares for cid, p in session.portfolio.items()}
             rent_before = session.monthly_rent
@@ -509,13 +637,23 @@ class GameEngine:
                 session.savings_rate_changed_week = week
                 session.savings_rate_source_week = rate_source_week
 
-            # 4a. Bankruptcy check.
-            bankruptcies = self._check_bankruptcies(session, week)
-            # 4b. Dividends.
+            # 4a. Bankruptcy check (a bankrupt issuer's bonds default too).
+            bankruptcies, defaults = self._check_bankruptcies(session, week)
+            stocks_change = r2(self._stocks_value(session) - stocks_before)
+            # 4b. Dividends (each company pays on its own calendar).
             dividends = self._pay_dividends(session, week)
             dividends_total = r2(sum(d.amount for d in dividends))
             # 4b'. Interest on the savings account (credited to the account itself).
             interest = self._pay_interest(session, week)
+            # 4b''. Bonds & term deposits: weekly interest, then pay back whatever matures this week.
+            fi_interest = self._accrue_fixed_income(session)
+            matured = self._mature_fixed_income(session, week)
+            fixed_income_update = FixedIncomeUpdate(
+                interest=fi_interest,
+                matured=matured,
+                defaulted=defaults,
+                value_after=self._fixed_income_value(session),
+            )
             # 4c. Price history for the SVG chart.
             session.price_history.append(
                 PricePoint(
@@ -529,14 +667,16 @@ class GameEngine:
             rent_from_savings = payment.from_savings if payment else 0.0
             # 4e. Weekly snapshot for the end-of-game analysis.
             stocks_value = self._stocks_value(session)
+            fixed_income_value = self._fixed_income_value(session)
             session.weekly_snapshots.append(
                 WeeklySnapshot(
                     week=week,
                     cash=session.cash,
                     stocks_value=stocks_value,
                     savings=session.savings,
-                    interest_earned=interest,
-                    net_worth=r2(session.cash + session.savings + stocks_value),
+                    interest_earned=r2(interest + fi_interest),
+                    fixed_income_value=fixed_income_value,
+                    net_worth=r2(session.cash + session.savings + stocks_value + fixed_income_value),
                     holdings={cid: p.shares for cid, p in session.portfolio.items() if p.shares > 0},
                     prices={cid: c.price for cid, c in session.companies.items() if self._is_listed(cid, week)},
                     dividends_received=dividends_total,
@@ -568,6 +708,7 @@ class GameEngine:
                     else 0.0,
                     risk_before=round(c.previous_risk, 4),
                     risk_after=round(c.bankruptcy_risk, 4),
+                    risk_level=self._risk_level(c.bankruptcy_risk),
                     is_bankrupt=c.is_bankrupt,
                     shares_owned=holdings_before.get(cid, 0),
                 )
@@ -613,6 +754,9 @@ class GameEngine:
                 balance_after=session.savings,
             )
             net_worth_after = self._net_worth(session)
+            rent_paid = payment.amount if payment else 0.0
+            # Investing result = everything except living costs: rent is a bill, not an investment loss.
+            investment_change = r2(net_worth_after - net_worth_before + rent_paid)
 
             # 5. AI micro-lesson about market lag (Gemini or fallback).
             lesson = await self.ai.generate_week_summary(
@@ -624,9 +768,11 @@ class GameEngine:
                     unmasked_noise=unmasked,
                     rent=rent_update,
                     savings=savings_update,
+                    fixed_income=fixed_income_update,
                     dividends_total=dividends_total,
                     bankruptcies=bankruptcies,
                     net_worth_change=r2(net_worth_after - net_worth_before),
+                    investment_change=investment_change,
                 )
             )
 
@@ -651,9 +797,15 @@ class GameEngine:
                 dividends_total=dividends_total,
                 rent=rent_update,
                 savings=savings_update,
+                fixed_income=fixed_income_update,
                 bankruptcies=bankruptcies,
                 unmasked_noise=unmasked,
                 lesson=lesson,
+                stocks_change=stocks_change,
+                investment_change=investment_change,
+                investment_change_pct=round(investment_change / net_worth_before * 100, 2)
+                if net_worth_before > 0
+                else 0.0,
                 net_worth_before=net_worth_before,
                 net_worth_after=net_worth_after,
                 net_worth_change=r2(net_worth_after - net_worth_before),
@@ -687,6 +839,8 @@ class GameEngine:
                 final_stocks_value=stocks_value,
                 final_savings=session.savings,
                 total_interest=r2(session.total_interest),
+                final_fixed_income=self._fixed_income_value(session),
+                total_fixed_income_interest=r2(session.total_fixed_income_interest),
                 trades_count=metrics.trades_count,
                 weeks_played=metrics.weeks_played,
                 end_reason=session.end_reason,
@@ -865,9 +1019,12 @@ class GameEngine:
     # =====================================================================
     # Internals - settlements
     # =====================================================================
-    def _check_bankruptcies(self, session: GameSession, week: int) -> list[BankruptcyNotice]:
+    def _check_bankruptcies(
+        self, session: GameSession, week: int
+    ) -> tuple[list[BankruptcyNotice], list[FixedIncomeDefault]]:
         threshold = self.repo.scenario.bankruptcy_threshold
         notices = []
+        all_defaults: list[FixedIncomeDefault] = []
         for company_id, state in session.companies.items():
             if state.is_bankrupt or state.bankruptcy_risk < threshold or not self._is_listed(company_id, week):
                 continue
@@ -890,6 +1047,13 @@ class GameEngine:
             message = f"{company.name} ({company.ticker}) went bankrupt. Its shares are now worth $0 and trading has stopped."
             if shares:
                 message += f" You held {shares} shares - about {money(lost)} is gone."
+            defaults = self._default_fixed_income(session, company_id, week)
+            all_defaults.extend(defaults)
+            for item in defaults:
+                message += (
+                    f" Your {item.name} defaulted: you got back only {money(item.recovered)} "
+                    f"of the {money(item.principal)} you lent."
+                )
             self._log(
                 session,
                 action_type=ActionType.BANKRUPTCY,
@@ -909,10 +1073,10 @@ class GameEngine:
                     ticker=company.ticker,
                     message=message,
                     player_shares=shares,
-                    lost_value=lost,
+                    lost_value=r2(lost + sum(d.lost for d in defaults)),
                 )
             )
-        return notices
+        return notices, all_defaults
 
     def _pay_dividends(self, session: GameSession, week: int) -> list[DividendItem]:
         if not session.modifiers.enable_dividends:
@@ -922,6 +1086,8 @@ class GameEngine:
             state = session.companies[company_id]
             if position.shares <= 0 or state.is_bankrupt or state.dividend_per_share <= 0:
                 continue
+            if not self.repo.pays_dividend(company_id, week):
+                continue  # not this company's payout week - owning the shares on payout day is what counts
             amount = r2(position.shares * state.dividend_per_share)
             if amount <= 0:
                 continue
@@ -967,6 +1133,112 @@ class GameEngine:
             week=week,
         )
         return interest
+
+    # ------------------------------------------------------ bonds & deposits
+    def _accrue_fixed_income(self, session: GameSession) -> float:
+        """Simple interest: every active holding earns principal x weekly rate at each week's close."""
+        total = 0.0
+        for holding in session.fixed_income:
+            if holding.status != FixedIncomeStatus.ACTIVE:
+                continue
+            earned = r2(holding.principal * holding.weekly_rate)
+            holding.accrued_interest = r2(holding.accrued_interest + earned)
+            total += earned
+        return r2(total)
+
+    def _mature_fixed_income(self, session: GameSession, week: int) -> list[FixedIncomePayout]:
+        """Holdings that reach maturity this week pay principal + interest into cash (before rent is due)."""
+        payouts = []
+        for holding in session.fixed_income:
+            if holding.status != FixedIncomeStatus.ACTIVE or holding.maturity_week != week:
+                continue
+            product = self.repo.fixed_income_product(holding.product_id)
+            name = product.name if product else holding.product_id
+            amount = r2(holding.principal + holding.accrued_interest)
+            holding.status = FixedIncomeStatus.MATURED
+            holding.closed_week = week
+            holding.payout = amount
+            session.cash = r2(session.cash + amount)
+            session.total_fixed_income_interest = r2(session.total_fixed_income_interest + holding.accrued_interest)
+            self._log(
+                session,
+                action_type=ActionType.FIXED_INCOME_PAYOUT,
+                company_id=product.issuer_company_id if product else None,
+                amount=amount,
+                note=f"{name} paid back {money(amount)} ({money(holding.accrued_interest)} interest)",
+                details={"product_id": holding.product_id, "holding_id": holding.holding_id},
+                week=week,
+            )
+            payouts.append(
+                FixedIncomePayout(
+                    holding_id=holding.holding_id,
+                    name=name,
+                    principal=holding.principal,
+                    interest=holding.accrued_interest,
+                    payout=amount,
+                )
+            )
+        return payouts
+
+    def _default_fixed_income(self, session: GameSession, company_id: str, week: int) -> list[FixedIncomeDefault]:
+        """The issuer went bankrupt: its bonds stop paying and only a small part of the money comes back."""
+        defaults = []
+        for holding in session.fixed_income:
+            product = self.repo.fixed_income_product(holding.product_id)
+            if holding.status != FixedIncomeStatus.ACTIVE or not product or product.issuer_company_id != company_id:
+                continue
+            recovered = r2(holding.principal * product.recovery_rate)
+            lost = r2(holding.principal + holding.accrued_interest - recovered)
+            holding.status = FixedIncomeStatus.DEFAULTED
+            holding.closed_week = week
+            holding.payout = recovered
+            session.cash = r2(session.cash + recovered)
+            self._log(
+                session,
+                action_type=ActionType.FIXED_INCOME_DEFAULT,
+                company_id=company_id,
+                amount=recovered,
+                note=f"{product.name} defaulted: {money(recovered)} recovered, {money(lost)} lost",
+                details={"product_id": product.id, "holding_id": holding.holding_id, "lost": lost},
+                week=week,
+            )
+            defaults.append(
+                FixedIncomeDefault(
+                    holding_id=holding.holding_id,
+                    name=product.name,
+                    principal=holding.principal,
+                    recovered=recovered,
+                    lost=lost,
+                )
+            )
+        return defaults
+
+    def _fixed_income_value(self, session: GameSession) -> float:
+        return r2(
+            sum(h.principal + h.accrued_interest for h in session.fixed_income if h.status == FixedIncomeStatus.ACTIVE)
+        )
+
+    @staticmethod
+    def _fi_payout_at_maturity(holding: FixedIncomeHolding) -> float:
+        weeks = holding.maturity_week - holding.opened_week + 1
+        return r2(holding.principal + weeks * r2(holding.principal * holding.weekly_rate))
+
+    def _fi_early_exit_value(self, holding: FixedIncomeHolding) -> float:
+        product = self.repo.fixed_income_product(holding.product_id)
+        fee = product.early_exit_fee if product else 0.0
+        return r2(holding.principal * (1 - fee))
+
+    def _fi_unavailable_reason(self, session: GameSession, product: FixedIncomeProduct, week: int) -> str | None:
+        last = self.repo.fixed_income_last_buy_week(product)
+        if week < product.available_from_week:
+            return f"The {product.name} goes on sale in Week {product.available_from_week}."
+        if week > last:
+            return f"The {product.name} was sold until Week {last}."
+        if product.issuer_company_id:
+            state = session.companies.get(product.issuer_company_id)
+            if state is None or state.is_bankrupt:
+                return f"{product.issuer} is bankrupt - its bonds can't be bought."
+        return None
 
     def _settle_rent(self, session: GameSession, week: int) -> RentPayment | None:
         period = self.repo.scenario.rent_period_weeks
@@ -1205,7 +1477,7 @@ class GameEngine:
         )
 
     def _net_worth(self, session: GameSession) -> float:
-        return r2(session.cash + session.savings + self._stocks_value(session))
+        return r2(session.cash + session.savings + self._stocks_value(session) + self._fixed_income_value(session))
 
     # ------------------------------------------------------------ hard data
     def _publish_reports(self, session: GameSession, week: int) -> None:
@@ -1368,6 +1640,13 @@ class GameEngine:
             just_listed=just_listed,
             dividend_per_share=state.dividend_per_share,
             previous_dividend=state.previous_dividend,
+            dividend_every_weeks=company.dividend_every_weeks,
+            next_dividend_week=None
+            if state.is_bankrupt or session.is_game_over
+            else self.repo.next_dividend_week(company.id, session.current_week),
+            pays_dividend_this_week=not state.is_bankrupt
+            and not session.is_game_over
+            and self.repo.pays_dividend(company.id, session.current_week),
             bankruptcy_risk=state.bankruptcy_risk,
             risk_level=self._risk_level(state.bankruptcy_risk),
             risk_trend=risk_trend,
@@ -1383,11 +1662,89 @@ class GameEngine:
             fine_print=state.fine_print,
         )
 
+    def _fixed_income_view(self, session: GameSession) -> FixedIncomeView:
+        week = session.current_week
+        offers = []
+        for product in self.repo.fixed_income_products:
+            maturity = self.repo.fixed_income_maturity(product, week)
+            weeks_held = max(0, maturity - week + 1)
+            issuer_state = session.companies.get(product.issuer_company_id) if product.issuer_company_id else None
+            reason = "The game is over." if session.is_game_over else self._fi_unavailable_reason(session, product, week)
+            offers.append(
+                FixedIncomeOfferView(
+                    id=product.id,
+                    kind=product.kind,
+                    name=product.name,
+                    issuer=product.issuer,
+                    issuer_company_id=product.issuer_company_id,
+                    issuer_risk=issuer_state.bankruptcy_risk if issuer_state else None,
+                    issuer_risk_level=self._risk_level(issuer_state.bankruptcy_risk) if issuer_state else None,
+                    issuer_bankrupt=bool(issuer_state and issuer_state.is_bankrupt),
+                    description=product.description,
+                    weekly_rate_pct=rate_pct(product.weekly_rate),
+                    term_weeks=product.term_weeks,
+                    maturity_week=maturity,
+                    weeks_held=weeks_held,
+                    total_return_pct=round(product.weekly_rate * weeks_held * 100, 2),
+                    min_amount=product.min_amount,
+                    early_exit_fee_pct=round(product.early_exit_fee * 100, 2),
+                    recovery_pct=round(product.recovery_rate * 100, 2),
+                    available=reason is None,
+                    available_from_week=product.available_from_week,
+                    available_until_week=self.repo.fixed_income_last_buy_week(product),
+                    unavailable_reason=reason,
+                )
+            )
+        holdings = []
+        for h in session.fixed_income:
+            product = self.repo.fixed_income_product(h.product_id)
+            active = h.status == FixedIncomeStatus.ACTIVE
+            holdings.append(
+                FixedIncomeHoldingView(
+                    holding_id=h.holding_id,
+                    product_id=h.product_id,
+                    kind=product.kind if product else FixedIncomeKind.BOND,
+                    name=product.name if product else h.product_id,
+                    issuer=product.issuer if product else "",
+                    issuer_company_id=product.issuer_company_id if product else None,
+                    principal=h.principal,
+                    opened_week=h.opened_week,
+                    maturity_week=h.maturity_week,
+                    weeks_left=max(0, h.maturity_week - week) if active else 0,
+                    weekly_rate_pct=rate_pct(h.weekly_rate),
+                    accrued_interest=h.accrued_interest,
+                    value=r2(h.principal + h.accrued_interest) if active else 0.0,
+                    payout_at_maturity=self._fi_payout_at_maturity(h),
+                    early_exit_value=self._fi_early_exit_value(h) if active else 0.0,
+                    status=h.status,
+                    closed_week=h.closed_week,
+                    payout=h.payout,
+                )
+            )
+        maturing = r2(
+            sum(
+                self._fi_payout_at_maturity(h)
+                for h in session.fixed_income
+                if h.status == FixedIncomeStatus.ACTIVE and h.maturity_week == week
+            )
+        )
+        return FixedIncomeView(
+            offers=offers,
+            holdings=holdings,
+            total_value=self._fixed_income_value(session),
+            total_interest=r2(
+                session.total_fixed_income_interest
+                + sum(h.accrued_interest for h in session.fixed_income if h.status == FixedIncomeStatus.ACTIVE)
+            ),
+            maturing_this_week=0.0 if session.is_game_over else maturing,
+        )
+
     def _build_state(self, session: GameSession) -> GameStateResponse:
         s = self.repo.scenario
         week_def = self.repo.week(session.current_week)
         stocks_value = self._stocks_value(session)
-        net_worth = r2(session.cash + session.savings + stocks_value)
+        fixed_income_value = self._fixed_income_value(session)
+        net_worth = r2(session.cash + session.savings + stocks_value + fixed_income_value)
 
         if session.is_game_over or week_def is None:
             news: list[NewsItem] = []
@@ -1455,15 +1812,24 @@ class GameEngine:
             end_reason=session.end_reason,
             cash=session.cash,
             stocks_value=stocks_value,
+            fixed_income_value=fixed_income_value,
             net_worth=net_worth,
             starting_cash=session.starting_cash,
             # ROI = investment return before living costs (rent is shown separately).
             roi_pct=round((net_worth + session.total_rent_paid - session.starting_cash) / session.starting_cash * 100, 2),
+            investment_gain=r2(net_worth + session.total_rent_paid - session.starting_cash),
+            total_rent_paid=session.total_rent_paid,
             total_dividends=session.total_dividends,
             sell_spread_pct=round(s.sell_spread * 100, 2),
             rent=rent,
             savings=savings,
+            fixed_income=self._fixed_income_view(session),
             advisor=advisor,
+            risk_scale=RiskScale(
+                elevated_pct=round(s.risk_thresholds.elevated * 100, 1),
+                critical_pct=round(s.risk_thresholds.critical * 100, 1),
+                bankruptcy_pct=round(s.bankruptcy_threshold * 100, 1),
+            ),
             companies=[
                 self._company_view(session, c.id)
                 for c in self.repo.companies

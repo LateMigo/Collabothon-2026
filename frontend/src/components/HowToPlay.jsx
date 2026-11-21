@@ -14,28 +14,40 @@ const STEPS = [
     text: "Flip a card with “Details”: cash, debt and profit margin with arrows. A red dot means new numbers this week. When the news shouts “success” but debt keeps rising, be careful. And read the fine print!",
   },
   {
+    title: "Mind the dividend calendar",
+    text: "Every company pays its dividend on its own schedule — every 2, 3 or 4 weeks, just like real companies. Only owners at the end of a payout week get the cash, so check “next payout” on the card before you buy or sell.",
+  },
+  {
     title: "Keep a safety pot",
     text: "Money in the savings vault earns a little interest every week and can’t lose value. If your cash is short on rent day, the vault pays the rest automatically.",
   },
   {
+    title: "Lend money for a fixed rate",
+    text: "At the bond desk you can open a bank term deposit (2, 4 or 8 weeks) or buy a bond that pays back halfway through the season or at the very end. Longer and riskier means a higher rate — but the money is locked, and a company bond can default if the company goes bankrupt.",
+  },
+  {
     title: "Meet new companies",
-    text: "The season lasts 12 weeks. You start with 2 companies and a new one joins the exchange every 2 weeks (Weeks 3, 5, 7 and 9) \u2014 look for the \u201cJust listed\u201d stamp.",
+    text: "The season lasts 12 weeks. You start with 2 companies and a new one joins the exchange every 2 weeks (Weeks 3, 5, 7 and 9) — look for the “Just listed” stamp. More companies means more news to read.",
   },
   {
     title: "End the week",
-    text: "The market reacts: prices move, dividends are paid, and older news may finally land. A summary explains what happened and why.",
+    text: "Slide up the drawer at the bottom of the screen (look for the red End Week tab) and press the big red button. The market reacts: prices move, dividends are paid, and older news may finally land. A summary explains what happened and why.",
   },
   {
     title: "Pay your bills",
-    text: "Rent is due every 4 weeks. Keep enough cash or savings! If both run out on rent day, the game ends.",
+    text: "Rent is due every 4 weeks. Keep enough cash or savings! If both run out on rent day, the game ends — you get a warning before you end such a week. Rent is a bill, so your investing result is always shown before rent.",
   },
   {
     title: "Watch the risk",
-    text: "A company with a Critical bankruptcy risk can go bust. Its shares then become worth $0.",
+    text: "The bankruptcy gauge shows how close a company is to the red line. If it gets there, the company goes bust and its shares become worth $0.",
   },
   {
     title: "Ask the advisor",
     text: "You get 3 hints per game (1 per week). Agent Vorr shows his reasoning step by step — about 7 in 10 hints are right, so check every step against the news.",
+  },
+  {
+    title: "Take a break",
+    text: "The Menu button in the top bar takes you back to the start screen. Your game is kept — press “Continue” there to pick it up again.",
   },
 ];
 

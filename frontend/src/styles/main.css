@@ -572,8 +572,8 @@ input {
 }
 
 .brand__mark {
-  width: 3.1rem;
-  height: 3.1rem;
+  width: 3.4rem;
+  height: 3.4rem;
   flex: none;
   padding: 3px;
   background: var(--paper);
@@ -1197,7 +1197,8 @@ input {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 1.75rem 2rem 3.5rem;
+  /* bottom room for the handle of the End Week drawer */
+  padding: 1.75rem 2rem 4rem;
   background-color: var(--steel);
   background-image: var(--brushed);
 }
@@ -1229,6 +1230,176 @@ input {
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+}
+
+/* right column: the newspaper with your holdings right under it */
+.market__side {
+  min-width: 0;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.holdings {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem 1.1rem;
+  background: var(--paper-light);
+  color: var(--ink);
+  box-shadow: var(--paper-shadow);
+  border-top: 6px solid var(--amber);
+  transform: rotate(calc(var(--tilt) * 0.4deg));
+}
+
+.holdings__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 3px double var(--ink);
+}
+
+.holdings__title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.holdings__total {
+  font-family: var(--font-data);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.holdings__empty {
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.holdings__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.holdings__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "ticker shares value"
+    "ticker avg gain"
+    "div div div";
+  align-items: center;
+  gap: 0.1rem 0.6rem;
+  padding: 0.45rem 0.55rem;
+  border: 2px solid var(--ink);
+  border-left: 7px solid var(--company, var(--ink));
+  background: #fbf7ea;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.holdings__row:hover:not(:disabled) {
+  background: #fff3d1;
+}
+
+.holdings__row:disabled {
+  cursor: default;
+}
+
+.holdings__list .is-bankrupt .holdings__row {
+  opacity: 0.6;
+}
+
+.holdings__ticker {
+  grid-area: ticker;
+  font-family: var(--font-data);
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
+}
+
+.holdings__shares {
+  grid-area: shares;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.holdings__value {
+  grid-area: value;
+  text-align: right;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.holdings__avg,
+.holdings__gain {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.holdings__avg {
+  grid-area: avg;
+}
+
+.holdings__gain {
+  grid-area: gain;
+  text-align: right;
+}
+
+.holdings__gain.is-up {
+  color: var(--up);
+}
+
+.holdings__gain.is-down {
+  color: var(--down);
+}
+
+.holdings__div {
+  grid-area: div;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--permit-green);
+}
+
+.holdings__sum {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.holdings__sum.is-up b {
+  color: var(--up);
+}
+
+.holdings__sum.is-down b {
+  color: var(--down);
+}
+
+.holdings__bonds {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border: 2px dashed var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.holdings__bonds:hover:not(:disabled) {
+  background: rgba(244, 178, 62, 0.2);
 }
 
 .companies {
@@ -1611,6 +1782,7 @@ input {
 }
 
 .company-card__inner {
+  position: relative;
   display: grid;
   height: 100%;
   transform-style: preserve-3d;
@@ -1639,7 +1811,15 @@ input {
   border-top: 8px solid var(--company);
 }
 
+/* The front decides the card's height; the longer classified file on the back scrolls inside it.
+   (Before, the back stretched every card and left a big empty gap on the front.) */
 .company-card__back {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #8a7440 transparent;
   transform: rotateY(180deg);
   background: var(--manila);
   border-top: 8px solid #a8925a;
@@ -1839,63 +2019,140 @@ input {
   padding-left: 0.6rem;
 }
 
+/* the way back stays reachable even when the file on the back scrolls */
 .company-card__back-btn {
+  position: sticky;
+  bottom: 0;
   margin-top: auto;
+  flex: none;
+}
+
+/* bankruptcy risk: one gauge from "safe" to the red bankruptcy line */
+.company-card__stats > .company-card__risk {
+  row-gap: 0.3rem;
+}
+
+.company-card__risk dd {
+  flex: 1 1 100%;
+  margin: 0;
+  text-align: left;
 }
 
 .risk-meter {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  --risk-color: var(--permit-green);
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
 }
 
-.risk-meter__bars {
-  display: inline-flex;
-  gap: 1px;
+.risk-meter--elevated {
+  --risk-color: #c98a1d;
 }
 
-.risk-meter__bars span {
-  width: 0.32rem;
-  height: 0.75rem;
-  border: 1px solid var(--ink);
+.risk-meter--critical {
+  --risk-color: var(--stamp-red);
 }
 
-.risk-meter--low .is-lit {
-  background: var(--permit-green);
-}
-
-.risk-meter--elevated .is-lit {
-  background: #d18a12;
-}
-
-.risk-meter--critical .is-lit {
-  background: var(--stamp-red);
+.risk-meter__readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .risk-meter__label {
   font-family: var(--font-stamp);
   font-weight: 400;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-size: 0.8rem;
-}
-
-.risk-meter--low .risk-meter__label {
-  color: var(--permit-green);
+  color: var(--risk-color);
 }
 
 .risk-meter--elevated .risk-meter__label {
   color: #9a5f00;
 }
 
-.risk-meter--critical .risk-meter__label {
+.risk-meter__pct {
+  font-family: var(--font-data);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 0.9;
+  color: var(--ink);
+}
+
+.risk-meter__trend {
+  font-size: 0.95rem;
+}
+
+.risk-meter__trend.is-up {
   color: var(--stamp-red);
 }
 
-.risk-meter__label small {
-  font-family: var(--font-body);
+.risk-meter__trend.is-down {
+  color: var(--permit-green);
+}
+
+.risk-meter__track {
+  position: relative;
+  display: block;
+  height: 0.85rem;
+  border: 2px solid var(--ink);
+  background: linear-gradient(
+    90deg,
+    rgba(78, 127, 58, 0.16) 0 var(--elevated),
+    rgba(209, 138, 18, 0.24) var(--elevated) var(--critical),
+    rgba(181, 48, 42, 0.24) var(--critical) 100%
+  );
+}
+
+.risk-meter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--risk-color);
+  transition: width 0.5s ease;
+}
+
+.risk-meter__bust {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: var(--bust);
+  width: 3px;
+  background: var(--stamp-red);
+  box-shadow: 0 0 0 1px var(--paper);
+}
+
+.risk-meter__scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.risk-meter__scale span:last-child {
+  color: var(--stamp-red);
+}
+
+/* dividend: amount + its own payout calendar */
+.company-card__dividend dd {
+  display: grid;
+  justify-items: end;
+}
+
+.company-card__stats .company-card__payday {
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--ink-soft);
+}
+
+.company-card__stats .company-card__payday.is-now {
+  padding: 0 0.3rem;
+  color: #fff3e0;
+  background: var(--permit-green);
 }
 
 .company-card.is-bankrupt .company-card__front > :not(.bankrupt-stamp) {
@@ -2141,28 +2398,37 @@ input {
   transition: transform 0.25s ease;
 }
 
+/* the drawer slides up when you hover it, open it, or reach it with the keyboard */
 .action-bar:hover,
-.action-bar:focus-within {
+.action-bar--open,
+.action-bar:has(:focus-visible) {
   transform: translateY(0);
 }
 
 .action-bar__lip {
+  position: relative;
+  overflow: hidden; /* the red hint tab slides down out of sight here */
   height: 1.9rem;
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.6rem;
+  width: 100%;
+  padding: 0 2rem;
+  border: 0;
+  border-bottom: 1px dashed rgba(244, 178, 62, 0.25);
+  background: transparent;
+  font-family: var(--font-body);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--amber);
-  border-bottom: 1px dashed rgba(244, 178, 62, 0.25);
   cursor: pointer;
 }
 
-.action-bar__lip span {
+.action-bar__lip > span:not(.action-bar__peek) {
   font-size: 0.6rem;
 }
 
@@ -2179,10 +2445,95 @@ input {
   color: #fff3e0;
 }
 
-/* touch screens can't hover: keep the console open there */
-@media (hover: none) {
-  .action-bar {
-    transform: none;
+/* Closed drawer: the top of the red End Week button peeks out of the handle,
+   right above the spot where the real button slides up. */
+.action-bar__peek {
+  position: absolute;
+  right: 2rem;
+  bottom: 0;
+  height: 1.3rem;
+  min-width: 10.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0 0.8rem;
+  background: var(--stamp-red);
+  border: 2px solid #1a0a08;
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: #fff3e0;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s ease;
+  animation: end-week-peek 2.6s ease-in-out infinite;
+}
+
+.action-bar__lip .action-bar__peek span {
+  font-size: 0.55rem;
+}
+
+/* once the drawer is up, the real button is visible, so the hint tucks away */
+.action-bar:hover .action-bar__peek,
+.action-bar--open .action-bar__peek,
+.action-bar:has(:focus-visible) .action-bar__peek {
+  opacity: 0;
+  transform: translateY(100%);
+  animation: none;
+}
+
+@keyframes end-week-peek {
+  50% {
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.18),
+      0 0 14px rgba(255, 90, 74, 0.55);
+  }
+}
+
+.action-bar--danger .action-bar__peek {
+  border-color: #ff5a4a;
+  animation-duration: 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-bar__peek {
+    animation: none;
+  }
+}
+
+.end-week-btn {
+  flex: none;
+  min-width: 17rem;
+}
+
+.end-week-btn > span:first-child {
+  display: grid;
+  line-height: 1.15;
+}
+
+.end-week-btn__alert {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  color: #ffd9c9;
+}
+
+.end-week-btn--danger {
+  animation: end-week-alarm 1.2s steps(2, end) infinite;
+}
+
+@keyframes end-week-alarm {
+  50% {
+    box-shadow:
+      0 6px 0 #5e1612,
+      0 0 0 4px #ff5a4a,
+      0 10px 18px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -2532,6 +2883,17 @@ input {
   font-size: 1.7rem;
 }
 
+/* the investing result is the headline number; rent comes after it */
+.ledger__rows > .ledger__invest {
+  margin: 0.2rem -0.5rem 0.3rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(244, 178, 62, 0.18);
+}
+
+.ledger__invest + div {
+  border-top: 0;
+}
+
 .summary-block {
   display: grid;
   gap: 1rem;
@@ -2685,9 +3047,106 @@ input {
   font-weight: 700;
 }
 
+.recap-table td,
+.recap-table th[scope="row"] {
+  vertical-align: middle;
+}
+
+.recap-table tbody tr.is-owned {
+  background: rgba(244, 178, 62, 0.16);
+}
+
+.recap-company {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-weight: 700;
+}
+
+.recap-company > span {
+  display: grid;
+  line-height: 1.15;
+}
+
+.recap-table .recap-company small {
+  font-family: var(--font-data);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+}
+
+.recap-table td.recap-owned {
+  white-space: nowrap;
+}
+
+.recap-owned b {
+  display: block;
+  font-family: var(--font-data);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.recap-none {
+  color: var(--ink-soft);
+}
+
+.recap-table .recap-was {
+  display: block;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 .recap-table td.recap-risk {
   white-space: nowrap;
   font-weight: 700;
+}
+
+.recap-risk__pill {
+  display: inline-block;
+  min-width: 3.6rem;
+  padding: 0.1rem 0.4rem 0;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  font-family: var(--font-data);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.recap-risk--low .recap-risk__pill {
+  color: var(--permit-green);
+}
+
+.recap-risk--elevated .recap-risk__pill {
+  color: #9a5f00;
+  background: rgba(244, 178, 62, 0.22);
+}
+
+.recap-risk--critical .recap-risk__pill {
+  color: var(--stamp-red);
+  background: rgba(181, 48, 42, 0.12);
+}
+
+.recap-risk__pill .is-up {
+  color: var(--permit-green);
+}
+
+.recap-risk__pill .is-down {
+  color: var(--stamp-red);
+}
+
+.recap-table td.recap-risk small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recap-table abbr {
+  text-decoration: underline dotted;
+  cursor: help;
 }
 
 .money-moves {
@@ -4301,8 +4760,10 @@ input {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .news-panel {
+  .market__side {
     order: -1;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    align-items: start;
   }
 
   .gameover__grid {
@@ -4371,7 +4832,7 @@ input {
   }
 
   .market {
-    padding: 1.25rem 1rem 3.5rem;
+    padding: 1.25rem 1rem 8.5rem;
   }
 
   .market__head {
@@ -4404,13 +4865,29 @@ input {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
-    padding: 0.9rem 1rem;
+    padding: 0.9rem 1rem 1.1rem;
   }
 
-  .btn--xl {
+  .action-bar__lip {
+    padding: 0 1rem;
+  }
+
+  /* phones: the handle text is short on room, so the hint drops its side arrows */
+  .action-bar__lip > span:not(.action-bar__peek) {
+    display: none;
+  }
+
+  .action-bar__peek {
+    right: 1rem;
+    min-width: 0;
+  }
+
+  .btn--xl,
+  .end-week-btn {
     min-width: 0;
     width: 100%;
   }
+
 
   .summary {
     padding: 1.5rem 1.1rem;
@@ -4545,4 +5022,431 @@ input {
     radial-gradient(circle at 100% 0, #8d8f94 0 3px, #2c2b23 3.5px 4.5px, transparent 5px) top right / 10px 10px no-repeat,
     radial-gradient(circle at 0 100%, #8d8f94 0 3px, #2c2b23 3.5px 4.5px, transparent 5px) bottom left / 10px 10px no-repeat,
     radial-gradient(circle at 100% 100%, #8d8f94 0 3px, #2c2b23 3.5px 4.5px, transparent 5px) bottom right / 10px 10px no-repeat;
+}
+
+/* ---------- 21. Investing result, bond desk, rent alert, menu ---------- */
+
+/* HUD: the investing result is shown before rent - rent is a bill, not an investment loss */
+.hud-stat--accent {
+  display: grid;
+  align-content: start;
+}
+
+.hud-invest {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.hud-invest small {
+  font-weight: 700;
+  color: var(--on-steel-dim);
+}
+
+.hud__menu {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.portfolio-mini__note {
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--on-steel-dim);
+}
+
+/* bond desk panel (left column) */
+.bond-desk__seal {
+  color: var(--amber);
+  background: rgba(244, 178, 62, 0.12);
+}
+
+.bond-modal .bond-desk__seal {
+  color: #9a5f00;
+}
+
+.bond-desk > .btn {
+  width: 100%;
+}
+
+/* Form B-3: the bond desk */
+.bond-modal {
+  width: min(780px, 100%);
+}
+
+.bond-modal > * + * {
+  margin-top: 1rem;
+}
+
+.bond-modal__intro {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+.bond-modal__tabs button {
+  font-size: 0.82rem;
+}
+
+.bond-modal__empty {
+  padding: 1rem;
+  border: 2px dashed var(--ink-soft);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.bond-offers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 0.6rem;
+}
+
+.bond-offer {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 0.65rem 0.75rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: #fbf7ea;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  box-shadow: 0 3px 0 var(--ink);
+  cursor: pointer;
+}
+
+.bond-offer:hover {
+  background: #fff3d1;
+}
+
+.bond-offer.is-selected {
+  background: #fde7b0;
+  outline: 3px solid var(--amber);
+  outline-offset: 1px;
+}
+
+.bond-offer.is-closed {
+  opacity: 0.55;
+}
+
+.bond-offer__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.bond-offer__name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.bond-offer__rate {
+  flex: none;
+  font-family: var(--font-data);
+  font-size: 1.6rem;
+  line-height: 0.9;
+  color: var(--permit-green);
+}
+
+.bond-offer__rate small {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.bond-offer__issuer {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.bond-offer__safety {
+  justify-self: start;
+  padding: 0.05rem 0.4rem;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  font-family: var(--font-stamp);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bond-offer__safety--safe,
+.bond-offer__safety--low {
+  color: var(--permit-green);
+}
+
+.bond-offer__safety--elevated {
+  color: #9a5f00;
+}
+
+.bond-offer__safety--critical {
+  color: var(--stamp-red);
+}
+
+.bond-offer__facts {
+  font-size: 0.76rem;
+}
+
+.bond-order {
+  display: grid;
+  gap: 0.9rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--ink);
+}
+
+.bond-order__desc {
+  font-size: 0.9rem;
+}
+
+.bond-holdings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.bond-holding {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border: 2px solid var(--ink);
+  border-left: 7px solid var(--permit-green);
+  background: #fbf7ea;
+}
+
+.bond-holding--matured {
+  border-left-color: var(--amber);
+  opacity: 0.85;
+}
+
+.bond-holding--closed_early {
+  border-left-color: var(--ink-soft);
+  opacity: 0.8;
+}
+
+.bond-holding--defaulted {
+  border-left-color: var(--stamp-red);
+  background: #f8e1da;
+}
+
+.bond-holding__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.bond-holding__head span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.bond-holding__bar {
+  height: 0.55rem;
+  border: 2px solid var(--ink);
+  background: #fffdf6;
+}
+
+.bond-holding__bar span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--permit-green) 0 8px, #3f6a2f 8px 10px);
+}
+
+.bond-holding__facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.bond-holding__facts dt {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.bond-holding__facts dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.bond-holding > .btn {
+  justify-self: start;
+}
+
+.bond-holding__confirm {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: #f8e2a6;
+  font-size: 0.84rem;
+}
+
+.bond-holding__confirm div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bond-holding__result {
+  font-size: 0.84rem;
+}
+
+/* Notice R-4: not enough money for the rent */
+.rent-alert {
+  width: min(600px, 100%);
+  display: grid;
+  gap: 1rem;
+  border-top: 10px solid var(--stamp-red);
+}
+
+.rent-alert__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  gap: 1rem;
+}
+
+.rent-alert__head h2:focus {
+  outline: none;
+}
+
+.rent-alert__stamp {
+  flex: none;
+  font-size: 1.3rem;
+}
+
+.rent-alert__sum {
+  margin: 0;
+  display: grid;
+  border: 2px solid var(--ink);
+  background: #fbf7ea;
+}
+
+.rent-alert__sum > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid rgba(36, 33, 27, 0.25);
+}
+
+.rent-alert__sum > div:first-child {
+  border-top: 0;
+}
+
+.rent-alert__sum dt {
+  font-size: 0.86rem;
+}
+
+.rent-alert__sum dd {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.rent-alert__sum > .rent-alert__missing {
+  border-top: 2px solid var(--ink);
+  background: rgba(181, 48, 42, 0.12);
+  color: var(--stamp-red);
+  font-weight: 700;
+}
+
+.rent-alert__warn {
+  font-size: 0.9rem;
+}
+
+.rent-alert__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.rent-alert__options li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border: 2px dashed var(--ink);
+  font-size: 0.84rem;
+}
+
+.rent-alert__none {
+  font-size: 0.86rem;
+  color: var(--stamp-red);
+  font-weight: 700;
+}
+
+.rent-alert__actions {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: center;
+}
+
+.rent-alert__actions .btn--xl {
+  width: 100%;
+}
+
+.rent-alert__anyway {
+  color: var(--stamp-red);
+}
+
+/* start screen: continue a game left through the Menu button */
+.resume-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border: 3px solid #0a0a08;
+  border-left: 10px solid var(--amber);
+  background: var(--steel-dark);
+  color: var(--on-steel);
+  box-shadow: inset 0 0 0 2px var(--steel-light);
+}
+
+.resume-card .eyebrow {
+  color: var(--amber);
+}
+
+.resume-card__text {
+  font-weight: 700;
+}
+
+.resume-card .btn--xl {
+  min-width: 13rem;
+}
+
+@media (max-width: 640px) {
+  .bond-holding__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rent-alert__head {
+    flex-direction: column;
+  }
 }

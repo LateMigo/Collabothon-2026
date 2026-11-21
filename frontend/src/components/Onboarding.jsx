@@ -25,7 +25,7 @@ function YesNo({ label, description, value, onChange }) {
 }
 
 /** Universal start screen: no age groups, one clear path into the game. */
-export default function Onboarding({ scenario, aiMode, onStart, busy }) {
+export default function Onboarding({ scenario, aiMode, onStart, busy, savedGame, onResume }) {
   const [enableDividends, setEnableDividends] = useState(true);
   const [enableLivingCosts, setEnableLivingCosts] = useState(true);
 
@@ -64,10 +64,30 @@ export default function Onboarding({ scenario, aiMode, onStart, busy }) {
             {interval ? `, and a new one joins the exchange every ${interval} weeks` : ""} &mdash; {companies} in total
             over {weeks} weeks. Read the news, invest your money and keep enough cash for the rent
             {scenario?.savings_weekly_rate_pct
-              ? ` — or park it safely in the ${scenario.savings_account_name} at ${scenario.savings_weekly_rate_pct}% interest a week`
+              ? ` — or park it safely in ${scenario.savings_account_name} at ${scenario.savings_weekly_rate_pct}% interest a week`
               : ""}
+            {scenario?.fixed_income_products ? ", or lend it out through bonds and term deposits for a fixed rate" : ""}
             .
           </p>
+
+          {savedGame && (
+            <div className="resume-card">
+              <div>
+                <p className="eyebrow">Game in progress</p>
+                <p className="resume-card__text">
+                  {savedGame.is_game_over
+                    ? "Your last season is over - see your results."
+                    : `Week ${savedGame.current_week} of ${savedGame.total_weeks} · net worth ${moneyCompact(
+                        savedGame.net_worth,
+                      )}`}
+                </p>
+              </div>
+              <button type="button" className="btn btn--yellow btn--xl" onClick={onResume}>
+                <span>{savedGame.is_game_over ? "See results" : "Continue"}</span>
+                <span aria-hidden="true">&rarr;</span>
+              </button>
+            </div>
+          )}
 
           <form className="setup-card" onSubmit={submit}>
             <p className="setup-card__head">Form R-1 &middot; Investor registration</p>
@@ -91,7 +111,7 @@ export default function Onboarding({ scenario, aiMode, onStart, busy }) {
               <legend>B &middot; Gameplay modifiers</legend>
               <YesNo
                 label="Enable Dividends"
-                description="Companies pay you cash every week for each share you own."
+                description="Companies pay you cash for each share you own - each on its own calendar (every 2, 3 or 4 weeks)."
                 value={enableDividends}
                 onChange={setEnableDividends}
               />
@@ -104,7 +124,7 @@ export default function Onboarding({ scenario, aiMode, onStart, busy }) {
             </fieldset>
 
             <button type="submit" className="btn btn--red btn--xl btn--block" disabled={busy}>
-              <span>{busy ? "Opening the market…" : "Enter the market"}</span>
+              <span>{busy ? "Opening the market…" : savedGame ? "Start a new game" : "Enter the market"}</span>
               <span aria-hidden="true">&rarr;</span>
             </button>
           </form>

@@ -9,6 +9,8 @@ from app.models.schemas import (
     CEODecisionRequest,
     CreateSessionRequest,
     FinalAnalysisResponse,
+    FixedIncomeRequest,
+    FixedIncomeResponse,
     GameStateResponse,
     NextWeekResponse,
     SavingsRequest,
@@ -64,6 +66,13 @@ async def trade(session_id: str, payload: TradeRequest, engine: GameEngine = Dep
 @router.post("/sessions/{session_id}/savings", response_model=SavingsResponse, tags=["game"])
 async def savings(session_id: str, payload: SavingsRequest, engine: GameEngine = Depends(get_engine)) -> SavingsResponse:
     return await engine.move_savings(session_id, payload)
+
+
+@router.post("/sessions/{session_id}/fixed-income", response_model=FixedIncomeResponse, tags=["game"])
+async def fixed_income(
+    session_id: str, payload: FixedIncomeRequest, engine: GameEngine = Depends(get_engine)
+) -> FixedIncomeResponse:
+    return await engine.fixed_income(session_id, payload)
 
 
 @router.post("/sessions/{session_id}/advisor", response_model=AdvisorResponse, tags=["game"])

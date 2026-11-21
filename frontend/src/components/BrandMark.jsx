@@ -1,55 +1,57 @@
 /**
- * CosmiCash emblem (original 32x32 pixel art): an alien claw rising from below and
- * crushing a banknote, talons hooked into the paper. One character per pixel.
+ * CosmiCash emblem (original 32x32 pixel art): a green three-fingered alien claw reaching in from the
+ * lower right and snatching a gold "$" coin - ivory talons hooked into the coin's rim. One character per pixel.
  */
 const ROWS = [
   "................................",
-  "...KKKK..................KKKK...",
-  "..KLLLLKKK............KKKLLLLK..",
-  "...KLNnLLLKKKKKnsKKKKKLLLnNLK...",
-  "....KLNnNNLLLnnssssLLLNNnNLK....",
-  ".....KLNnNNNNnsmsmnNNNNnNLK.....",
-  ".....KLNNnNNnmmsssmnNNnNNLK.....",
-  "....KLNNKKNNnmmmsmsnNNKKNNLK....",
-  "...KLNNKWWKNNnssssnNNKWWKNNLK...",
-  "..KLLNKWKKwKNnnKKnnNKwKKWKNLLK..",
-  "...KKLKWKNKNNNKWwKNNNKNKWKLKK...",
-  ".....KKKKKNNNNKWKNNNNNKKKKK.....",
-  "....KKKgBKnnnKKKKKKnnnKgBK......",
-  "...KWwBBKnnnnKgBBBKnnnnKBBK.....",
-  "..KWKKbBKnnnnKbBBBKnnnnKbBK.....",
-  "..KWKKBdKnnnnKBddBKnnnnKddK.....",
-  "..KKKBbBKnnnnKbBBBKnnnnKbBK.....",
-  ".KgBBBbBKnnnnKbBBBKnnnnKbBK.....",
-  ".KbBBBBBKKKKKKBBBBKKKKKKBBK.....",
-  ".KBddBBBBKKKKBBBBBBKKKKBBBBK....",
-  ".KbBBBBBBBBBBBBBBBBBBBBBBBBK....",
-  ".KBBBBBBBBBBBBBBBBBBBBBBBBBK....",
-  ".KKKBBBBBdBBBBBBdBBBBBdBBBBK....",
-  "....KBBBBBBBBBBBBBBBBBBBBBBK....",
-  "....KKKKKKBbBBBBBBBBBBKKKKKK....",
-  "..........KbdddBdddBdK..........",
-  "..........KbBBBBBBBBBK..........",
-  "..........KddBdddBdddK..........",
-  "..........KbBBBBBBBBBK..........",
-  "..........KbdddBdddBdK..........",
-  "..........KbBBBBBBBBBK..........",
-  "..........KKKKKKKKKKKK..........",
+  "................................",
+  "................................",
+  ".........KKKKKKKK...............",
+  ".......KKyyyyyyyyKKKKKK.........",
+  "......KyyYYYYYYYKCCCCCCK........",
+  ".....KyyYWYLLYYKCccccCCKK.......",
+  "....KyyWWLLLYYYKkKKKKcchgK......",
+  "....KyYWLLLYDYYYKYyYoKhGgKKK....",
+  "...KyYYLLLDDDDDYYYYyYKhCCCCCK...",
+  "...KyYYLLDDYDYYYYYYyYKhCCcCCCKK.",
+  "...KyYLLYDDYDYYYYYYYyKCccGccchgK",
+  "...KyYLYYYDDDDYYYYYyyKksGgKKhGgK",
+  "...KyYYYYYYDDDDYYYyyyKhGGgKKhGgK",
+  "...KyYYYYYYYDYDDYyyyyKhGGgKhGGgK",
+  "...KyYYYYYYYDYDDyyyyKhGGGgKhsGgK",
+  "...KyYYYYYKDDDDyyyyyKhGGgKhGGGgK",
+  "....KyYYYKkKDYyyyyyyKhGGGhGGGgK.",
+  "....KyyYyKCKYyyyyyyKhGGGGGGGgK..",
+  ".....KyyKCCKyyyyyyKhGGGGGGGgK...",
+  "......KoKCCKyyyyyKhGGsGGGGGgK...",
+  ".......KKCCKooooKKhGGGGGGGgKK...",
+  "........KcCCKKKKhhGGGGGGsGGhgK..",
+  ".........KcchhhhGGGGGGGGGGGGGgK.",
+  "..........KhGGGsGGggGGsGGGGGGGgK",
+  "..........KgggggggKKggGGGGGGsGGg",
+  "...........KKKKKKK..KKhGGGGGGGGg",
+  ".....................KhGsGsGGGGg",
+  ".....................KgGGGGGGsGg",
+  "......................KgGGGsGGGg",
+  ".......................KgGGGGGGg",
+  "........................Kggggggg",
 ];
 
 const COLORS = {
-  K: "#07090a", // outline
-  B: "#262c31", // carapace
-  b: "#46525a", // sheen
-  g: "#8fa0a8", // gloss
-  d: "#121619", // ribs / joints
-  W: "#e6e0c6", // talons
-  w: "#a89f80", // talon tips
-  N: "#7cb563", // banknote
-  n: "#3f6e34", // folds / shadow
-  L: "#c9e6a8", // paper edge
-  m: "#d6ecbd", // medallion
-  s: "#1f3a1b", // $ sign
+  K: "#0b0c0a", // outline
+  G: "#6fc23f", // alien skin
+  g: "#3d7a24", // skin shadow
+  h: "#b3ec78", // skin highlight
+  s: "#2f6a1b", // scales and knuckles
+  C: "#f4ecd2", // talons
+  c: "#b9ad86", // talon shade
+  k: "#5a5040", // talon tips
+  Y: "#f4b23e", // gold
+  y: "#c98a1d", // gold shade
+  o: "#8a5a12", // rim shadow
+  L: "#ffe39a", // gold light
+  W: "#fff8e0", // shine
+  D: "#4d2c06", // $ sign
 };
 
 const PIXELS = ROWS.flatMap((row, y) =>

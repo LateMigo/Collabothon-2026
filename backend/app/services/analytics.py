@@ -98,7 +98,9 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
     for snap in session.weekly_snapshots:
         if snap.net_worth > 0:
             invested_ratios.append(max(0.0, min(1.0, snap.stocks_value / snap.net_worth)))
-            savings_ratios.append(max(0.0, min(1.0, snap.savings / snap.net_worth)))
+            # "safe money": the savings vault plus bonds and term deposits
+            safe = snap.savings + snap.fixed_income_value
+            savings_ratios.append(max(0.0, min(1.0, safe / snap.net_worth)))
         meaningful = snap.net_worth > 0 and snap.stocks_value / snap.net_worth >= 0.2
         if snap.stocks_value > 0 and meaningful:
             for company_id, shares in snap.holdings.items():
@@ -270,8 +272,18 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
     liquidity_week = session.rent_payments[-1].week if liquidity_loss and session.rent_payments else None
 
     final_net_worth = session.weekly_snapshots[-1].net_worth if session.weekly_snapshots else session.cash
-    # ROI measures investing skill: market gains + dividends, before living costs (rent).
+    # ROI measures investing skill: market gains + dividends + interest, before living costs (rent).
     roi = (final_net_worth + session.total_rent_paid - session.starting_cash) / session.starting_cash * 100
+
+    # --- bonds & term deposits ----------------------------------------------
+    fi_defaults = [a for a in session.action_log if a.action_type == ActionType.FIXED_INCOME_DEFAULT]
+    fi_interest = session.total_fixed_income_interest + sum(
+        h.accrued_interest for h in session.fixed_income if h.status == "active"
+    )
+
+    def product_name(product_id: str) -> str:
+        product = repo.fixed_income_product(product_id)
+        return product.name if product else "A bond"
 
     metrics = PlayerMetrics(
         final_net_worth=round(final_net_worth, 2),
@@ -291,6 +303,11 @@ def compute_player_metrics(session: GameSession, repo: GameDataRepository) -> Pl
         final_savings=round(session.savings, 2),
         total_interest=round(session.total_interest, 2),
         rent_covered_by_savings=round(sum(p.from_savings for p in session.rent_payments), 2),
+        fixed_income_interest=round(fi_interest, 2),
+        fixed_income_bought=sum(1 for a in session.action_log if a.action_type == ActionType.FIXED_INCOME_BUY),
+        fixed_income_defaults=[product_name(a.details.get("product_id", "")) for a in fi_defaults],
+        fixed_income_default_loss=round(sum(float(a.details.get("lost", 0.0)) for a in fi_defaults), 2),
+        fixed_income_default_week=fi_defaults[0].week if fi_defaults else None,
         noise_events_total=noise_total,
         noise_followed=noise_followed,
         delayed_signals=delayed,
@@ -390,6 +407,8 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
         )
     if m.total_interest >= 1:
         note(strengths, "s_savings", interest=money(m.total_interest), savings=money(m.final_savings))
+    if m.fixed_income_interest >= 1 and not m.fixed_income_defaults:
+        note(strengths, "s_fixed_income", interest=money(m.fixed_income_interest), count=m.fixed_income_bought)
     for outcome in m.bankruptcies:
         if outcome.outcome == "exited":
             note(strengths, "s_exited_risk", week=outcome.week, severity=80, ticker=outcome.ticker)
@@ -435,6 +454,16 @@ def build_fallback_analysis(m: PlayerMetrics, repo: GameDataRepository) -> MoveA
             shares=outcome.player_shares,
             ticker=outcome.ticker,
             loss=money(outcome.loss),
+        )
+        tip_keys.append("bankruptcy")
+    if m.fixed_income_defaults:
+        note(
+            improvements,
+            "i_bond_default",
+            week=m.fixed_income_default_week,
+            severity=m.fixed_income_default_loss + 40,
+            name=m.fixed_income_defaults[0],
+            loss=money(m.fixed_income_default_loss),
         )
         tip_keys.append("bankruptcy")
     hits = [d for d in m.delayed_signals if d.outcome == "hit"]

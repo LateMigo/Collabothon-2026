@@ -79,6 +79,8 @@ Rules:
 - If the rent changed, explain how a news story from an earlier week ended up in the player's living costs.
 - If the savings interest rate changed, explain how the news about interest rates reached the player's savings account.
 - If the savings account paid interest or covered part of the rent, mention it in one short sentence (safe money, small but steady return).
+- If bonds or term deposits ("fixed_income") earned interest, paid back at maturity or defaulted, mention it in one short sentence: a fixed rate for locking money away, and a company bond can default when its issuer goes bankrupt.
+- "investment_change" is the player's investing result BEFORE rent; rent is a living cost, not an investment loss - never call a week with positive investment_change a losing investment week just because rent was paid.
 - If there were no delayed effects, explain that some news needs time to show up and that older headlines are worth re-reading.
 - If noise was unmasked, say briefly that it changed nothing.
 - "jargon": pick 1-3 finance words that appear in this week's story and explain each in one plain sentence.
@@ -117,7 +119,9 @@ Rules:
 - real_life_habit: ONE simple money habit to start in real life this month, ideally a banking or saving habit (for example an automatic transfer to a savings account on payday, or a bills buffer of one month of rent). Tie it to the player's biggest weakness.
 - Keep everything short: the stamp and the two weeks replace a long essay.
 - Base every strength and improvement on the player's REAL moves: cite the week, the ticker and what happened (for example "In Week 2 you bought 20 PIZA at $40.40..."). Never invent trades.
-- When relevant, cover: diversification, keeping cash or savings for rent (liquidity), reacting to delayed signals (market lag), avoiding companies heading to bankruptcy, and following noise or wrong advisor hints.
+- When relevant, cover: diversification, keeping cash or savings for rent (liquidity), reacting to delayed signals (market lag), avoiding companies heading to bankruptcy, following noise or wrong advisor hints, and how the player used bonds and term deposits (fixed interest, money locked until maturity, company bonds that can default).
+- roi_pct is the investing result before rent. Rent is a living cost: judge investing skill on roi_pct, and liquidity on the rent checks.
+- Dividends are paid on each company's own calendar (every 2, 3 or 4 weeks): only owners on payout day get paid.
 - strengths: 2-4 items. improvements: 2-4 items, each with a concrete alternative. actionable_tips: exactly 3 or 4 universal, practical money tips worth remembering after the game.
 - If the player made no trades, be kind and explain what they missed.
 - play_style: a 2-3 word label such as "Cautious Saver" or "Headline Chaser".
@@ -194,6 +198,17 @@ class AIService:
             summary_parts.append(
                 fill(t.savings_note, amount=money(ctx.savings.interest), rate=f"{ctx.savings.rate_pct:g}%")
             )
+        fi = ctx.fixed_income
+        if fi.interest > 0:
+            summary_parts.append(fill(t.fixed_income_note, amount=money(fi.interest)))
+        for payout in fi.matured[:2]:
+            summary_parts.append(
+                fill(t.fixed_income_matured_note, name=payout.name, amount=money(payout.payout), interest=money(payout.interest))
+            )
+        for item in fi.defaulted[:2]:
+            summary_parts.append(
+                fill(t.fixed_income_default_note, name=item.name, recovered=money(item.recovered), lost=money(item.lost))
+            )
 
         if delayed:
             items = "; ".join(
@@ -224,6 +239,12 @@ class AIService:
             )
 
         wanted_terms = ["Market lag"]
+        if fi.defaulted:
+            wanted_terms.append("Default")
+        if fi.matured:
+            wanted_terms.append("Maturity")
+        if fi.interest > 0 and not fi.matured:
+            wanted_terms.append("Bond")
         if ctx.savings.rate_changed:
             wanted_terms.append("Interest rate")
         if ctx.rent.changed or ctx.rent.paid:
@@ -232,7 +253,9 @@ class AIService:
             wanted_terms.append("Savings account")
         if ctx.bankruptcies or any(c.target_type == TargetType.BANKRUPTCY_RISK for c in ctx.consequences):
             wanted_terms.append("Bankruptcy risk")
-        if ctx.dividends_total > 0 or any(c.target_type == TargetType.DIVIDEND for c in ctx.consequences):
+        if ctx.dividends_total > 0:
+            wanted_terms.append("Dividend calendar")
+        elif any(c.target_type == TargetType.DIVIDEND for c in ctx.consequences):
             wanted_terms.append("Dividend")
         if ctx.unmasked_noise:
             wanted_terms.append("Noise")

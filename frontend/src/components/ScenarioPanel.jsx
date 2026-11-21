@@ -22,7 +22,7 @@ function WeekStepper({ current, total, gameOver }) {
   );
 }
 
-function PortfolioMini({ history, total, start }) {
+function PortfolioMini({ history, total, start, investing, rentPaid }) {
   const W = 260;
   const H = 96;
   const pad = 10;
@@ -33,16 +33,24 @@ function PortfolioMini({ history, total, start }) {
   const y = (v) => pad + (1 - (v - min) / (max - min || 1)) * (H - pad * 2);
   const points = history.map((p) => `${x(p.week).toFixed(1)},${y(p.net_worth).toFixed(1)}`).join(" ");
   const last = history[history.length - 1];
-  const change = ((last.net_worth - start) / start) * 100;
 
   return (
     <section className="portfolio-mini" aria-label="Your portfolio">
       <header>
         <h2 className="panel-label">Your portfolio</h2>
-        <span className={`portfolio-mini__change is-${tone(change)}`}>{pct(change)}</span>
+        <span
+          className={`portfolio-mini__change is-${tone(investing)}`}
+          title="Investing result since the start, before rent (rent is a bill, not an investment loss)"
+        >
+          Investing {pct(investing)}
+        </span>
       </header>
       <div className="portfolio-mini__screen">
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Net worth ${money(last.net_worth)}, ${pct(change)} since start`}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          role="img"
+          aria-label={`Net worth ${money(last.net_worth)}. Investing result ${pct(investing)} before rent.`}
+        >
           <line x1={pad} x2={W - pad} y1={y(start)} y2={y(start)} className="portfolio-mini__base" />
           {history.length > 1 ? (
             <polyline points={points} className="portfolio-mini__line" />
@@ -53,6 +61,12 @@ function PortfolioMini({ history, total, start }) {
         </svg>
         <p className="portfolio-mini__value">{money(last.net_worth)}</p>
       </div>
+      {rentPaid > 0 && (
+        <p className="portfolio-mini__note">
+          Net worth after {money(rentPaid)} of rent. The line dips on rent days &mdash; that is your bills, not your
+          investments.
+        </p>
+      )}
     </section>
   );
 }
@@ -79,11 +93,19 @@ export default function ScenarioPanel({ game, children }) {
         )}
       </section>
 
-      <PortfolioMini history={game.net_worth_history} total={game.total_weeks} start={game.starting_cash} />
+      <PortfolioMini
+        history={game.net_worth_history}
+        total={game.total_weeks}
+        start={game.starting_cash}
+        investing={game.roi_pct}
+        rentPaid={game.total_rent_paid}
+      />
 
       {children}
 
-      <p className="panel-note">Bills first: cash and savings pay your rent &mdash; shares don&apos;t.</p>
+      <p className="panel-note">
+        Bills first: cash and savings pay your rent &mdash; shares and locked bonds don&apos;t.
+      </p>
     </aside>
   );
 }

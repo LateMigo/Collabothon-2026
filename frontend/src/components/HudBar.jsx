@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { money, moneyCompact, pct, plural, readStorage, tone, writeStorage } from "../utils/format.js";
+import { money, moneyCompact, pct, plural, readStorage, readyForRent, tone, writeStorage } from "../utils/format.js";
 import BrandMark from "./BrandMark.jsx";
 
 const COLLAPSED_KEY = "fq.hudCollapsed";
@@ -55,12 +55,13 @@ function RentIndicator({ rent, ready }) {
   );
 }
 
-export default function HudBar({ game }) {
+export default function HudBar({ game, onMenu }) {
   const [collapsed, setCollapsed] = useState(() => readStorage("localStorage", COLLAPSED_KEY) === "1");
   const { current_week: week, total_weeks: total, cash, stocks_value: stocks, net_worth: netWorth } = game;
   const savings = game.savings.balance;
-  const ready = cash + savings;
-  const change = ((netWorth - game.starting_cash) / game.starting_cash) * 100;
+  const ready = readyForRent(game);
+  // Investing result: rent is a living cost, not an investment loss - so it is added back here.
+  const investing = game.roi_pct;
   const progress = Math.min(100, ((week - (game.is_game_over ? 0 : 1)) / total) * 100);
 
   useEffect(() => {
@@ -116,19 +117,34 @@ export default function HudBar({ game }) {
             <dt>Savings</dt>
             <dd>{money(savings)}</dd>
           </div>
+          <div className="hud-stat" title="Bonds and term deposits: money lent for a fixed interest, plus the interest earned so far">
+            <dt>Bonds</dt>
+            <dd>{money(game.fixed_income_value)}</dd>
+          </div>
           <div className="hud-stat hud-stat--accent">
             <dt>Net worth</dt>
-            <dd>
-              {money(netWorth)}{" "}
-              <span className={`hud-change is-${tone(change)}`} title="Change since the start of the game">
-                {pct(change)}
-              </span>
-            </dd>
+            <dd>{money(netWorth)}</dd>
+            <span
+              className={`hud-invest is-${tone(investing)}`}
+              title={`What your investing earned since the start, before living costs. Rent paid so far: ${money(
+                game.total_rent_paid,
+              )} - that is a bill, not an investment loss.`}
+            >
+              Investing {pct(investing)}
+              {game.total_rent_paid > 0 && <small> &middot; rent paid {moneyCompact(game.total_rent_paid)}</small>}
+            </span>
           </div>
           <RentIndicator rent={game.rent} ready={ready} />
         </dl>
 
         <div className="hud__controls">
+          <button type="button" className="hud__collapse hud__menu" onClick={onMenu} title="Back to the main menu (your game is kept)">
+            <span aria-hidden="true" className="hud__collapse-icon">
+              {"☰"}
+            </span>
+            <span className="hud__collapse-text">Menu</span>
+            <span className="sr-only">Back to the main menu</span>
+          </button>
           <button
             type="button"
             className="hud__collapse"

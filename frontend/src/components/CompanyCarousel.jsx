@@ -15,7 +15,7 @@ function pageStep(track) {
   return perPage * slideStep;
 }
 
-export default function CompanyCarousel({ companies, onTrade, disabled }) {
+export default function CompanyCarousel({ companies, onTrade, disabled, currentWeek, riskScale }) {
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -73,7 +73,13 @@ export default function CompanyCarousel({ companies, onTrade, disabled }) {
       <div className="carousel__track" ref={trackRef} onScroll={update}>
         {companies.map((company) => (
           <div className="carousel__slide" key={company.id}>
-            <CompanyCard company={company} onTrade={onTrade} disabled={disabled} />
+            <CompanyCard
+              company={company}
+              onTrade={onTrade}
+              disabled={disabled}
+              currentWeek={currentWeek}
+              riskScale={riskScale}
+            />
           </div>
         ))}
       </div>

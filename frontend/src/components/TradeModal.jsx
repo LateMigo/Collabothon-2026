@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal.jsx";
-import { clamp, money, plural } from "../utils/format.js";
+import { clamp, everyWeeks, money, plural, whenWeek } from "../utils/format.js";
 
 export default function TradeModal({ company, game, onClose, onTrade }) {
   const canBuy = company.max_affordable > 0;
@@ -26,13 +26,13 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
 
   const rent = game.rent;
   const savings = game.savings.balance;
-  // Savings cover the rent automatically, so only cash + savings below the rent is a problem.
+  // Savings cover the rent automatically (and bonds that pay back this week add cash), so only less than that is a problem.
   const rentWarning =
     mode === "buy" &&
     value > 0 &&
     rent.enabled &&
     rent.next_due_week !== null &&
-    cashAfter + savings < rent.monthly_rent;
+    cashAfter + savings + game.fixed_income.maturing_this_week < rent.monthly_rent;
 
   const switchMode = (next) => {
     setMode(next);
@@ -182,6 +182,18 @@ export default function TradeModal({ company, game, onClose, onTrade }) {
           </div>
         </div>
 
+        {game.modifiers.enable_dividends && company.dividend_per_share > 0 && company.next_dividend_week !== null && (
+          <p className="fee-note">
+            <strong>Dividend calendar:</strong> {money(company.dividend_per_share)} per share, {everyWeeks(company.dividend_every_weeks)}.
+            Next payout {whenWeek(company.next_dividend_week, game.current_week)}
+            {company.next_dividend_week === game.current_week ? " (end of this week)" : ""} &mdash;{" "}
+            {mode === "buy"
+              ? value > 0
+                ? `own these ${value} shares then and you get ${money(company.dividend_per_share * value)}.`
+                : "only owners on payout day get paid."
+              : "if you sell now, you won't get it."}
+          </p>
+        )}
         {rentWarning && (
           <p className="warning-note" role="alert">
             <strong>Careful:</strong> after this purchase you&apos;d have {money(cashAfter)} in cash

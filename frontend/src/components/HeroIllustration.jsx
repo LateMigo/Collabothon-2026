@@ -159,6 +159,32 @@ const DOWN = "#9c2b23";
 // window opening (the glass area) and the head's position
 const WIN = { x0: 39, y0: 13, x1: 121, y1: 79 };
 
+/** One tall glass tower in the city, with a plain dark crown and an antenna mast. */
+function paintGlassTower(p) {
+  const rand = seeded(91); // its own sequence, so the rest of the scene keeps its old random details
+  const x0 = 103;
+  const x1 = 117;
+  const top = 36;
+  // antenna mast in front of the ringed planet
+  for (let by = top - 9; by < top - 2; by += 1) p.set(110, by, "#2a2c33", VIEW);
+  p.rect(109, top - 3, 3, 3, "#191b23", VIEW);
+  // glass shaft: lit side on the left, shadow side on the right, dark frame
+  for (let by = top; by <= WIN.y1; by += 1)
+    for (let bx = x0; bx <= x1; bx += 1) {
+      let color = bx < 110 ? "#1d2232" : "#151925";
+      if (bx === x0 || bx === x1) color = "#0b0c11";
+      p.set(bx, by, color, VIEW);
+    }
+  // a plain dark crown band at the top
+  p.rect(x0, top, x1 - x0 + 1, 3, "#0b0c11", VIEW);
+  // the office works late: rows of warm windows
+  for (let wy = top + 5; wy < WIN.y1 - 1; wy += 3)
+    for (let wx = x0 + 2; wx < x1 - 1; wx += 2) {
+      const roll = rand();
+      if (roll > 0.45) p.set(wx, wy, roll > 0.8 ? "#d8b24a" : "#8a7536", VIEW);
+    }
+}
+
 function paintRoom(p, rand) {
   // wallpaper with faint stripes, and a wooden wainscot
   for (let y = 0; y < 128; y += 1)
@@ -212,6 +238,7 @@ function paintRoom(p, rand) {
   // a taller tower with an antenna (its light blinks)
   for (let by = 44; by <= WIN.y1; by += 1) for (let bx = 52; bx <= 58; bx += 1) p.set(bx, by, "#121318", VIEW);
   for (let by = 36; by <= 44; by += 1) p.set(55, by, "#24252a", VIEW);
+  paintGlassTower(p);
   // snow piled on the outside of the window
   for (let sx = WIN.x0; sx <= WIN.x1; sx += 1) {
     p.set(sx, WIN.y1, "#bdb9ae", VIEW);
@@ -602,9 +629,10 @@ function paintFrame(target, frame, flakes, moving) {
   // blinking antenna light
   target.set(55, 35, Math.floor(frame / 5) % 2 === 0 ? "#e0503a" : "#4a1d17");
 
-  // the alien: thinking with the pen, or staring at the sheets
-  paintThinkingArm(target, thinking ? RUB[t % RUB.length] : 2);
+  // the alien: thinking with the pen, or staring at the sheets. The face goes first so the hand and the pen
+  // rubbing the forehead stay in front of the raised eyebrow (the brow used to be drawn over the pen).
   paintFace(target, thinking, t === 52 || t === 53);
+  paintThinkingArm(target, thinking ? RUB[t % RUB.length] : 2);
   if (thinking && t >= 12 && Math.floor(t / 6) % 4 !== 3) paintThought(target);
 
   paintLampLight(target);
@@ -666,7 +694,7 @@ export default function HeroIllustration() {
       width={W}
       height={H}
       role="img"
-      aria-label="Pixel-art night scene: in a small room, a green alien with a huge afro, in a mustard sweater with a stock chart knitted on it, sits at a green-leather banker's desk covered in stock sheets and charts, rubbing a pen against his forehead while he thinks. A green banker's lamp, a calculator, a piggy bank, a sticky note with a question mark and a steaming coffee mug sit on the desk; through the window, snow falls on a dark city under a ringed planet."
+      aria-label="Pixel-art night scene: in a small room, a green alien with a huge afro, in a mustard sweater with a stock chart knitted on it, sits at a green-leather banker's desk covered in stock sheets and charts, rubbing a pen against his forehead while he thinks. A green banker's lamp, a calculator, a piggy bank, a sticky note with a question mark and a steaming coffee mug sit on the desk; through the window, snow falls on a dark city under a ringed planet, where a glass bank tower glows with the yellow Commerzbank ribbon logo on its crown."
     />
   );
 }

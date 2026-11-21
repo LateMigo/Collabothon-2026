@@ -223,7 +223,9 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
         })}
       </ul>
 
-      <table className="sr-only">
+      {/* A table ignores width: 1px, so it is wrapped in the hidden box - otherwise it widened the page on phones. */}
+      <div className="sr-only">
+      <table>
         <caption>{title} data</caption>
         <thead>
           <tr>
@@ -246,6 +248,7 @@ export default function StockChart({ history, companies, totalWeeks, title = "St
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }

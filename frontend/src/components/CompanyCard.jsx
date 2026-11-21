@@ -1,8 +1,8 @@
 import { useState } from "react";
 import InfoTip from "./InfoTip.jsx";
-import { millions, money, pct, RISK_LABELS, tone } from "../utils/format.js";
+import { everyWeeks, millions, money, pct, RISK_LABELS, tone, whenWeek } from "../utils/format.js";
 
-const RISK_SEGMENTS = 10;
+const DEFAULT_SCALE = { elevated_pct: 40, critical_pct: 70, bankruptcy_pct: 85 };
 
 /** Trend arrow for the hard data: green when the move is good news, red when it is a warning. */
 function Trend({ direction, goodWhen }) {
@@ -70,32 +70,87 @@ function HardData({ fundamentals: f }) {
   );
 }
 
-function RiskMeter({ level, risk, trend }) {
-  // 10 segments, one per 10% of bankruptcy risk, so 5% and 35% look different.
-  const lit = Math.max(1, Math.min(RISK_SEGMENTS, Math.round(risk * RISK_SEGMENTS)));
+/**
+ * One continuous gauge from 0% to 100% with the "Elevated" and "Critical" zones shaded and a red line where the
+ * company goes bankrupt - so the player sees how far a company is from the edge, not just a word.
+ */
+function RiskMeter({ level, risk, trend, scale = DEFAULT_SCALE }) {
+  const value = Math.round(risk * 100);
+  const trendText = trend === "up" ? "rising" : trend === "down" ? "falling" : null;
   return (
-    <span className={`risk-meter risk-meter--${level}`}>
-      <span className="risk-meter__bars" aria-hidden="true">
-        {Array.from({ length: RISK_SEGMENTS }, (_, i) => (
-          <span key={i} className={i < lit ? "is-lit" : ""} />
-        ))}
+    <div className={`risk-meter risk-meter--${level}`}>
+      <div className="risk-meter__readout">
+        <span className="risk-meter__label">{RISK_LABELS[level]}</span>
+        <span className="risk-meter__pct">
+          {value}%
+          {trendText && (
+            <span className={`risk-meter__trend is-${trend}`} title={`Risk ${trendText} since last week`}>
+              {trend === "up" ? " ▲" : " ▼"}
+              <span className="sr-only"> {trendText} since last week</span>
+            </span>
+          )}
+        </span>
+      </div>
+      <span
+        className="risk-meter__track"
+        style={{
+          "--elevated": `${scale.elevated_pct}%`,
+          "--critical": `${scale.critical_pct}%`,
+          "--bust": `${scale.bankruptcy_pct}%`,
+        }}
+        aria-hidden="true"
+      >
+        <span className="risk-meter__fill" style={{ width: `${Math.min(100, Math.max(2, value))}%` }} />
+        <span className="risk-meter__bust" />
       </span>
-      <span className="risk-meter__label">
-        {RISK_LABELS[level]}
-        <small>
-          {" "}
-          {Math.round(risk * 100)}%{trend === "up" ? " ↑" : trend === "down" ? " ↓" : ""}
-        </small>
+      <span className="risk-meter__scale" aria-hidden="true">
+        <span>safe</span>
+        <span>bankrupt at {Math.round(scale.bankruptcy_pct)}%</span>
       </span>
-    </span>
+    </div>
   );
 }
 
-export default function CompanyCard({ company, onTrade, disabled }) {
+function DividendRow({ c, currentWeek }) {
+  const changed = Math.abs(c.dividend_per_share - c.previous_dividend) > 1e-6 && !c.is_bankrupt;
+  const pays = c.dividend_per_share > 0 && !c.is_bankrupt;
+  return (
+    <div className="company-card__dividend">
+      <dt>
+        Dividend
+        <InfoTip term="Dividend">
+          {pays
+            ? `Cash the company pays for each share you own - ${everyWeeks(
+                c.dividend_every_weeks,
+              )}, on its own calendar. Only owners at the end of a payout week get paid: 10 shares would bring you ${money(
+                c.dividend_per_share * 10,
+              )}.`
+            : "Cash a company pays its owners on its payout days. This one pays nothing right now."}
+        </InfoTip>
+      </dt>
+      <dd>
+        {money(c.dividend_per_share)}
+        <small> / share</small>
+        {changed && (
+          <span className={`mini-delta is-${tone(c.dividend_per_share - c.previous_dividend)}`}>
+            {c.dividend_per_share > c.previous_dividend ? " ▲" : " ▼"}
+          </span>
+        )}
+        {pays && (
+          <small className={`company-card__payday ${c.pays_dividend_this_week ? "is-now" : ""}`}>
+            {everyWeeks(c.dividend_every_weeks)} &middot;{" "}
+            {c.pays_dividend_this_week ? "payout this week!" : `next ${whenWeek(c.next_dividend_week, currentWeek)}`}
+          </small>
+        )}
+      </dd>
+    </div>
+  );
+}
+
+export default function CompanyCard({ company, onTrade, disabled, currentWeek, riskScale }) {
   const [flipped, setFlipped] = useState(false);
   const c = company;
   const changeTone = c.change_pct === null ? "flat" : tone(c.change_pct);
-  const dividendChanged = Math.abs(c.dividend_per_share - c.previous_dividend) > 1e-6 && !c.is_bankrupt;
 
   return (
     <article
@@ -132,37 +187,17 @@ export default function CompanyCard({ company, onTrade, disabled }) {
           </div>
 
           <dl className="company-card__stats">
-            <div>
-              <dt>
-                Dividend/share
-                <InfoTip term="Dividend/share">
-                  {c.dividend_per_share > 0
-                    ? `Cash the company pays you every week for each share you own: 10 shares would bring you ${money(
-                        c.dividend_per_share * 10,
-                      )} a week.`
-                    : "Cash a company pays its owners every week. This one pays nothing right now."}
-                </InfoTip>
-              </dt>
-              <dd>
-                {money(c.dividend_per_share)}
-                <small> / week</small>
-                {dividendChanged && (
-                  <span className={`mini-delta is-${tone(c.dividend_per_share - c.previous_dividend)}`}>
-                    {c.dividend_per_share > c.previous_dividend ? " ▲" : " ▼"}
-                  </span>
-                )}
-              </dd>
-            </div>
-            <div>
+            <DividendRow c={c} currentWeek={currentWeek} />
+            <div className="company-card__risk">
               <dt>
                 Bankruptcy risk
                 <InfoTip term="Bankruptcy risk">
-                  The chance that this company runs out of money. If it goes bankrupt, its shares drop to $0 and you
-                  lose 100% of what you put in.
+                  The chance that this company runs out of money. If the gauge reaches the red line, the company goes
+                  bankrupt: its shares drop to $0 and you lose 100% of what you put in.
                 </InfoTip>
               </dt>
               <dd>
-                <RiskMeter level={c.risk_level} risk={c.bankruptcy_risk} trend={c.risk_trend} />
+                <RiskMeter level={c.risk_level} risk={c.bankruptcy_risk} trend={c.risk_trend} scale={riskScale} />
               </dd>
             </div>
             <div className="company-card__owned">

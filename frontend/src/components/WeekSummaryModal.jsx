@@ -1,19 +1,20 @@
 import Modal from "./Modal.jsx";
-import { money, moneyCompact, pct, ratePct, signedMoney, tone } from "../utils/format.js";
+import { money, moneyCompact, pct, ratePct, RISK_LABELS, signedMoney, tone } from "../utils/format.js";
 
+// Headline and stamp judge the INVESTING result: rent is a bill, not an investment loss.
 function headlineFor(summary) {
   if (summary.end_reason === "liquidity") return "Out of cash!";
   if (summary.is_game_over) return "Final bell!";
-  if (summary.net_worth_change_pct > 0.5) return "Money at work!";
-  if (summary.net_worth_change_pct < -0.5) return summary.rent.paid ? "Rent day bites." : "Rough week.";
-  return "Holding steady.";
+  const invest = summary.investment_change_pct;
+  if (invest > 0.5) return summary.rent.paid ? "Profit - and the rent is paid." : "Money at work!";
+  if (invest < -0.5) return "Rough week.";
+  return summary.rent.paid ? "Rent day - investments held steady." : "Holding steady.";
 }
 
-// The verdict stamped on the weekly report.
 function verdictFor(summary) {
   if (summary.end_reason === "liquidity") return { text: "Evicted", tone: "red" };
-  if (summary.net_worth_change_pct > 0.5) return { text: "Profit", tone: "green" };
-  if (summary.net_worth_change_pct < -0.5) return { text: "Loss", tone: "red" };
+  if (summary.investment_change_pct > 0.5) return { text: "Profit", tone: "green" };
+  if (summary.investment_change_pct < -0.5) return { text: "Loss", tone: "red" };
   return { text: "No change", tone: "ink" };
 }
 
@@ -41,7 +42,6 @@ function ConsequenceItem({ item }) {
         <span className={`impact impact--${sentiment(item)}`}>
           {item.target_label}: {item.impact_label}
         </span>
-        {item.player_was_exposed && <span className="badge badge--you">You owned this</span>}
       </div>
       <p className="hit__news">
         News: &ldquo;{item.event_title}&rdquo;
@@ -60,10 +60,13 @@ function ConsequenceItem({ item }) {
 
 export default function WeekSummaryModal({ summary, onContinue }) {
   const resultTone = tone(summary.net_worth_change);
+  const investTone = tone(summary.investment_change);
   const verdict = verdictFor(summary);
   const rentPaid = summary.rent.paid ? summary.rent.amount_paid : 0;
   const savings = summary.savings;
-  const marketMove = summary.net_worth_change - summary.dividends_total - savings.interest + rentPaid;
+  const fi = summary.fixed_income;
+  const interest = savings.interest + fi.interest;
+  const defaultLoss = fi.defaulted.reduce((sum, d) => sum + d.lost, 0);
   const lesson = summary.lesson;
   const delayedCount = summary.triggered_consequences.filter((c) => c.is_delayed).length;
 
@@ -80,34 +83,44 @@ export default function WeekSummaryModal({ summary, onContinue }) {
         <span className={`stamp stamp--${verdict.tone} stamp--drop summary__verdict`}>{verdict.text}</span>
       </div>
 
-      <div className={`ledger is-${resultTone}`}>
+      <div className={`ledger is-${investTone}`}>
         <p className="eyebrow">Your result this week</p>
         <dl className="ledger__rows">
           <div>
             <dt>Share prices</dt>
-            <dd className={`is-${tone(marketMove)}`}>{signedMoney(marketMove)}</dd>
+            <dd className={`is-${tone(summary.stocks_change)}`}>{signedMoney(summary.stocks_change)}</dd>
           </div>
           <div>
             <dt>Dividends</dt>
             <dd className={`is-${tone(summary.dividends_total)}`}>{signedMoney(summary.dividends_total)}</dd>
           </div>
           <div>
-            <dt>Savings interest</dt>
-            <dd className={`is-${tone(savings.interest)}`}>{signedMoney(savings.interest)}</dd>
+            <dt>Interest (savings, bonds, deposits)</dt>
+            <dd className={`is-${tone(interest)}`}>{signedMoney(interest)}</dd>
+          </div>
+          {defaultLoss > 0 && (
+            <div>
+              <dt>Bond default</dt>
+              <dd className="is-down">{signedMoney(-defaultLoss)}</dd>
+            </div>
+          )}
+          <div className="ledger__total ledger__invest">
+            <dt>Investing result</dt>
+            <dd className={`is-${investTone}`}>
+              {signedMoney(summary.investment_change)} <small>({pct(summary.investment_change_pct)})</small>
+            </dd>
           </div>
           <div>
-            <dt>Rent</dt>
+            <dt>Rent (a bill, not an investment)</dt>
             <dd className={rentPaid ? "is-down" : "is-flat"}>{rentPaid ? signedMoney(-rentPaid) : money(0)}</dd>
           </div>
           <div className="ledger__total">
-            <dt>Net change</dt>
+            <dt>Net change after bills</dt>
             <dd className={`is-${resultTone}`}>{signedMoney(summary.net_worth_change)}</dd>
           </div>
           <div className="ledger__total">
             <dt>New net worth</dt>
-            <dd>
-              {money(summary.net_worth_after)} <small>({pct(summary.net_worth_change_pct)})</small>
-            </dd>
+            <dd>{money(summary.net_worth_after)}</dd>
           </div>
         </dl>
       </div>
@@ -153,36 +166,64 @@ export default function WeekSummaryModal({ summary, onContinue }) {
               <thead>
                 <tr>
                   <th scope="col">Company</th>
-                  <th scope="col">Before</th>
-                  <th scope="col">After</th>
+                  <th scope="col">You own</th>
+                  <th scope="col">Share price</th>
                   <th scope="col">Change</th>
-                  <th scope="col">Risk</th>
+                  <th scope="col">
+                    <abbr title="Bankruptcy risk now. The arrow shows the direction since last week.">Bust risk</abbr>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {summary.price_changes.map((p) => (
-                  <tr key={p.company_id}>
-                    <th scope="row">
-                      <i style={{ background: p.color }} aria-hidden="true" /> {p.name}
-                      {p.shares_owned > 0 && <small> &middot; you: {p.shares_owned}</small>}
-                    </th>
-                    <td>{money(p.old_price)}</td>
-                    <td>{p.is_bankrupt ? "Bankrupt" : money(p.new_price)}</td>
-                    <td className={`is-${tone(p.change_pct, 0.05)}`}>{pct(p.change_pct)}</td>
-                    <td
-                      className={`recap-risk is-${tone(p.risk_before - p.risk_after, 0.004)}`}
-                      title="Bankruptcy risk before and after this week"
-                    >
-                      {Math.round(p.risk_before * 100)}%
-                      {Math.abs(p.risk_after - p.risk_before) >= 0.005 && (
-                        <>
-                          {" "}
-                          {p.risk_after > p.risk_before ? "\u2191" : "\u2193"} {Math.round(p.risk_after * 100)}%
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {summary.price_changes.map((p) => {
+                  const riskMove = p.risk_after - p.risk_before;
+                  const moved = Math.abs(riskMove) >= 0.005;
+                  return (
+                    <tr key={p.company_id} className={p.shares_owned > 0 ? "is-owned" : undefined}>
+                      <th scope="row">
+                        <span className="recap-company">
+                          <i style={{ background: p.color }} aria-hidden="true" />
+                          <span>
+                            {p.name}
+                            <small>{p.ticker}</small>
+                          </span>
+                        </span>
+                      </th>
+                      <td className="recap-owned">
+                        {p.shares_owned > 0 ? (
+                          <>
+                            <b>{p.shares_owned}</b>
+                            <small>{p.shares_owned === 1 ? "share" : "shares"}</small>
+                          </>
+                        ) : (
+                          <span className="recap-none">&mdash;</span>
+                        )}
+                      </td>
+                      <td>
+                        {p.is_bankrupt ? "Bankrupt" : money(p.new_price)}
+                        <small className="recap-was">was {money(p.old_price)}</small>
+                      </td>
+                      <td className={`is-${tone(p.change_pct, 0.05)}`}>{pct(p.change_pct)}</td>
+                      <td
+                        className={`recap-risk recap-risk--${p.risk_level}`}
+                        title={`Bankruptcy risk: ${Math.round(p.risk_before * 100)}% last week, ${Math.round(
+                          p.risk_after * 100,
+                        )}% now`}
+                      >
+                        <span className="recap-risk__pill">
+                          {Math.round(p.risk_after * 100)}%
+                          {moved && (
+                            <span className={riskMove > 0 ? "is-down" : "is-up"} aria-hidden="true">
+                              {riskMove > 0 ? " \u25b2" : " \u25bc"}
+                            </span>
+                          )}
+                        </span>
+                        <small>{RISK_LABELS[p.risk_level]}</small>
+                        {moved && <span className="sr-only">{riskMove > 0 ? " rising" : " falling"}</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -206,6 +247,28 @@ export default function WeekSummaryModal({ summary, onContinue }) {
                 <span>Savings interest ({ratePct(savings.rate_pct)} a week)</span>
                 <b className={savings.interest > 0 ? "is-up" : ""}>{money(savings.interest)}</b>
               </li>
+              {(fi.interest > 0 || fi.matured.length > 0 || fi.defaulted.length > 0) && (
+                <li>
+                  <span>Bond &amp; deposit interest</span>
+                  <b className={fi.interest > 0 ? "is-up" : ""}>{money(fi.interest)}</b>
+                </li>
+              )}
+              {fi.matured.map((m) => (
+                <li key={m.holding_id} className="money-moves__sub">
+                  <span>
+                    {m.name} paid back {money(m.principal)} + {money(m.interest)} interest
+                  </span>
+                  <b className="is-up">{money(m.payout)}</b>
+                </li>
+              ))}
+              {fi.defaulted.map((d) => (
+                <li key={d.holding_id} className="money-moves__alert">
+                  <span>
+                    {d.name} defaulted &mdash; only {money(d.recovered)} of {money(d.principal)} came back
+                  </span>
+                  <b className="is-down">&minus;{money(d.lost)}</b>
+                </li>
+              ))}
               {savings.rate_changed && (
                 <li className="money-moves__alert">
                   <span>

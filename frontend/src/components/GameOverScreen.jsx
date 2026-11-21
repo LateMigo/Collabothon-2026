@@ -245,6 +245,8 @@ export default function GameOverScreen({ game, onPlayAgain }) {
           <p className="result-box__sub">
             Started with {money(stats.starting_cash)} &middot; cash {money(stats.final_cash)} + savings{" "}
             {money(stats.final_savings)} + shares {money(stats.final_stocks_value)}
+            {stats.final_fixed_income > 0 ? ` + bonds ${money(stats.final_fixed_income)}` : ""} &middot; after{" "}
+            {money(stats.total_rent_paid)} of rent
           </p>
         </div>
 
@@ -259,8 +261,11 @@ export default function GameOverScreen({ game, onPlayAgain }) {
             <dd className={stats.total_dividends > 0 ? "is-up" : ""}>{money(stats.total_dividends)}</dd>
           </div>
           <div>
-            <dt>Savings interest</dt>
-            <dd className={stats.total_interest > 0 ? "is-up" : ""}>{money(stats.total_interest)}</dd>
+            <dt>Interest earned</dt>
+            <dd className={stats.total_interest + stats.total_fixed_income_interest > 0 ? "is-up" : ""}>
+              {money(stats.total_interest + stats.total_fixed_income_interest)}
+            </dd>
+            <small>savings, bonds &amp; deposits</small>
           </div>
           <div>
             <dt>Rent paid</dt>

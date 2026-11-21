@@ -12,6 +12,8 @@ from pathlib import Path
 from app.models.schemas import (
     CompanyDefinition,
     EventDefinition,
+    FixedIncomeKind,
+    FixedIncomeProduct,
     GameData,
     IndustryDefinition,
     NoiseInsight,
@@ -59,6 +61,8 @@ REQUIRED_INSIGHTS = {
     "s_savings",
     "s_savings_rent",
     "i_bought_bad_news",
+    "s_fixed_income",
+    "i_bond_default",
 }
 REQUIRED_VERDICTS = {"evicted", "fomo", "all_in", "rookie", "careful_saver", "prudent", "bold", "steady"}
 REQUIRED_HABITS = {
@@ -89,6 +93,7 @@ class GameDataRepository:
         self._events: dict[str, tuple[int, EventDefinition]] = {
             e.id: (w.week, e) for w in data.weeks for e in w.events
         }
+        self._fixed_income: dict[str, FixedIncomeProduct] = {p.id: p for p in data.fixed_income}
 
     # --- scenario -----------------------------------------------------------
     @property
@@ -154,6 +159,43 @@ class GameDataRepository:
             for event in week.events:
                 yield week.week, event
 
+    # --- dividends ------------------------------------------------------------
+    def dividend_weeks(self, company_id: str) -> list[int]:
+        """Every company has its own payout calendar (every 2, 3, 4... weeks), like a real one."""
+        company = self.company(company_id)
+        if company is None:
+            return []
+        every = company.dividend_every_weeks
+        first = company.first_dividend_week or company.listed_week - 1 + every
+        return list(range(first, self.scenario.total_weeks + 1, every))
+
+    def pays_dividend(self, company_id: str, week: int) -> bool:
+        return week in self.dividend_weeks(company_id)
+
+    def next_dividend_week(self, company_id: str, from_week: int) -> int | None:
+        return next((w for w in self.dividend_weeks(company_id) if w >= from_week), None)
+
+    # --- bonds & term deposits ------------------------------------------------
+    @property
+    def fixed_income_products(self) -> list[FixedIncomeProduct]:
+        return self.data.fixed_income
+
+    def fixed_income_product(self, product_id: str) -> FixedIncomeProduct | None:
+        return self._fixed_income.get(product_id)
+
+    def fixed_income_maturity(self, product: FixedIncomeProduct, open_week: int) -> int:
+        """The week whose close pays the holding back (a deposit opened in Week 1 for 4 weeks -> Week 4)."""
+        if product.maturity_week is not None:
+            return product.maturity_week
+        return open_week + (product.term_weeks or 1) - 1
+
+    def fixed_income_last_buy_week(self, product: FixedIncomeProduct) -> int:
+        if product.available_until_week is not None:
+            return product.available_until_week
+        if product.maturity_week is not None:
+            return product.maturity_week - 1
+        return self.scenario.total_weeks - (product.term_weeks or 1) + 1
+
 
 # =============================================================================
 # Loading & cross-reference validation
@@ -194,6 +236,8 @@ def validate_cross_references(data: GameData) -> None:
     for company in data.companies:
         if company.listed_week > scenario.total_weeks:
             errors.append(f"Company '{company.id}' lists after the final week")
+        if company.first_dividend_week is not None and company.first_dividend_week < company.listed_week:
+            errors.append(f"Company '{company.id}' pays its first dividend before it is listed")
         if company.industry not in data.industries:
             errors.append(f"Company '{company.id}' uses unknown industry '{company.industry}'")
         if company.id in data.industries or company.id == GLOBAL_TARGET:
@@ -239,6 +283,31 @@ def validate_cross_references(data: GameData) -> None:
                 errors.append(f"Week {week.week}: reports reference unknown company '{company_id}'")
             elif listed_week[company_id] > week.week:
                 errors.append(f"Week {week.week}: report for '{company_id}' before it is listed")
+
+    product_ids: set[str] = set()
+    for product in data.fixed_income:
+        where = f"fixed_income '{product.id}'"
+        if product.id in product_ids:
+            errors.append(f"Duplicate {where}")
+        product_ids.add(product.id)
+        if product.issuer_company_id and product.issuer_company_id not in valid_company_targets:
+            errors.append(f"{where} references unknown company '{product.issuer_company_id}'")
+        if product.issuer_company_id and product.kind != FixedIncomeKind.BOND:
+            errors.append(f"{where}: only bonds can be issued by a company")
+        if product.maturity_week is not None and product.maturity_week > scenario.total_weeks:
+            errors.append(f"{where} matures after the final week")
+        last_buy = product.available_until_week
+        if last_buy is not None and last_buy < product.available_from_week:
+            errors.append(f"{where}: available_until_week is before available_from_week")
+        if product.term_weeks is not None:
+            latest = last_buy if last_buy is not None else scenario.total_weeks - product.term_weeks + 1
+            if latest + product.term_weeks - 1 > scenario.total_weeks:
+                errors.append(f"{where} could mature after the final week")
+        if product.maturity_week is not None and last_buy is not None and last_buy > product.maturity_week:
+            errors.append(f"{where} can be bought after it matures")
+        issuer_listed = listed_week.get(product.issuer_company_id or "", 1)
+        if product.available_from_week < issuer_listed:
+            errors.append(f"{where} is sold before its issuer is listed")
 
     for event_id, insight in data.noise_insights.items():
         if event_id not in event_ids:

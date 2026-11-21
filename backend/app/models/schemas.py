@@ -69,11 +69,32 @@ class ActionType(StrEnum):
     DEPOSIT = "deposit"
     WITHDRAW = "withdraw"
     INTEREST = "interest"
+    FIXED_INCOME_BUY = "fixed_income_buy"
+    FIXED_INCOME_EXIT = "fixed_income_exit"
+    FIXED_INCOME_PAYOUT = "fixed_income_payout"
+    FIXED_INCOME_DEFAULT = "fixed_income_default"
 
 
 class SavingsAction(StrEnum):
     DEPOSIT = "deposit"
     WITHDRAW = "withdraw"
+
+
+class FixedIncomeKind(StrEnum):
+    DEPOSIT = "deposit"  # bank term deposit: locked for N weeks from the day it is opened
+    BOND = "bond"  # government or company bond: everyone is paid back in the same (maturity) week
+
+
+class FixedIncomeAction(StrEnum):
+    BUY = "buy"
+    CLOSE = "close"  # cash out before maturity (fee + the interest is lost)
+
+
+class FixedIncomeStatus(StrEnum):
+    ACTIVE = "active"
+    MATURED = "matured"
+    CLOSED_EARLY = "closed_early"
+    DEFAULTED = "defaulted"
 
 
 class AISource(StrEnum):
@@ -168,7 +189,13 @@ class CompanyDefinition(_StrictModel):
     industry: str
     main_product: str
     initial_price: float = Field(gt=0)
-    dividend_per_share: float = Field(ge=0)
+    dividend_per_share: float = Field(ge=0, description="Cash paid per share on every payout day.")
+    dividend_every_weeks: int = Field(
+        default=1, ge=1, le=12, description="How often the dividend is paid (its own calendar, like a real company)."
+    )
+    first_dividend_week: int | None = Field(
+        default=None, ge=1, description="First payout week. Default: one full interval after the listing."
+    )
     bankruptcy_risk: float = Field(ge=0.0, le=1.0)
     description: str
     country: str
@@ -182,6 +209,41 @@ class CompanyDefinition(_StrictModel):
 class IndustryDefinition(_StrictModel):
     label: str
     color: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+
+
+class FixedIncomeProduct(_StrictModel):
+    """A bank term deposit or a bond the player can buy. Interest is simple: principal x weekly_rate per week."""
+
+    id: str = Field(min_length=1)
+    kind: FixedIncomeKind
+    name: str
+    issuer: str
+    issuer_company_id: str | None = Field(
+        default=None, description="Company bond: if this company goes bankrupt, the bond defaults."
+    )
+    description: str
+    weekly_rate: float = Field(ge=0, le=0.1, description="Interest per week on the money put in (0.005 = 0.5%).")
+    term_weeks: int | None = Field(default=None, ge=1, le=52, description="Deposits: locked for this many weeks.")
+    maturity_week: int | None = Field(default=None, ge=1, le=52, description="Bonds: everyone is repaid this week.")
+    available_from_week: int = Field(default=1, ge=1)
+    available_until_week: int | None = Field(default=None, ge=1)
+    min_amount: float = Field(default=100.0, gt=0)
+    early_exit_fee: float = Field(
+        default=0.0, ge=0, lt=1, description="Cash out early: you get principal x (1 - fee) and lose the interest."
+    )
+    recovery_rate: float = Field(
+        default=0.0, ge=0, le=1, description="Share of the principal returned when the issuer defaults."
+    )
+
+    @model_validator(mode="after")
+    def _one_maturity_rule(self) -> FixedIncomeProduct:
+        if (self.term_weeks is None) == (self.maturity_week is None):
+            raise ValueError(f"Product '{self.id}' needs exactly one of 'term_weeks' or 'maturity_week'.")
+        if self.kind == FixedIncomeKind.DEPOSIT and self.term_weeks is None:
+            raise ValueError(f"Deposit '{self.id}' must use 'term_weeks'.")
+        if self.kind == FixedIncomeKind.BOND and self.maturity_week is None:
+            raise ValueError(f"Bond '{self.id}' must use 'maturity_week'.")
+        return self
 
 
 class WeekDefinition(_StrictModel):
@@ -260,6 +322,9 @@ class WeekLessonTexts(_StrictModel):
     savings_note: str
     savings_rent_note: str
     savings_rate_note: str
+    fixed_income_note: str
+    fixed_income_matured_note: str
+    fixed_income_default_note: str
     takeaway_delayed: str
     takeaway_immediate: str
     takeaway_quiet: str
@@ -335,6 +400,7 @@ class GameData(_StrictModel):
     industries: dict[str, IndustryDefinition]
     companies: list[CompanyDefinition]
     weeks: list[WeekDefinition]
+    fixed_income: list[FixedIncomeProduct] = Field(default_factory=list)
     noise_insights: dict[str, NoiseInsight] = Field(default_factory=dict)
     fallback_texts: FallbackTexts
 
@@ -375,6 +441,21 @@ class PortfolioPosition(BaseModel):
     instrument_type: InstrumentType = InstrumentType.STOCK
     shares: int = 0
     avg_cost: float = 0.0
+
+
+class FixedIncomeHolding(BaseModel):
+    """One bond or term deposit the player bought (each purchase is its own line)."""
+
+    holding_id: str
+    product_id: str
+    principal: float
+    opened_week: int
+    maturity_week: int
+    weekly_rate: float
+    accrued_interest: float = 0.0
+    status: FixedIncomeStatus = FixedIncomeStatus.ACTIVE
+    closed_week: int | None = None
+    payout: float = 0.0
 
 
 class PendingEffect(BaseModel):
@@ -462,6 +543,7 @@ class WeeklySnapshot(BaseModel):
     stocks_value: float
     savings: float = 0.0
     interest_earned: float = 0.0
+    fixed_income_value: float = 0.0
     net_worth: float
     holdings: dict[str, int]
     prices: dict[str, float]
@@ -498,6 +580,8 @@ class GameSession(BaseModel):
     savings_rate_changed_week: int | None = None
     savings_rate_source_week: int | None = None
     total_interest: float = 0.0
+    fixed_income: list[FixedIncomeHolding] = Field(default_factory=list)
+    total_fixed_income_interest: float = 0.0
     companies: dict[str, CompanyState]
     portfolio: dict[str, PortfolioPosition] = Field(default_factory=dict)
     pending_effects: list[PendingEffect] = Field(default_factory=list)
@@ -532,6 +616,13 @@ class TradeRequest(BaseModel):
 class SavingsRequest(BaseModel):
     action: SavingsAction
     amount: float = Field(gt=0, le=1_000_000_000)
+
+
+class FixedIncomeRequest(BaseModel):
+    action: FixedIncomeAction
+    product_id: str | None = Field(default=None, max_length=64, description="buy: which bond or deposit.")
+    amount: float | None = Field(default=None, gt=0, le=1_000_000_000, description="buy: how much cash to put in.")
+    holding_id: str | None = Field(default=None, max_length=64, description="close: which holding to cash out.")
 
 
 class NewsItem(BaseModel):
@@ -572,6 +663,9 @@ class CompanyView(BaseModel):
     just_listed: bool
     dividend_per_share: float
     previous_dividend: float
+    dividend_every_weeks: int
+    next_dividend_week: int | None
+    pays_dividend_this_week: bool
     bankruptcy_risk: float
     risk_level: RiskLevel
     risk_trend: Direction
@@ -622,6 +716,65 @@ class AdvisorView(BaseModel):
     disclaimer: str
 
 
+class FixedIncomeOfferView(BaseModel):
+    id: str
+    kind: FixedIncomeKind
+    name: str
+    issuer: str
+    issuer_company_id: str | None
+    issuer_risk: float | None
+    issuer_risk_level: RiskLevel | None
+    issuer_bankrupt: bool
+    description: str
+    weekly_rate_pct: float
+    term_weeks: int | None
+    maturity_week: int = Field(description="The week it pays back if you buy it this week.")
+    weeks_held: int = Field(description="Weeks of interest if bought this week and held to the end.")
+    total_return_pct: float
+    min_amount: float
+    early_exit_fee_pct: float
+    recovery_pct: float
+    available: bool
+    available_from_week: int
+    available_until_week: int
+    unavailable_reason: str | None
+
+
+class FixedIncomeHoldingView(BaseModel):
+    holding_id: str
+    product_id: str
+    kind: FixedIncomeKind
+    name: str
+    issuer: str
+    issuer_company_id: str | None
+    principal: float
+    opened_week: int
+    maturity_week: int
+    weeks_left: int
+    weekly_rate_pct: float
+    accrued_interest: float
+    value: float
+    payout_at_maturity: float
+    early_exit_value: float
+    status: FixedIncomeStatus
+    closed_week: int | None
+    payout: float
+
+
+class FixedIncomeView(BaseModel):
+    offers: list[FixedIncomeOfferView]
+    holdings: list[FixedIncomeHoldingView]
+    total_value: float
+    total_interest: float
+    maturing_this_week: float = Field(description="Cash that active holdings pay out at the end of this week.")
+
+
+class RiskScale(BaseModel):
+    elevated_pct: float
+    critical_pct: float
+    bankruptcy_pct: float
+
+
 class ScenarioView(BaseModel):
     id: str
     title: str
@@ -648,14 +801,19 @@ class GameStateResponse(BaseModel):
     end_reason: EndReason | None
     cash: float
     stocks_value: float
+    fixed_income_value: float
     net_worth: float
     starting_cash: float
-    roi_pct: float
+    roi_pct: float = Field(description="Investment return in % - before living costs (rent is not an investment).")
+    investment_gain: float = Field(description="Net worth + rent paid - starting cash, in $.")
+    total_rent_paid: float
     total_dividends: float
     sell_spread_pct: float
     rent: RentView
     savings: SavingsView
+    fixed_income: FixedIncomeView
     advisor: AdvisorView
+    risk_scale: RiskScale
     companies: list[CompanyView]
     news: list[NewsItem]
     price_history: list[PricePoint]
@@ -678,6 +836,7 @@ class ScenarioInfo(BaseModel):
     listing_interval_weeks: int | None
     savings_account_name: str
     savings_weekly_rate_pct: float
+    fixed_income_products: int
     available_modes: list[GameMode]
     coming_soon_modes: list[GameMode]
 
@@ -701,6 +860,14 @@ class SavingsResponse(BaseModel):
     requested_amount: float
     amount: float
     was_clamped: bool
+    message: str
+    state: GameStateResponse
+
+
+class FixedIncomeResponse(BaseModel):
+    action: FixedIncomeAction
+    holding_id: str
+    amount: float = Field(description="buy: money put in; close: cash received back.")
     message: str
     state: GameStateResponse
 
@@ -743,6 +910,7 @@ class PriceChange(BaseModel):
     change_pct: float
     risk_before: float
     risk_after: float
+    risk_level: RiskLevel
     is_bankrupt: bool
     shares_owned: int
 
@@ -780,6 +948,29 @@ class SavingsUpdate(BaseModel):
     balance_after: float
 
 
+class FixedIncomePayout(BaseModel):
+    holding_id: str
+    name: str
+    principal: float
+    interest: float
+    payout: float
+
+
+class FixedIncomeDefault(BaseModel):
+    holding_id: str
+    name: str
+    principal: float
+    recovered: float
+    lost: float = Field(description="Principal + interest earned so far - what was recovered.")
+
+
+class FixedIncomeUpdate(BaseModel):
+    interest: float = Field(description="Interest earned this week by all active bonds and deposits.")
+    matured: list[FixedIncomePayout] = Field(default_factory=list)
+    defaulted: list[FixedIncomeDefault] = Field(default_factory=list)
+    value_after: float = 0.0
+
+
 class BankruptcyNotice(BaseModel):
     company_id: str
     name: str
@@ -805,9 +996,13 @@ class WeekSummaryResponse(BaseModel):
     dividends_total: float
     rent: RentUpdate
     savings: SavingsUpdate
+    fixed_income: FixedIncomeUpdate
     bankruptcies: list[BankruptcyNotice]
     unmasked_noise: list[UnmaskedNoise]
     lesson: WeekLesson
+    stocks_change: float = Field(description="What price moves (and bankruptcies) did to the shares you held.")
+    investment_change: float = Field(description="Net worth change before rent - the result of your investing.")
+    investment_change_pct: float
     net_worth_before: float
     net_worth_after: float
     net_worth_change: float
@@ -856,9 +1051,11 @@ class WeekSummaryContext(BaseModel):
     unmasked_noise: list[UnmaskedNoise]
     rent: RentUpdate
     savings: SavingsUpdate
+    fixed_income: FixedIncomeUpdate
     dividends_total: float
     bankruptcies: list[BankruptcyNotice]
     net_worth_change: float
+    investment_change: float
 
 
 class AdvisorSignal(BaseModel):
@@ -997,6 +1194,11 @@ class PlayerMetrics(BaseModel):
     final_savings: float = 0.0
     total_interest: float = 0.0
     rent_covered_by_savings: float = 0.0
+    fixed_income_interest: float = 0.0
+    fixed_income_bought: int = 0
+    fixed_income_defaults: list[str] = Field(default_factory=list, description="Names of bonds that defaulted.")
+    fixed_income_default_loss: float = 0.0
+    fixed_income_default_week: int | None = None
     noise_events_total: int
     noise_followed: list[NoiseFollow]
     delayed_signals: list[DelayedSignalOutcome]
@@ -1067,6 +1269,8 @@ class FinalStats(BaseModel):
     final_stocks_value: float
     final_savings: float = 0.0
     total_interest: float = 0.0
+    final_fixed_income: float = 0.0
+    total_fixed_income_interest: float = 0.0
     trades_count: int
     weeks_played: int
     end_reason: EndReason | None

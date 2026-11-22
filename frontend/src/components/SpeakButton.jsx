@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
-import { speechLang, useAiPrefs } from "../utils/aiPrefs.js";
 
 const supported = typeof window !== "undefined" && "speechSynthesis" in window;
 
+// Voices load asynchronously in Chrome; keep a fresh copy.
+let cachedVoices = [];
+if (supported) {
+  const load = () => (cachedVoices = window.speechSynthesis.getVoices());
+  load();
+  window.speechSynthesis.addEventListener?.("voiceschanged", load);
+}
+
 export default function SpeakButton({ text, className = "" }) {
-  const { language } = useAiPrefs();
   const [speaking, setSpeaking] = useState(false);
 
   useEffect(() => {
@@ -23,15 +29,16 @@ export default function SpeakButton({ text, className = "" }) {
     }
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    const lang = speechLang(language);
-    utterance.lang = lang;
-    // Windows/Chrome often ignores `lang` and keeps the system (e.g. Polish) voice,
-    // so pick a matching voice explicitly.
-    const voices = synth.getVoices();
-    const prefix = lang.slice(0, 2).toLowerCase();
+    // Always use an English voice (never the Polish system voice).
+    const voices = (cachedVoices.length ? cachedVoices : synth.getVoices()).filter((v) =>
+      v.lang.toLowerCase().replace("_", "-").startsWith("en")
+    );
     const voice =
-      voices.find((v) => v.lang.toLowerCase() === lang.toLowerCase()) ||
-      voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+      voices.find((v) => /Google UK English/i.test(v.name)) ||
+      voices.find((v) => v.lang.toLowerCase().replace("_", "-") === "en-gb") ||
+      voices.find((v) => /Google US English/i.test(v.name)) ||
+      voices[0];
+    utterance.lang = voice?.lang || "en-GB";
     if (voice) utterance.voice = voice;
     utterance.rate = 0.95;
     utterance.onend = () => setSpeaking(false);

@@ -355,6 +355,13 @@ export default function GameOverScreen({ game, onPlayAgain }) {
           <span>Play Again</span>
           <span aria-hidden="true">&rarr;</span>
         </button>
+        <p style={{ marginTop: "1rem", textAlign: "center" }}>
+          If you want more and like our idea, visit{" "}
+          <a href="https://www.commerzbank.de" target="_blank" rel="noopener noreferrer">
+            Commerzbank
+          </a>
+          .
+        </p>
       </div>
     </main>
   );
